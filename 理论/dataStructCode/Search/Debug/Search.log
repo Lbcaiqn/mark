@@ -1,0 +1,4 @@
+﻿  Search.cpp
+d:\作业\笔记\datastructcode\search\search.cpp(14): warning C4715: “midSearch”: 不是所有的控件路径都返回值
+  Search.vcxproj -> D:\作业\笔记\dataStructCode\Search\Debug\Search.exe
+  Search.vcxproj -> D:\作业\笔记\dataStructCode\Search\Debug\Search.pdb (Partial PDB)

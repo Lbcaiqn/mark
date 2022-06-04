@@ -1,0 +1,29 @@
+
+
+
+node exec的er回调中，服务器会停在这里，需要：
+return next(err)  或直接return  来继续运行服务器。
+
+
+
+更改脚手架3创建的vue端口：
+主目录下创建 vue.config.
+
+vue需要打包，否则访问会很慢。
+用express脚手架创建项目，将打包后dist目录下所有文件复制到public文件夹下。
+解决刷新后找不到网页的问题：
+const history = require('connect-history-api-fallback')
+app.use(history())
+
+
+
+
+
+
+
+
+
+
+
+
+

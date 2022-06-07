@@ -39,8 +39,6 @@ import store from '...'
 this.$store.state.xxx
 ```
 
-
-
 # 三、mutations
 
 官方推荐不应该直接对state进行修改，而是应该通过mutations提交进行修改，这样在Vue开发者工具才能看到数据的变化。
@@ -79,13 +77,6 @@ import {xxx} from ‘...’
 //在组件中直接调用，而在mutations中，需要[xxx]调用
 ```
 
-
-
-
-
-
-
-
 # 四、actions
 
 里面额的都是异步操作，如果在mutations中定义异步操作，vuedevtools是无法跟踪的，所以需要在actions定义，就可以跟踪。
@@ -120,8 +111,6 @@ this.$store.getters.bbb
 this.$store.getters.ccc(123,456)
 ```
 
-
-
 # 六、modules
 
 Store是单一状态树，只定义一个store，但是有时候确实又要将共享状态进行划分。
@@ -151,10 +140,10 @@ import {mapGetters} from 'vuex'
 
 //computed中
 //用法1：
-...mapGetters(['getters函数','..',...]) 	//就能直接用getters函数名调用
+...mapGetters(['getters函数','..',...])     //就能直接用getters函数名调用
 //用法2：
 ...mapGetters({
-  别名: 'getters函数'			//就能直接用别名调用
+  别名: 'getters函数'            //就能直接用别名调用
 })
 
 /*
@@ -176,3 +165,126 @@ funcname(payload)
 moduls建立一个文件夹
 
 # 九、Vuex4
+
+# 十、Pinia
+
+1 基本介绍
+
+npm install --save pinia
+
+官方推荐的Vuex的代替品，优势：
+
+1. Vue2，Vue3都可以使用
+
+2. 抛弃了mutations，使用state，actions，getters就可以了
+
+3. 不需要嵌套模块
+
+4. 完全支持ts
+
+5. 代码简洁
+
+创建store：
+
+```
+// /src/store/index.js
+import {createPinia,defineStore} from 'pinia'
+const pinia = createPinia()
+
+const mainStore = defineStore('main',{
+  state(){
+    return {
+      aaa: 100,
+      phoneNumber: 18312345678
+    }
+  },
+  getters: {
+    phoneNumberHide(){
+      return this.phoneNumber.toString().replace(/^(\d{3})\d{4}(\d{4})$/,'$1****$2')
+    }  
+  },
+  actions: {
+    xxx(){
+      this.aaa += 10
+    }  
+  }
+})
+
+export {
+  pinia,
+  mainStore
+}
+
+//main.js
+import {pinia} from './store'
+...
+app.use(pinia)
+
+//用到的组件中
+import {mainStore} from '...'
+//store是一个Proxy响应式对
+const store = mainStore()
+```
+
+steate变量的调用与修改，getters：
+
+```
+import {mainStore} from './store'
+//store是一个Proxy响应式对象
+const store = mainStore()
+
+//1.使用state的变量
+console.log(store.aaa)
+/*
+注意，如果再从store结构出来state变量，取出来的不是响应式数据
+let {aaa} = store
+console.log(aaa)
+解决方法,类似于toRef()
+import {storeToRefs} from 'pinia'
+let {aaa} = storeToRefs(store)
+console.log(aaa)
+*/
+
+//2.修改state的变量
+//2.1 修改单个，可以这样修改，因为Vue.js devtools可以检测到
+store.aaa++
+//2.2 修改多个，同时修改多个时用这种方式，性能会高些
+store.$patch({
+  aaa: store.aaa + 1
+})
+//2.3 $patch修改多个的另一种方式，由于是函数，可以写一些业务逻辑
+store.$patch((state) => {
+  if(state.aaa > 0) state.aaa++
+})
+//2.4 当球盖的业务逻辑很复杂时，使用actions修改
+store.xxx()
+
+//3 getters
+console.log(state.phoneNumber)
+console.log(state.phoneNumberHide)
+
+
+```
+
+store之间的调用：
+
+Vuex的modules用来定义多个store，而pinia删除了modules，使用更好的方式：
+
+多个store用多个defineStore()，若store在另外的文件，引入使用即可
+
+```
+const store1 = defineStore('store1',{
+  state(){
+    return {
+      store1Num: 123
+    }  
+  }
+})
+const store1 = defineStore('store1',{
+  state(){
+    return {
+      store1Num: store1().store1Num
+    }  
+  }
+})
+```

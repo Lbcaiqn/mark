@@ -499,6 +499,7 @@ var e=document.querySelectorAll('.xxx') //返回所有
 //获取body，html标签
 var f=document.body //body
 var g=document.documentElement //html
+
 ```
 
 2 读写文本，属性，样式 
@@ -531,6 +532,8 @@ H5的自定义属性命名规范；data-xxx data-xxx-xxx
 新增获得自定义属性得到api：(省略data-，xxx-xxx变成xxxXxx)
 e.dataset.xxx    e.data.xxxXxx
 e.dataset[‘xxx’]  e.dataset[‘xxxXxx’]
+
+
 ```
 
 3 节点操作：
@@ -572,6 +575,8 @@ let n=e.children[0].cloneNode() //复制e的第一个元素节点，但还未放
 //appendChild等操作
 若cloneNode() 参数为空，则是浅拷贝，只拷贝元素，元素里的文本等不拷贝
 cloneNode(true) 深拷贝，拷贝包括元素，文本等所有节点
+
+
 ```
 
 4 事件
@@ -599,6 +604,8 @@ e.attachEvent(‘onclick’,function(){}) //IE9以下才支持，最好别用
 e.onclick=none
 e.removeEventListener(‘click’,func) //注册事件时，事件函数不能是匿名函数
 e.detachEvent(‘onclick’,func) //注册事件时，事件函数不能是匿名函数
+
+
 ```
 
 4.3 事件类型：
@@ -623,6 +630,7 @@ event.keyCode 可获得按键码，up，down不区分大小写，press区分
 通过event.keyCode 可实现对特定键的监听
 
 onscroll  滚动事件
+
 
 4.4 事件对象：
 事件函数给个形参event，事件函数内 console.log(event) 可以看到
@@ -679,19 +687,27 @@ e.style可读写  e.offset是只读
 盒子鼠标按下事件，计算鼠标在盒子内坐标=鼠标坐标-(offset编译-offset宽高/2)
 内嵌鼠标移动事件，行内样式left/top=鼠标坐标-鼠标盒子内坐标
 全局document事件，鼠标弹起取消鼠标移动事件
+
+
 ```
 
 ```
 //client：返回的都不带单位
 e.clientWidth e.clientHeight  包含内边距，不包含边框和外边距
 e.clientTop  e.clientLeft  上/左边框的大小
+
+
 ```
 
 ```
 //scroll
 e.scrollWidth e.scrollHeight 包括内边距不包括边框和外边距，而且，如果盒子内的内容超出了盒子的大小，会把超出的计算在内s
 e.scrollTop e.scrollLeft  返回滚动后被卷去的那部分大小
+
+
 ```
+
+
 
 # 四、BOM
 
@@ -770,6 +786,7 @@ location.assign(‘url’)  跳转页面（也叫重定向），跳转后可返�
 location.replace(‘url’) 跳转，但无法返回
 location.reload()  参数为空或false重新刷新页面，true为强制刷新
 非强制刷新会缓存一些页面内容，速度快一点，强制刷新则全部重新加载，速度慢一点
+
 ```
 
 4 navigation对象
@@ -778,6 +795,7 @@ location.reload()  参数为空或false重新刷新页面，true为强制刷新
 存放浏览器的信息，可以知道是PC端的浏览器还是移动端的浏览器，由此可以知道显示PC端还是移动端页面
 Navigator.userAgent.match()
 但是代码比较复杂
+
 ```
 
 5 history对象
@@ -787,7 +805,10 @@ Navigator.userAgent.match()
 history.forward() 前进
 history.back()  后退
 history.go(x)  正数前进x步  负数后退x步
+
 ```
+
+
 
 # 五、ES6↑
 
@@ -810,21 +831,27 @@ const：
 2、对于const修饰的对象/数组，对象/数组本身不能修改，但是对象的成员/数组元素可以增删改。
 3、确定值不会变时，优先使用const（规范），常量名一把大写
 4、具有块级作用域
+
 ```
+
+
 
 1.2 模板字符串
 
 ```
 1.声明：let str=`…`
-`str`        `在tab键上方，字符串新写法，可以解析出换行，如：
+`str`		`在tab键上方，字符串新写法，可以解析出换行，如：
 `str1
-str2`    等价于’str1\n’+’str2’
+str2`	等价于’str1\n’+’str2’
 2、字符串拼接：
 let str1=`hello`;
 let str2=`${str1}world`
 输出helloworld
 3、模板字符串中，${xxx}，xxx可以是表达式，变量，函数，对象等
+
 ```
+
+
 
 1.3 结构赋值
 
@@ -844,7 +871,10 @@ const {属性名1，属性名2…} = 对象名
 解构的变量可以设置别名：{变量:别名}
 对象连续解构；
 const {xxx: {aaa}或[aaa] }=obj 从obj解构出xxx对象或数组，再解构xxx中的aaa
+
 ```
+
+
 
 1.4 对象属性方法的新写法
 
@@ -854,11 +884,14 @@ const {xxx: {aaa}或[aaa] }=obj 从obj解构出xxx对象或数组，再解构xxx
 *属性：
 const name=’lgx’;
 const person={
-name,      //等同于 name:name
+name,  	//等同于 name:name
 }
 *方法（vue中的方法，计算属性，过滤器也行）：
 fun(){}  //等同于 fun:function(){}
+
 ```
+
+
 
 1.5 新数据类型Symbol
 
@@ -889,7 +922,10 @@ obj.run=function(){}   s//与对象内的run是不同的
 //Symbol内置属性，作用是作为对象的属性
 如Symbol.hasInstance
 作为对象的属性 [Symbol.hasInstance] : …
+
 ```
+
+
 
 1.7 新运算符
 
@@ -897,31 +933,30 @@ obj.run=function(){}   s//与对象内的run是不同的
 扩展运算符 … 将数组转化成逗号分隔的列表
 具备iterator接口的数据类型才可使用
 const arr=[‘a’,’b’,’c’]
-1、fun(…arr)        //传入了’a’,’b’,’c’三个字符串作为实参
-2、let arr_arr=[…arr,…arr]      arr_arr为[‘a’,’b’,’c’,‘a’,’b’,’c’]
-3、let arr_copy=[…arr]        拷贝
+1、fun(…arr)		//传入了’a’,’b’,’c’三个字符串作为实参
+2、let arr_arr=[…arr,…arr]  	arr_arr为[‘a’,’b’,’c’,‘a’,’b’,’c’]
+3、let arr_copy=[…arr]		拷贝
 4、将伪数组（如querySelectAll得到的）转化为真正的数组
+
 ```
 
 1.8 新for循环和迭代器
 
 ```
 for in 和 for of
-for in    只能用来遍历数组，字符串，对象
-for(var k in 数组名/字符串名/对象名)        //通常用k或key
+for in	只能用来遍历数组，字符串，对象
+for(var k in 数组名/字符串名/对象名)		//通常用k或key
 {
-console.log(k);         //k为每个数组或字符串的下标或对象属性名和方法名
-console.log(数组串对象[k]);    //遍历每个数组/字符串元素或对象属性的值，不执行方法
+console.log(k);		 //k为每个数组或字符串的下标或对象属性名和方法名
+console.log(数组串对象[k]);	//遍历每个数组/字符串元素或对象属性的值，不执行方法
 }
 遍历对象数组时，第一行获得下标，第二行获得各个对象。
 
 for of与for in的区别就在于for of的i是数组/字符串元素的值,对象数组的对象实体。注意对象不能用for of
 ```
-
 ```
 
 ```
-
 迭代器：
 ES6提供了iterator接口，为不同的数据结构提供统一的访问机制。一种数据结构只要部署了interator接口，就能通过 for of 遍历
 一般iterator接口是各数据结构的原型对象中的一个方法：
@@ -966,9 +1001,12 @@ const o={
 for(i of o) console.log(i)
 
 ```
-1.9 函数相关
-```
 
+
+
+1.9 函数相关
+
+```
 ①函数形参
 1).rest参数
 再形参列表的最后放一个（一定在最后） …args 作为数组接收实参
@@ -979,7 +1017,7 @@ for(i of o) console.log(i)
 与对象解构配合使用时：
 形参obj ---- 形参{.. .. .. ..}，..也可以设置默认值
 
-②箭头函数        常用于作为形参
+②箭头函数		常用于作为形参
 具名：const/let name=(形参列表)=>{函数体}
 匿名：(形参列表)=>{函数体}
 *当形参只有一个时，小括号可以省略
@@ -1000,19 +1038,19 @@ for(i of o) console.log(i)
 JS三种常用的高阶函数：分别用来筛选，操作，汇总。
 1)。filter()
 let 型数组=原数组.filter( function(n){
-    return 布尔值（变量/表达式）;
+	return 布尔值（变量/表达式）;
 });
 参数为回调函数，作用是：true时，将元素n加入新数组（用数组接收）
 
 2)。map()
 let 型数组=原数组.map( function(n){
-    return 对n的操作（如n*2）;
+	return 对n的操作（如n*2）;
 });
 参数为回调函数，作用是：对每个n执行操作，并返回给新数组（用数组接收） 
 
 3)。reduce()
 let 变量=原数组.reduce( function(pre,n){
-    return 汇总（如pre+n 是计算数组元素值的和）;
+	return 汇总（如pre+n 是计算数组元素值的和）;
 },0);
 第一个参数为回调函数，第二个参数为pre的初始化值，一般为0.
 作用：pre保存上一次return的值，n为此次遍历的值，每次执行完汇总，将值返回给pre。（最终用一个变量接收）
@@ -1020,20 +1058,23 @@ let 变量=原数组.reduce( function(pre,n){
 高阶函数有链式写法：
 1)。filter()
 let 变量=原数组.filter( function(n){
-    return 布尔值（变量/表达式）;
+	return 布尔值（变量/表达式）;
 }).map( function(n){
-    return 对n的操作（如n*2）;
+	return 对n的操作（如n*2）;
 }).reduce( function(pre,n){
-    return 汇总（如pre+n 是计算数组元素值的和）;
+	return 汇总（如pre+n 是计算数组元素值的和）;
 },0);
 
 链式写法+箭头函数：
 let 变量=原数组.filter( n => … ).map( n => … ).reduce( ( pre , n ) => … , 0 ); 
 
 ```
-1.10 生成器
-```
 
+
+
+1.10 生成器
+
+```
 本质是一个函数,但是语法与传统函数完全不同，是es6提供的一个异步解决方案，进行异步编程。解决了回调地狱。
 以前的异步解决方案是单纯使用回调函数。
 
@@ -1099,9 +1140,12 @@ let x=xxx()
 x.next()
 
 ```
-1.11 Promise
-```
 
+
+
+1.11 Promise
+
+```
 一种异步解决方案
 用于封装异步代码，使得异步代码结构更加清晰
 举例，这里的异步使用setTimeout()举例
@@ -1152,11 +1196,14 @@ then里面的箭头函数的参数是一个数组（自己命名），该数组�
 由于封装的都是异步，所以all执行总时间就是执行最慢的那一个异步操作的时间。
 
 ```
+
+
+
 1.12 新数据结构
 
 1.12.1 Set
-```
 
+```
 //Set 集合
 //*成员的值是惟一的，有相同的会去重
 //*具有iterator接口，可使用for of（遍历出每个元素） 和 ...
@@ -1185,9 +1232,12 @@ let arr4=[...new Set([...arr1,...arr2])]
 let arr5=[...new Set([...arr1])].filter( i => !new Set([...arr2]).has(i))
 
 ```
-1.12.2 Map
-```
 
+
+
+1.12.2 Map
+
+```
 //键值对的集合，键是唯一的，若增加了相同的键，会覆盖原有
  //键和值都可以是任何数据类型，也可以函数
 //有iterator接口，可使用for of（遍历出每个键值对） 和 ...
@@ -1201,9 +1251,12 @@ delete(key) 删
 clear() 清空
 
 ```
-1.12.3 Class
-```
 
+
+
+1.12.3 Class
+
+```
 使用：
 class里的this永远不会指向window，硬要指向window也会指向undefine
 //声明，class不会被提升
@@ -1266,11 +1319,14 @@ class c {
 }
 
 ```
+
+
+
 1.13 其他
 
 1.13.1 数值相关
-```
 
+```
 Number.EPSILON   js表示的最小精度
 作用：浮点数运算
 浮点数运算是有误差的，0.1+0.2 != 0.3
@@ -1290,13 +1346,17 @@ Number.isNaN(x)   x是/不是NaN返回true/false，注意只有NaN才是true
 window.isNaN(x) x是undefine，String，Object，NaN都返回true，因为他会自动对数据进行转换
 Number.isNaN(x) x只有NaN才返回true，因为它不对数据进行转换。
 
+
 Math.trunc(x)  将x的小鼠部分抹掉
 Math.sign(x)   x为正数/负数/0返回1/-1/0
 
 ```
-1.13.2 对象方法的扩展
-```
 
+
+
+1.13.2 对象方法的扩展
+
+```
 Js的数组，字符层，Set，Map本质都是对象，所以这些方法都可以调用
 *数组，字符层可以正常调用
 *Set，Map可以调，但结果为空
@@ -1309,9 +1369,12 @@ Object.setPrototypeOf(a,b)  将b设置为a的原型对象
 Object.getPrototypeOf(a)    返回a的原型对象
 
 ```
-1.13.3 数组方法的扩展
-```
 
+
+
+1.13.3 数组方法的扩展
+
+```
 let a=[1,2,3,4]
 //遍历数组，当所有值都符合条件时，才返回true v值，i索引，arr原数组
 let res0=a.every((v,i,arr) => v>=2)
@@ -1334,9 +1397,12 @@ a.fill(5,0,3)
 let aCopy=Array.from(a)
 
 ```
-1.13.4 模块化
-```
 
+
+
+1.13.4 模块化
+
+```
 没有模块化时，引入多个js文件会有全局变量的冲突，可以用闭包，但是闭包后必须导出，否则无法复用。
 模块化的核心：导出，导入
 常见模块化规范：ES6，AMD，CMD，CommonJS
@@ -1346,17 +1412,12 @@ CMD：seaJS
 CommonJS：nodejs，Browserify使用
 
 引入：
-
 <script type="module" src="..."></script>
-
 或
-
 <script type="module">
   import ...
 </script>
-
 但是这样会有报错，而在实际开发项目中也不会使用这种方式，项目中会将模块化代码用babel转成ES5代码整合成main.js文件，html只引入这个js文件。
-
 <script src=”./main.js”></script>
 
 导出语法：
@@ -1374,6 +1435,7 @@ default 只能有一个
 *在上一级文件夹 最前面 ../ 多级就用多个 ../
 *导入包，直接写包名
 
+
 Import {…} from ‘路径’
 或
 Import * as 别名 from ‘路径’
@@ -1385,7 +1447,7 @@ Import 别名 from ‘路径’
 使用CommomJS的NodeJS模块化语法：
 导出语法：
 module.exports={
-    变量名或函数名
+	变量名或函数名
 }
 导入语法：
 路径规则与ES6一样
@@ -1395,21 +1457,29 @@ babel：
 js编译器，将ES6以上代码，typescript代码转化成ES5代码。
 
 ```
-2 ES7
-```
 
+
+
+2 ES7
+
+```
 arr.includes(参数)  若数组中有该参数，返回true，否则false（以前的indexOf有则返回下标，否则返回-1）
 新运算符  **  幂运算  2**5  2的5次方
 
+
+
 ```
+
+
+
 3 ES8
 
 3.1 async和await
 
 新的异步解决方案，以类似同步的方式使用异步
 async用来声明async函数，该函数一定会返回一个Promise对象，return的值是reslove()的参数，根据async函数返回的Promise的成功或失败状态，可以使用.then()和.catch()
-```
 
+```
 async function a(){
   return 123
 }
@@ -1447,10 +1517,14 @@ async function a(){
 }
 a()
 
-```
-3.2 对象方法的扩展：
+
 ```
 
+
+
+3.2 对象方法的扩展：
+
+```
 Object.keys(obj)  //返回一个数组，值为对象中所有的键
 Object.values(obj)  //返回一个数组，值为对象中所有的值
 Object.entries(obj)  /*返回一个数组，每个元素的值为对象中所有的键和值组成的数组，第一个值为键，第二个值为值*/
@@ -1461,11 +1535,14 @@ Object.getOwnPropertyDescriptors(obj) /*返回obj的属性的描述对象（描�
 Object.getOwnPropertyDescriptors()  的主要作用是实现更深层次的对象拷贝，把是否可枚举/可删除等都拷贝了。
 
 ```
+
+
+
 4 ES9
 
 4.1 为对象提供了像ES6数组一样的rest参数和扩展运算符
-```
 
+```
 //对象的rest：
 …hobbit会保存除了name，age之后的所有参数，保存为一个对象
 function a({name,age,...hobbit}){
@@ -1481,6 +1558,7 @@ a({
   hobbit3: 'eat'
 })
 
+
 //对象的扩展运算符：
 let a = {
   name: 'asd',
@@ -1492,12 +1570,16 @@ let b = {
 }
 console.log(b)
 
+
 ```
+
+
+
 4.2 正则扩展
 
 在ES5中就可以使用正则表达式了
-```
 
+```
 创建：
 字面量创建（编译时就创建）；let reg = /正则/
 构造函数创建（运行时才创建）：let reg = new RegExp(‘正则’)
@@ -1525,15 +1607,19 @@ let reg = [
 console.log(reg.every( r => r.test(密码)))
 
 ```
-ES9正则
-```
 
+ES9正则
+
+```
 1.对分组可进行命名：左括号后加?<别名>  如 \w+(?<num>\d+)
 exec和match，matchAll获得的匹配结果可用  匹配结果.groups.num 获得该分组
 2.ES9增加了ES5不支持的负向后行断言，正向后行断言
 3.新的匹配模式：dotAll模式（使用s），使得.包括换行符
 
 ```
+
+
+
 5 ES10
 
 5.1 Object.fromEntries(xxx)  用二维数组创建一个对象
@@ -1541,17 +1627,20 @@ xxx如   [[k1,v1],[k2,v2]]
 Object.entries()返回的和Map就是这种形式，既可以将Map转为对象
 
 5.2 字符串方法噶新增trimStart，trimEnd
-```
 
+```
 let str=’   123   ’
 console.log(str.trim())      //ES5的方法，清空两侧空格
 console.log(str.trimStart())  //清空左侧空格
 console.log(str.trimEnd())  //清空右侧空格
 
 ```
-5.3 数组方法新增 flat() flatMap() ,用于数组降维
-```
 
+
+
+5.3 数组方法新增 flat() flatMap() ,用于数组降维
+
+```
 let arr2 = [1,2,[3,4]]
 let arr3 = [1,2,[3,4,[5,6]]]
 console.log(arr2.flat()) // [1,2,3,4]   二维转化一维
@@ -1564,18 +1653,24 @@ console.log(arr.map(item=>[item*10,item*20]))
 console.log(arr.flatMap(item => [item * 10,item * 20]))  //相当于map之后使用flat()
 
 ```
-5.4 Sysbol新增description，获取Sysbol的描述字符串
-```
 
+
+
+5.4 Sysbol新增description，获取Sysbol的描述字符串
+
+```
 let a = Symbol('123456')
 console.log(a.description)  //输出123456
 
 ```
+
+
+
 6 ES11
 
 6.1 class增加私有属性，类外不可调用，类内可以调用，用#声明，类内调用时，不能少了#
-```
 
+```
 class a {
   name;
   #age;
@@ -1593,9 +1688,10 @@ console.log(aaa.name,aaa.age)  //无法调用私有属性，结果为undefine
 aaa.getAge()  //通过类内的方法噶来则可以调用
 
 ```
-6.2 Promise.allSettle(xxx)
-```
 
+6.2 Promise.allSettle(xxx)
+
+```
 xxx为由Promise对象组成的数组
 它会返回一个成功的Promise对象，成功的值为一个对象数组，对象数组中的每一个对象保存了xxx各个Promise的状态和对应的值
 let p1 = new Promise((resolve,reject)=>{
@@ -1629,13 +1725,16 @@ Promise.all([p1,p2]).then( r => {
 })  //输出 [1,2]
 
 ```
+
+
+
 6.3 可选链操作符  ?. 
 
 语法 obj?.属性  当obj存在时，才会调用属性，防止出现 undefined.属性 的情况
 若node环境中报错，则需要安装依赖
 npm install @babel/plugin-proposal-optional-chaining --save-dev
-```
 
+```
 function a(config){
   //原本必须这样做，通过短路运算判断是否传入了这个对象或属性
   let userName = config && config.db && config.db.userName
@@ -1651,20 +1750,26 @@ a({
 })
 
 ```
+
+
+
 6.4 动态import
 
 ES6的是静态import，这里的动态import实现按需加载（懒加载）
-```
 
+```
 import(‘…’).then(r=>{
   //r为导出的东西
 })
 const a = import(‘xxx’)  //路由懒加载
 
 ```
-6.5 新数据类型，大整型：BigInt
-```
 
+
+
+6.5 新数据类型，大整型：BigInt
+
+```
 let a = 123n  //声明
 let b = BigInt(567)  //将Number的整数转为BigInt，浮点数不能转
 let c = 123n + 456n  //BigInt只能与BigInt运算
@@ -1672,10 +1777,10 @@ let a=Number.MAX_SAFE_INTEGER + 1  //Number能表示的最大整数
 console.log(BigInt(a+10)) //再大就要转为BigInt
 
 ```
+
 6.6 新关键字：globalThis   
 
 始终指向全局环境（浏览器是window，node是global）
 
 字符串使用正则的新方法：
 str.matchAll(reg)   解决了match在全局模式下不显示全部信息的情况
-```

@@ -14,8 +14,6 @@ ts.config.json   ts的编译配置文件
 
 ts是js的超集，具备类型，语法检查更方便
 
-js类型是大写开头，而ts是小写开头
-
 # 一、类型
 
 给变量声明数据类型，赋值时只能赋值对应的数据类型
@@ -27,7 +25,6 @@ js类型是大写开头，而ts是小写开头
 let a: number
 let b: number = 5
 let c = 5   //这样ts会自动给变量number类型
-let d; symbpl = Symbol(123)
 ```
 
 ```
@@ -134,6 +131,23 @@ let o: {name: string,sex: sexVal}
 o = {name: 'lgx',sex: sexVal.Male}
 ```
 
+```
+//联合类型
+// | 表示类型a或类型b都可以
+let a2: number|string
+let a3: number|'123'
+let a4: 100|'hello'|true
+// & 表示同时具备两种类型
+let obj: {name: string} & {age: number}
+obj = {name: 'lgx',age: 23}
+
+
+//类型别名
+type myType1 = string
+type myType2 = 1 | 2 | 3
+let a: myType2
+```
+
 # 二、函数
 
 ```
@@ -182,254 +196,7 @@ console.log(fun8('lgx'))
 console.log(fun8('lgx',23))
 ```
 
-# 三、高级类型语法
-
-1 js内置对象类型和DOM、BOM类型
-
-这些类型ts也内置了
-
-ES5内置对象：
-
-```
-//js内置对象
-//1.正则
-let reg: RegExp = /*/
-//2.日期时间
-let date: Date = new Date()
-let time: number = new Date().getTime() 
-//3.Error
-let err: Error = new Error('123')
-//4.Boolean Number String对象
-let b: Boolean = new Boolean()
-let n: Number = new Number()
-let s: String = new String()
-```
-
-ES6↑内置对象
-
-```
-//1.Set
-let a: Set<number> = new Set([1,2,3])
-
-//2.Map
-let b: Nap<string,number> = new Map
-b.set('age',23)
-
-//3.迭代器
-letarr = [1,2,3]
-let c:Iterator<number> = arr[Symbpl.iterator]()
-
-
-```
-
-
-
-DOM：
-
-```
-//1.HTMLElement，DOM元素
-let aaa1: HTMLElement = document.body
-let bbb1: HTMLDivElement = document.qurySelect('div')  
-let ccc1: HTMLImageElement = document.qurySelect('img') //其他查阅类型表  
-
-//NodeList，DOM元素伪数组
-let aaa2: NodeList = document.querySelectAll('ul li') 
-let ccc: 
-
-//事件类型
-xxx.addEventListener('click',(e: MouseEvent) => {})
-```
-
-HTML标签对应的类型：
-
-```
-    "a": HTMLAnchorElement;
-    "abbr": HTMLElement;
-    "address": HTMLElement;
-    "applet": HTMLAppletElement;
-    "area": HTMLAreaElement;
-    "article": HTMLElement;
-    "aside": HTMLElement;
-    "audio": HTMLAudioElement;
-    "b": HTMLElement;
-    "base": HTMLBaseElement;
-    "basefont": HTMLBaseFontElement;
-    "bdi": HTMLElement;
-    "bdo": HTMLElement;
-    "blockquote": HTMLQuoteElement;
-    "body": HTMLBodyElement;
-    "br": HTMLBRElement;
-    "button": HTMLButtonElement;
-    "canvas": HTMLCanvasElement;
-    "caption": HTMLTableCaptionElement;
-    "cite": HTMLElement;
-    "code": HTMLElement;
-    "col": HTMLTableColElement;
-    "colgroup": HTMLTableColElement;
-    "data": HTMLDataElement;
-    "datalist": HTMLDataListElement;
-    "dd": HTMLElement;
-    "del": HTMLModElement;
-    "details": HTMLDetailsElement;
-    "dfn": HTMLElement;
-    "dialog": HTMLDialogElement;
-    "dir": HTMLDirectoryElement;
-    "div": HTMLDivElement;
-    "dl": HTMLDListElement;
-    "dt": HTMLElement;
-    "em": HTMLElement;
-    "embed": HTMLEmbedElement;
-    "fieldset": HTMLFieldSetElement;
-    "figcaption": HTMLElement;
-    "figure": HTMLElement;
-    "font": HTMLFontElement;
-    "footer": HTMLElement;
-    "form": HTMLFormElement;
-    "frame": HTMLFrameElement;
-    "frameset": HTMLFrameSetElement;
-    "h1": HTMLHeadingElement;
-    "h2": HTMLHeadingElement;
-    "h3": HTMLHeadingElement;
-    "h4": HTMLHeadingElement;
-    "h5": HTMLHeadingElement;
-    "h6": HTMLHeadingElement;
-    "head": HTMLHeadElement;
-    "header": HTMLElement;
-    "hgroup": HTMLElement;
-    "hr": HTMLHRElement;
-    "html": HTMLHtmlElement;
-    "i": HTMLElement;
-    "iframe": HTMLIFrameElement;
-    "img": HTMLImageElement;
-    "input": HTMLInputElement;
-    "ins": HTMLModElement;
-    "kbd": HTMLElement;
-    "label": HTMLLabelElement;
-    "legend": HTMLLegendElement;
-    "li": HTMLLIElement;
-    "link": HTMLLinkElement;
-    "main": HTMLElement;
-    "map": HTMLMapElement;
-    "mark": HTMLElement;
-    "marquee": HTMLMarqueeElement;
-    "menu": HTMLMenuElement;
-    "meta": HTMLMetaElement;
-    "meter": HTMLMeterElement;
-    "nav": HTMLElement;
-    "noscript": HTMLElement;
-    "object": HTMLObjectElement;
-    "ol": HTMLOListElement;
-    "optgroup": HTMLOptGroupElement;
-    "option": HTMLOptionElement;
-    "output": HTMLOutputElement;
-    "p": HTMLParagraphElement;
-    "param": HTMLParamElement;
-    "picture": HTMLPictureElement;
-    "pre": HTMLPreElement;
-    "progress": HTMLProgressElement;
-    "q": HTMLQuoteElement;
-    "rp": HTMLElement;
-    "rt": HTMLElement;
-    "ruby": HTMLElement;
-    "s": HTMLElement;
-    "samp": HTMLElement;
-    "script": HTMLScriptElement;
-    "section": HTMLElement;
-    "select": HTMLSelectElement;
-    "slot": HTMLSlotElement;
-    "small": HTMLElement;
-    "source": HTMLSourceElement;
-    "span": HTMLSpanElement;
-    "strong": HTMLElement;
-    "style": HTMLStyleElement;
-    "sub": HTMLElement;
-    "summary": HTMLElement;
-    "sup": HTMLElement;
-    "table": HTMLTableElement;
-    "tbody": HTMLTableSectionElement;
-    "td": HTMLTableDataCellElement;
-    "template": HTMLTemplateElement;
-    "textarea": HTMLTextAreaElement;
-    "tfoot": HTMLTableSectionElement;
-    "th": HTMLTableHeaderCellElement;
-    "thead": HTMLTableSectionElement;
-    "time": HTMLTimeElement;
-    "title": HTMLTitleElement;
-    "tr": HTMLTableRowElement;
-    "track": HTMLTrackElement;
-    "u": HTMLElement;
-    "ul": HTMLUListElement;
-    "var": HTMLElement;
-    "video": HTMLVideoElement;
-    "wbr": HTMLElement;
-
-圣
-```
-
-声明文件：
-
-在使用第三方库时，需要从第三方库的声明文件中引入它里面要用的一些类型
-
-2 联合类型，交叉类型
-
-```
-//联合类型
-// | 表示类型a或类型b都可以
-let a2: number | string
-let a3: number | '123'
-let a4: 100|'hello' | true
-
-//交叉类型
-// & 表示同时具备两种类型
-let obj: {name: string} & {age: number}
-obj = {name: 'lgx',age: 23}
-```
-
-3 类型推论，类型断言
-
-```
-//类型推论，会根据值来自动推断类型
-let a = 5  //相当于 let a: numebr = 5
-let b   //未赋值，推论为any类型
-//返回值简单可以屯轮出来，但当返回值比较复杂时，可能推论不出来，此时需要手动写类型
-let aaa = () => 123   //相当于 let aaa = (): number => 123
-
-//类型断言
-//一些情况下，数据需要被确定为某种类型，这时候就使用类型断言
-//如下面的例子，num被断言为string类型，才有length
-function a(num: number | string): void{
-  //console.log(num.length)  报错，因为若是number，则没有length
-  console.log((num as string).length) //写法一
-  console.log((<string>num).length)   //写法二
-}
-a('123')
-// a(123) //报错
-/*
-但是，类型断言只是消除了ts编译器的报错，当出入怒number类型时无法避免运行时的错误，
-依然会报错，所以类型断言不能滥用
-*/
-function b(num: any): boolean{
-  return num as boolean
-}
-b(true)
-// b(123) 报错
-```
-
-4 类型别名
-
-```
-type myType1 = string
-type myType2 = 1 | 2 | 3
-type myType3 = {
-  a: number,
-  b: string
-}
-type myType4 = (a: number) => number
-
-let a: myType2
-```
-
-# 四、面向对象
+# 三、面向对象
 
 1 类
 
@@ -454,41 +221,7 @@ let u2:user = u1
 fun(u2)
 ```
 
-面向对象三大特性之封装：
-
-```
-/*属性/方法的新增修饰符 public，private，protected
-不加这些修饰符的属性和方法默认是public，public类内外都可以访问
-private只能在类内访问，可以类内定义getxxx，setxxx方法给类外访问，此外，子类中也无法访问（相当于无法继承private）
-protected在类外无法访问，在类内以及子类可以访问
-修饰符顺序：private static readonly
-*/
-
-/*此外，就public可以修饰构造函数的形参
-这样就相当于直接声明赋值了，不用再this也不用先声明属性
-可以看成语法糖
-*/
-class a {
-  // x: number
-  // constructor(x: number){
-    // this.x = x
-  // }
-  //简写
-  constructor(public x:number){
-
-  }
-}
-let aa = new a(5)
-console.log(aa.x)
-```
-
-
-
-面向对象三大特性之多态：
-
-父类不对方法具体实现，而由子类来进行实现，使得每个子类都有不同的形态，这就是多态。可以看出，多态是基于继承的重写
-
-其他与ES6的类一样
+其他一样
 
 2 抽象类
 
@@ -623,9 +356,39 @@ class mymy extends coder implements lgx {
 }
 ```
 
+4 属性的封装
 
+```
+/*属性/方法的新增修饰符 public，private，protected
+不加这些修饰符的属性和方法默认是public，public类内外都可以访问
+private只能在类内访问，可以类内定义getxxx，setxxx方法给类外访问，此外，子类中也无法访问（相当于无法继承private）
+protected在类外无法访问，在类内以及子类可以访问
+修饰符顺序：private static readonly
+*/
 
-# 五、泛型
+/*此外，就public可以修饰构造函数的形参
+这样就相当于直接声明赋值了，不用再this也不用先声明属性
+可以看成语法糖
+*/
+class a {
+  // x: number
+  // constructor(x: number){
+    // this.x = x
+  // }
+  //简写
+  constructor(public x:number){
+
+  }
+}
+let aa = new a(5)
+console.log(aa.x)
+```
+
+5 多态
+
+父类不对方法具体实现，而由子类来进行实现，使得每个子类都有不同的形态，这就是多态。可以看出，多态是基于继承的重写
+
+# 四、泛型
 
 ```
 //当不知道未来将会使用什么类型，就可以使用泛型
@@ -656,17 +419,10 @@ interface i<xxx>{
 }
 let o:i<number> = {a:123}
 
-//同时传入多个泛型
-function aaa<xxx,yyy>(a:xxx,b:yyy){}
-
-//泛型约束
-//有时需要对泛型进行约束，如下，a是number就会出问题
-let getLength<T> = (a:T) => a.length  
-//泛型可以根据接口等等做一些限制  <xxx extends 接口/类/抽象类>  注意都用extends
-interface len {
-  length: number
-}
-let getLength<T extends len> = (a:T) => a.length
+/*
+可以同时定义多个泛型   <xxx,yyy,www>
+泛型可以根据接口等等做一些限制  <xxx extends 接口/类/抽象类>  注意都用extends
+*/
 ```
 
 ```
@@ -694,7 +450,7 @@ class MongoDB<T> implements DB<T> {
 }
 ```
 
-# 六、模块
+# 五 模块
 
 ts的模块分为内部模块（也叫命名空间）和外部模块（也叫模块）
 
@@ -703,14 +459,20 @@ ts的模块分为内部模块（也叫命名空间）和外部模块（也叫模
 命名空间用于组织代码和避免命名冲突
 
 ```
+
+```
+
 namespace aaa {
- export let a:number = 123
+  export let a:number = 123
 }
 namespace bbb {
- export let a:number = 456
+  export let a:number = 456
 }
 console.log(aaa.a)
 console.log(bbb.a)
+
+```
+
 ```
 
 命名空间也可以放到外部模块中，再导出使用

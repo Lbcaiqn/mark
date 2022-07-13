@@ -522,164 +522,51 @@ str.indexOf(s):
 
 sort( (a,b) => {}) 改变源数据 return a-b升序  return b-a 降序
 
-# 八、动画
+# 八、动画与过渡
 
-1 <transition>
+1 动画
 
-vue动画对css3动画进行了一些封装，写CSS3动画代码，只是类名是固定的。
+vue动画：对css3动画进行了一些封装
+
+```
+1.<transition></transition>包住要实现动画的元素
+2.写CSS3动画代码，只是类名是固定的，来是 .v-enter-active 走势是 .v-leave-active 当
+<transition>有name属性时，v换成相应的name
+3.当页面一刷新就展示动画，<transition>增加 appear 或 :appear="true"
 vue动画显示隐藏元素是立刻执行的，动画只是播放而已，如元素消失了，但是动画在播放
-
-```
-<transition>
-  属性：
-  name 类名的v换成name 如xxx-enter-to
-  appear或:appear="true"  页面一刷新就展示动画
-  :duration="x ms" 限制自定义动画的时间（动画库无效）,值也可以是 "{enter:..,leave:..}"
-</transition>、
 ```
 
-2 动画类名
+2过渡
 
-| .v-enter        | 来之前  |
-| --------------- | ---- |
-| .v-enter-to     | 来之后  |
-| .v-leave        | 去之前  |
-| .v-leave-to     | 去之后  |
-| .v-enter-active | 来的动画 |
-| .v-leave-active | 去的动画 |
+vue过渡：
+<transition>除了上面两个类名，还有v-enter/leave (to) 这四个类名，因此，用他们上面就
 
-使用用他们可以替换CSS3动画代码
+可以替换上面一坨CSS3代码
 注意：v-enter v-leave 在获得后生效，马上失去，所以在控制台很难看到这两个类名
 
 ```
-//若过渡到的状态是原本的样式，如这里的v-enter-to和v-leave,则可以不写
-//来之前 = 去之后   来之后 = 去之前
-.x-enter,
-.x-leave-to {
-  width: 0px;
-  height: 0px;
-}
-.v-enter-to,
-.v-leave {
-  width: 100px;
-  height: 100px;
-}
-//也可以不写下面一段，而把transition属性放在要过渡的元素css里，相同效果，但是不推荐，没这种美观
-.v-enter-active,
-.v-leave-active {
-  transition: 1s;
-}
-```
-
-3修改类名和动画库animate.css
-
-```
-<transition enter-to-class="xxx">
-  其他类名以此类推
-</transition>
-```
-
-动画库animate.css
-
-npm install --save animate.css
-
-<script>中引入：import 'animate.css'
-
-使用：只需要修改enter-active和leave-active类名即可，如动画fadeIn，fadeOut
-
-```
-<transition 
-  enter-active-class="animate__animated animate__fadeIn"
-  leave-active-class="animate__animated animate__fadeOut"
->
-</transition>
-```
-
-若是animate3，则不需要加animate__animated
-
-animate4以上版本需要加上animate__animated
-
-其他动画类名详见官网
-
-4 <transition>生命周期和动画库
-
-当需要更加高级复杂的动画时，可以使用生命周期
-
-| before-enter | 相当于 .v-enter        |
-| ------------ | ------------------- |
-| after-enter  | 相当于 .v-enter-to     |
-| enter        | 相当于 .v-enter-active |
-| enter-cancel | 来的动画被取消时回调          |
-| before-leave | 相当于 .v-leave        |
-| after-leave  | 相当于 .v-leave-to     |
-| leave        | 相当于 .v-leave-active |
-| leave-cancel | 去的动画被取消时回调          |
-
-使用：
-
-```
-<transition @before-enter="enterFrom" @enter="enterActive">
-
-</transition>
-<script>
-export default {
-  methods: {
-    enterFrom(el){
-      //el为使用动画的组件实例，before，after和cancel都是这样
-    },
-    enterActive(el,done){
-      //done为完成动画时的回调函数，active都是这样
-      done(){
-        console.log('结束')
-      }
-    }
+.v-enter,
+  .v-leave-to {
+    transform: translateX(-100%)
   }
-}
-</script>
-
-```
-动画库gsap
-
-Vue官方推荐的动画库
-
-npm install --save gsap
-
-<script>中引入：import gsap from 'gsap'
-
-使用：
+  .v-leave,
+  .v-enter to {
+    transform: translateX()
+  }
+  //也可以不写下面一段，而把transition属性放在要过渡的元素css里，相同效果，但是不推荐，没这种美观
+  .v-enter-active,
+  .v-leave-active {
+    transition: 1s;
+  }
 ```
 
-//@before-enter="enterFrom"
-enterFrom(el){
-  gsap.set(el,{
-    width: 0,
-    height: 0
-  })
-},
-//@enter="enterActive"
-enterActive(el,done){
-  gsap.to(el,{
-    width: 100,
-    height: 100,
-    onComplete: done
-  })
-}
+多个元素的过渡：
+<transition>只能包裹一个元素，要实现多个元素或者列表的过渡，可以：
+*n个元素n个<transition>，用不同的name区分，但明显列表不适用
+*用div包裹<transition>里的多个元素，但是无法这种实现互斥（布尔值不同）动画效果，极不推荐
+*使用<transition-group>包裹多个元素，并给每个元素增加独立的key属性
 
-```
-5 多个元素的过渡：
-<transition>只能包裹一个元素，要实现多个元素或者列表渲染的过渡，可以：
-
-* n个元素n个<transition>，用不同的name区分，但明显列表渲染的元素不适用
-
-* 用div包裹<transition>里的多个元素，但是无法这种实现互斥（布尔值不同）动画效果，极不推荐
-
-* 使用<transition-group>包裹多个元素，必须给每个元素增加独立的key，其他使用与<transition>一样
-```
-
-<transition-group>
-    <div v-for="i in arr" :key="i" v-show="flag" class="box"></div>
-  </transition-group>
-  ```
+第三方动画库：Animate.css  使用见官网
 
 # 九、组件
 
@@ -780,8 +667,6 @@ cpn: {
 
 2 父子组件通信
 
-2.1 props,emit
-
 ```
 //父传子 
 
@@ -797,7 +682,6 @@ props: {
 props: {
   xxx: {
     tupe: Number
-    //基本数据类型的默认值写法如下，引用数据类型则需要函数形式，如数组默认值 default:()=>[1,2]
     default: 789                //默认值，为了严禁，最好要设置默认值
     require: true               //是否必须传入，默认false
     validator(){return 123,456} //限定传入的值
@@ -839,53 +723,6 @@ fun2(i){
 
 //自定义事件解除，有时会用的高，在子组件中
 this.$off('xxx')
-```
-
-2.2 自定义组件上使用v-model
-
-v-model也可以用在自定义组件上，是结合props和emit的语法糖
-
-v-model的props的默认值是value，emit默认是input，可以通过子组件的model配置项修改默认值
-
-```
-<template>
-  父组件
-  <son1 v-model="msg" />
-  <!-- 相当于
-  <son1 :value="msg" @input="msg = $event" />
-  -->
-</template>
-
-<script>
-import son1 from './son1.vue'
-export default {
-  components: {
-    son1
-  },
-  data(){
-    return {
-      msg: false
-    }
-  }
-}
-</script>
-
-<template>
-  子组件
-  <div @click="$emit('input',value)">{{value}}</div>
-</template>
-
-<script>
-export default {
-  model:{
-    //prop: 'pp',  //将value改为pp
-    //event: 'ee'  //将input改为ee
-  },
-  props: {
-    value: Boolean
-  }
-}
-</script>
 ```
 
 3 非父子组件通信
@@ -971,15 +808,9 @@ mixins: [mixinA]
     <slot></slot>  
   </div>
 </template>
-
 //父组件中
 <子组件>
   <h1>123</h1>
-  <h2>456</h2>
-</子组件>
-//或者
-<子组件>
-  《<h1>123</h1>
   <h2>456</h2>
 </子组件>
 /*
@@ -1003,37 +834,23 @@ mixins: [mixinA]
   <h2 slot="bbb">456</h2>
   <h2>456</h2>
 </子组件>
-//或者
-<子组件>
-  <template v-slot:aaa>
-   123   
-  </template>
-</子组件>
 /*
 有名字只会替换对应名字的，没名字的只能替换没名字
 */
 ```
 
 ```
-//作用域插槽，子组件的数据可以通过作用域插槽传给父组件
-//子组件
-<slot :aaa="..."></slot>
-//父组件
-<子组件>
-  <template v-slot:default="ddd">  或者解构出来 {aaa}  使用时 {{aaa}}
-    {{ddd.aaa}}
-  </template>
-</子组件>
-//高版本的vue这里template也可以用div
+//作用域插槽
+作用域插槽：
+替换的内容由子组件决定。
+编译作用域：一个模板内的变量只在使用该模板的组件有效。
+如替换的内容带有子组件的属性，父组件无法直接调用，此时，
+slot增加自定义属性  v-bind:自定属性名d=”子组件data内属性”
+组件标签内，<template slot-scope=”自定对象名s”>… 使用s.d ..</template>
+高版本的vue这里template也可以用div
 ```
 
-6 全局变量/函数和插件
-
-6.1 全局变量/函数
-
-Vue.prototype = xxx
-
-6.2 插件
+6 插件
 
 组件定义后，使用时要导入，注册，定义变量等，十分麻烦，若一个组件几乎哪里都用到，可以进一步封装成插件，就能this.$xxx直接调用
 

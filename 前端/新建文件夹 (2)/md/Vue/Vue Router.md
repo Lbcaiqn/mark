@@ -17,6 +17,8 @@ url在后端服务器中取得网站的内容（此时的html，css，js都是�
 ③前端路由：单网页富应用（各个网页实际上是一个个组件），静态后台服务器只有一个html文件，甚至css，js都只有一个。
 访问网站时，会一次性从后台服务器得到所有的网页资源。当访问相应的网页时，相应的内容就会显示，其他隐藏，各个网页组件也对应一个url，此时的映射关系都在前端中，就叫做前端路由。
 
+
+
 # 二、基本使用
 
 路由的组件不需要注册
@@ -37,12 +39,12 @@ const routes = [
   {
     //默认路由，一进入页面就进入该路由
     path: '',   //也可以是 '/'
-    redirect: ‘/aaa’,  //有多钟写法，但这种最常用
+    redirect: aaa,
+    component: aaa
   },
   {
     path: '/aaa',
     name: aaa,
-    alias: ['/aaa1','/aaa2'],  //可选参数，路由路径别名
     component: aaa
   },
   {
@@ -55,7 +57,7 @@ const routes = [
     name: ccc,
     component: () => import(''...)
   },
-
+  
 ]
 const router = new VueRouter({
   routes
@@ -107,7 +109,7 @@ hash与history区别：
 显示一个a标签，点击会push跳转到/…，跳转后可以返回 
 属性：
 tag=”标签名”  修改显示的标签，默认a，如button
-replace     使用replace修改url
+replace 	使用replace修改url
 点击route-lick后，会得到router-link-active类，可以在style修改样式，若想重命名该该类：
 1.router-link属性active-class=”重命名”，每个都得加或
 2.router/index.js中，增加属性linkActiveClass:’重命名’  所以router-link都适用
@@ -132,7 +134,7 @@ router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:
 
 有些情况path是不能写死的，如用户id，此时需要配置动态路由
 
-动态路由是传递参数的方式之一，但一次只能传递一个参数（params）
+动态路由是传递参数的方式之一，但一次只能传递一个参数
 
 ```
 //如user组件
@@ -143,23 +145,22 @@ router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:
 }
 
 //组件中
-//第一种
 v-bind:to=”’/user/’+ xxx”
 this.$router.push('/user/' + xxx)
-//第二种，这里只能用name不能用path
-v-bind:to=”{name:'...',params:{...}}”
-this.$router.push({name:'...',params:{...}})
 
 //若想获得跳转过来的路由参数，可以
-this.$route.params.xxx    
+this.$route.params.xxx	
 ```
 
-2 传递对象参数（query）
+
+
+
+
+2 传递对象参数
 
 路由配置的path正常写就行  path: '/aaa'
 
 ```
-//path name都可以
 v-bind:to="{path:'/aaa',query:{a:1,b:2}}"
 this.$router.push({}
   path: '/aaa',
@@ -185,6 +186,8 @@ props传递路由参数：
   获得params或query参数，形参$router可以解构赋值
 ```
 
+
+
 # 四、嵌套路由
 
 使用嵌套路由时，嵌套的路由组件也要再用<router-view>，如：
@@ -209,9 +212,9 @@ to="/aaa/bbb"
 this.$router.push('/aaa/bbb')
 ```
 
-# 五、导航守卫
 
-路由元数据：路由配置项meta，可以定义该路由需要用到的数据
+
+# 五、导航守卫
 
 也叫路由守卫
 
@@ -249,6 +252,8 @@ document.title = to.match[0].meta.title
 */
 ```
 
+
+
 独享守卫
 
 ```
@@ -261,6 +266,8 @@ document.title = to.match[0].meta.title
 }
 ```
 
+
+
 组件内守卫
 
 ```
@@ -269,6 +276,8 @@ document.title = to.match[0].meta.title
 beforeRouteEnter((to,from,next)=>{})
 afterRouteLeave((to,from)=>{})
 ```
+
+
 
 # 六、keep-alive
 
@@ -286,211 +295,8 @@ exclude="ccc"       除了name为ccc的路由无效，其他都生效
 </keep-alive>
 ```
 
-# 七、滚动行为
-
-# 八、Vue Router4
-
-vue3使用的路由版本
-
-1 基本使用
-
-js的路由写法
-
-```
-import {createRouter,createWebHashHistory} from 'vue-router'
-
-const routes = [
-  {
-    path: '/Home',
-    component: () => import('../views/Home/Home.vue')
-  }
-]
-
-const router = createRouter({
-  //使用什么模式就要引入什么模式的函数
-  history: createWebHashHistory(),   //hash模式
-  //history: createWebHistory(),     //history模式
-  //history: createMemoryHistory(),  //abstract模式
-  routes
-})
-
-export default router
-```
-
-ts的路由写法，只需要限制routes的类型，routes里面的写法和js一样（嵌套路由也不用限制类型）
-
-```
-import {createRouter,createWebHashHistory,RouteRecordRaw} from 'vue-router'
-
-const routes: Array<RouteRecordRaw> = [
-  {
-    path: '/',
-    redirect: '/Home'
-  },
-  {
-    path: '/Home',
-    component: () => import('../views/Home/Home.vue')  
-  }
-]
-
-const router = createRouter({
-  history: createWebHashHistory(),  
-  routes
-})
-
-export default router
-```
-
-main中导入并use，注意use要在mount之前
-
-```
-...
-import router from '...'
-createApp(App).use(router).mount('#app')
-```
-
-组件里使用（获取参数，跳转等）
-
-在组件的setup的this指向undefine，所以vue2中的this.$route等用不了，新的用法如下
-
-```
-<template>
-模板中直接$route使用，不需要借助useRoute和useRouter
-{{$route}}
-{{$router}}
-</template><>
-<script>
-import {useRoute,useRouter} from 'vue-router'
-export default [
-  setup(){
-    const route = useRoute(), router = useRouter()
-    /*
-    然后就可以用route,router来替代vue2的this.$route和this.$router
-    如获取当前url route.path
-    如编程式导航就 router.push()
-    */  
-  }
-]
-</script>
-```
-
-2 命名视图
-
-```
-/ /src/router/index.js
-...
-{
-  path: '/Home',
-  components: {
-    default: () => import('../views/Home/Home.vue'),
-    aaa:() => import('../views/Home/aaa.vue')
-  }
-},
-...
-
-//组件中
-<router-view />   展示deafult的组件
-<router-view name="aaa" />  展示名为aaa的组件
-```
 
 
-
-3 动态路由新增
-
-（1）可选参数
-
-path: '/Home:id?'
-
-（2）pathMatch(正则)，如
-
-path: '/:pathMatch(.*)
-
-4 <router-link />和<router-view>新增了插槽
-
-5 导航守卫的一些小变化
-
-（1）next不再是必选参数
-
-```
-//老写法，也支持
-router.beforeEach((to,from,next) => {
-  if(true) next()
-})
-//新方式，此时参数一定不能有next
-router.beforeEach((to,from) => {
-  return true
-  /* return 的类型
-  1. false：取消当前导航。如果浏览器URL被更改（由用户手动或通过后退按钮更改），它将被重置
-  为该from路由的URL
-  2. '/aaa'：跳转到对应路由
-  3. 什么也不返回，undefined或者true  等同于next()
-  4. 引发异常：取消导航并调用回调router.onError()
-*/
-})
-```
-
-（2）组件内守卫
-
-变为组合式API，onBeforeRouteUpdate，onBeforeRouteLeave，但是没有onBeforeRouteEnter，只能写成OptionsAPI
-
-```
-<script>
-import {onBeforeRouteUpdate,onBeforeRouteLeave} from 'vue-router'
-export default {
-  beforeRouteEnter(to,from){
-    console.log('123')
-  },
-  setup(){
-    onBeforeRouteLeave((to,from) => {
-      console.log(123)
-    })
-  }
-}
-</script>
-```
-
-Vue3.2 script setup
-
-```
-<script setup>
-import {onBeforeRouteUpdate,onBeforeRouteLeave} from 'vue-router'
-onBeforeRouteLeave((to,from) => {
-  console.log(123)
-})
-</script>
-<script>
-export default {
-  beforeRouteEnter(to,from){
-    console.log('123')
-  }
-}
-</script>
-```
-
-6 路由相关组件的插槽
-
-<router-view>的默认+作用域插槽，route是当前路由配置，可以获取route.meta等，Component是当前路由使用的组件实例
-
-```
-<router-view v-slot:default="{route,Component}">
-  <component :is="Component"></component>
-</router-view>
-```
-
-Vue3要对<router-view>使用<transition>和<keep-alive>必须是这种写法
-
-```
-<router-view v-slot:default="{route,Component}">
-  <keep-alive>
-    <component :is="Component"></component>
-  </keep-alive>
-  </router-view>
-```
+# 七、Vue Router4
 
 
-
-7 修复了vue2路由的两个bug
-
-bug1：当跳转的路由就是当前路由时，不再像vue2会有警告
-
-7 其他的用法基本与vue2一样

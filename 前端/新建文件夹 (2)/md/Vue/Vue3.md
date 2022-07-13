@@ -361,199 +361,17 @@ export default {
 }
 ```
 
-（3）父组件中获取子组件实例
+（3）具名插槽
 
-由于setup中的this指向undefined，所以不能像Vue2一样使用this.$refs，Vue3使用的方法如下：
-
-```
-<template>
-  父组件
-  <son1 ref="son1" />
-</template>
-
-<script>
-import {ref,onMounted} from 'vue'
-import son1 from './son1.vue'
-
-export default {
-  components: {
-    son1
-  },
-  setup(){
-    let son1 = ref(null)  //子组件实例
-    onMounted(() => {
-      //模板加载完才能获得子组件实例
-      console.log(son1Ref.value.sonName)
-      //子组件中return的属性和方法噶，父组件才能获取到
-      console.log(son1Ref.value.sonName)
-    })
-    //必须return才能获取到子组件
-    return {son1Ref}
-  }
-}
-</script>
-```
-
-nextTick的应用，解决一个问题
-
-```
-<template>
-  <div ref=box @click="changeMsg">{{msg}}</div>
-</template>
-
-<script>
-import {ref,nextTick} from 'vue'
-export default {
-  setup(){
-    let msg = ref(123)
-    let box = ref(null)
-    function changeMsg(){
-      msg.value = 456
-      console.log(msg.value)
-      //问你题就出在这，数据变了模板也变了456，维度这样从DOM取出来还是123
-      console.log(box.value.innerText)
-    }
-    return {msg,box,changeMsg}
-  }
-}
-</script>
-
-```
-
-```
-//解决
-import {ref,nextTick} from 'vue'
-...
-async function changeMsg(){
-  msg.value = 456
-  console.log(msg.value)
-  await nextTick()
-  console.log(box.value.innerText)
-}
-...
-```
-
-（4）组件v-model
-
-与Vue2相比：
-
-* 删除了model配置项
-
-* props默认值value改为modelValue，emit默认值input改为update:modelValue
-
-* 组件可使用多个v-model
-
-* 除了v-model自带的修饰符外，还可以自定义修饰符
-
-使用：
-
-```
-<template>
-  父组件
-  <son1 v-model="msg" v-model:num="num" />
-  <!-- 相当于 
-   <son1 :modelValue="msg" @update:modelValue="msg = $event" :num="num" @update:num="num = $event" /> 
-  -->
-</template>
-
-<script>
-import {ref} from 'vue'
-import son1 from './son1.vue'
-export default {
-  components: {
-    son1
-  },
-  setup(){
-    let msg = ref(false), num=ref(100)
-    return {msg,num}
-  }
-}
-</script>
-
-
-<template>
-  子组件
-  <div @click="fun1">{{modelValue}}</div>
-  <div @click="fun2">{{num}}</div>
-</template>
-
-<script>
-export default {
-  props:{
-    modelValue: Boolean,
-    num: Number
-  },
-  setup(props,context){
-    function fun1(){
-      context.emit('update:modelValue',!props.modelValue)
-    }
-    function fun2(){
-      context.emit('update:num',props.num + 1)
-    }
-    return {fun1,fun2}
-  }
-}
-</script>
-```
-
-自定义修饰符：
-
-```
-<template>
-  父组件
-  <son1 v-model.aaa="msg" v-model:num.bbb="num" />
-</template>
-
-<script>
-...
-</script>
-
-<template>
-  子组件
-  ...
-</template>
-
-<script>
-export default {
-  props:{
-    modelValue: Boolean,
-    num: Number,
-    modelModifiers: {
-      aaa: Boolean
-    },
-    numModifiers: {
-      bbb: Boolean
-    }
-  },
-  setup(props,context){
-    //当传入了自定义修饰符时，值为true，没有传时modelModifiers为undefined（所以要用可选链操作符）
-    //就可以根据true和undefined来进行操作
-    console.log(props.modelModifiers?.aaa)
-    console.log(props.numModifiers?.bbb)
-    ...
-  }
-}
-</script>
-```
-
-（5）插槽
-
-默认插槽写不写template都行，但是具名插槽必须这样写，无法再用Vue2的 <子组件 slot="asd">...<子组件>
+Vue3的具名插槽必须这样写，默认插槽用法不变
 
 ```
 <子组件>
   <template v-slot:asd>
     <div>6666666666</div>
   </template>
-</子组件>
-
-<!--
-v-slot:[变量]  可以用字符串的变量来控制插槽的名字，此时也叫动态插槽，注意这里只能用变量，不能用字面量
-v-slot: 可以简写为 #  如 v-slot:aaa 简写为 #aaa  v-slot:[xxx] 简写为 #[xxx]
--->
+  </子组件>
 ```
-
-作用域插槽的 v-slot:defalt="..."  变成了  v-slot="..."  可简写为 #defalut="..."
 
 # 三、常用的组合式API
 
@@ -715,7 +533,7 @@ watchEffect与计算属性有点类似：
 
 * watchEffect初始调用一次，当waychEffect函数用到数据get，且数据修改时回调一次
 
-4 祖孙组件通信（跨代组件通信，也叫依赖注入）
+4 祖孙组件通信（跨代组件通信）
 
 父子组件通信依旧可用，用法变化详见setup参数
 
@@ -749,130 +567,6 @@ export default {
     return {a,b,c}
   }
 }
-/*
-jnject()可以有第二个参数，设置默认值
-使用ts时需要限制类型，如分别接收number，ref的number，reactive的xxx
-import {Ref,Reactive} from 'vue'
-inject<number>()
-inject<Ref<number>>()
-inject<Reactive<xxx>>()
-注意，值也有可能是undefined（未传值时）,要么就设置联合类型，要么给默认值，如：
-```
-
-5 自定义指令
-
-5.1 Vue3.0
-
-相比起Vue2，更换了全部生命周期钩子，现在共有7个，分别是：
-
-create,beforeMount,mounted,beforeUpdate,updated,beforeUnmount,unmount
-
-在指令绑定的元素对应的时间节点回调
-
-使用：
-
-```
-<template>
-
-  <!-- 传入的参数是字面量，不是变量 -->
-  <div v-big.tag="'asdf'">123</div>
-</template>
-
-<script>
-
-export default {
-  directives: {
-    //在模板中使用 v-big
-    big: {
-      //每个钩子的形参都一样，这是其中比较重要的两个参数
-      mounted(el,dir,a,b,c,d){
-        //绑定该指令的元素实例
-        console.log(el)
-        //自定义修饰符
-        console.log(dir.modifiers?.tag)
-        //参数
-        console.log(dir.value)
-      }
-    }，
-    //简写，只在mounted和updated时回调
-    small(el,dir){
-      console.log('mounted or updated')
-    }
-  },
-
-}
-</script>
-```
-
-全局指令：
-
-5.2 Vue3.2
-
-```
-<script setup>
-//命名必须是 vXxx 的形式，在模板中使用 v-xxx
-const vBig = {
-  mounted(el,dir){
-    console.log('mounted')
-  }
-}
-//简写
-const small = (el,dir) => {}
-</script>
-```
-
-ts：
-
-```
-<script setup lang="ts">
-import {Directive,DirectiveBinding} from 'vue'
-const vBig: Directive = {
-  mounted(el: HTMLElement, dir: DirectiveBinding){
-    /*如果参数传的是对象，如 v-big="{aaa: 123}"
-    dir: DirectiveBinding<{aaa: number}>
-    */
-    console.log('mounted')
-  }
-}
-</script>
-```
-
-3.3 应用案例
-
-拖拽盒子
-
-```
-<template>
-  <div v-move class="box"></div>
-</template>
-
-<script setup>
-const vMove = (el,dir) => {
-  el.addEventListener('mousedown',(initE) => {
-    let initClientX = initE.clientX - el.offsetLeft
-    let initClientY = initE.clientY - el.offsetTop
-    function move(e){
-      el.style.left = e.clientX - initClientX + 'px'
-      el.style.top = e.clientY - initClientY   + 'px'
-    }
-    document.addEventListener('mousemove',move)
-    document.addEventListener('mouseup',() => {
-      document.removeEventListener('mousemove',move)
-    })
-  })
-}
-</script>
-
-<style scoped>
-.box {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100px;
-  height: 100px;
-  border: 1px solid #000;
-}
-</style>
 ```
 
 # 四、生命周期
@@ -916,7 +610,7 @@ Vue3中，将每个功能的数据，函数，生命周期等封装在一个hook
 
 hook函数就是组合式API的强有力体现，将某功能用到的东西组合起来，在组件中又将一个个功能组合起来使用。
 
-很类似Vue2中的混入，但由于是封装起来了就不像混入有冲突问题
+很类似Vue2中的混入
 
 使用，以获取鼠标坐标的功能为例：
 
@@ -991,10 +685,6 @@ export default {
 }
 </script>
 ```
-
-vue自己也自带一些hook函数，如 import {useAttr} from 'vue'
-
-hook库如vueuse
 
 # 六、其他组合式API和新的内置组件
 
@@ -1089,309 +779,7 @@ function myRef(value){
 }
 ```
 
-2 全局变量/函数和插件
-
-（1）全局变量/函数
-
-从Vue.prototype  变成 app.config.globalProperties
-
-（2）插件
-
-以loading为例
-
-开发组件-挂载-use
-
-```
-<template>
-  /src/plug/Loading/Loading.vue
-  <div class="box" v-show="isShow">loading...</div>
-</template>
-
-<script>
-import {ref} from 'vue'
-export default {
-  setup(){
-    let isShow = ref(false)
-
-    const show = () => isShow.value = true
-    const hide = () => isShow.value = false
-    return {isShow,show,hide}
-  }
-}
-</script>
-
-<style scoped>
-.box {
-  position: absolute;
-  z-index: 999;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%,-50%);
-  width: 200px;
-  height: 100px;
-  border: 1px solid #000;
-  text-align: center;
-  line-height: 100px;
-}
-</style>
-```
-
-```
-// /src/plug/Loading/Loading.js
-import {createVNode,render} from 'vue'
-import Loading from './index.vue'
-export default {
-  install(app){
-    //创建虚拟DOM
-    const LoadingVNode = createVNode(Loading)
-    //渲染成真实DOM
-    render(LoadingVNode,document.body)
-    //Vue2直接挂载Loading本身就好了，因为里面没有其他多余的东西
-    //挂载，Vue3由于LoadingVNode里面东西很多，只需要将要用到的东西挂上去
-    app.config.globalProperties.$loading = {
-      show: LoadingVNode.component.setupState.show,
-      hide: LoadingVNode.component.setupState.hide
-    }
-
-    //Vue3.0用setupState(此时只能获得return出来的东西)
-    //Vue3.2的script setup自动return，所以可以获得所有
-    console.log(LoadingVNode.component.setupState)
-  }
-}
-
-/*ts
-import {createVNode,render,App,VNode} from 'vue'
-...
-install(app: App){
-  const LoadingVNode: VNode = createVNode(Loading)
-  ...
-}
-...
-*/
-```
-
-```
-//main.js
-...
-import Loading from '.../index.js'
-createApp(App).use(Loading).mount('#app')
-...
-```
-
-在需要的组件中使用：
-
-```
-<script>
-//vUE2中可以直接 this.$loading 使用，而Vue3由于setup的this指向undefine，所以需要以下操作
-import {getCurrentInstance} from 'vue'
-export default {
-  setup(){
-    const {appContext} = getCurrentInstance()
-    appContext.config.globalProperties.$loading.show()
-  }
-}
-/*ts
-import {getCurrentInstance,ComponentInternalInstance} from 'vue'
-...
-const {appContext} = getCurrentInstance() as ComponentInternalInstance
-...
-*/
-</script>
-```
-
-3 组件新用法
-
-（1）局部组件：就是在父组件中引入的子组件
-
-（2）全局组件，在main中引入并注册，使得在任何的组件中都能直接使用该组件
-
-```
-//main.js
-...
-import cpn from '...'
-createApp(App).component(cpn).mount('#app')
-```
-
-（3）递归组件：、
-
-情景：父组件中，有如下数据
-
-```
-let data = [
-  {
-    title: '1',
-    children: [
-      {title: '1.1'},
-      {title: '1.2'},
-    ]
-  },
-  {
-    title: '2',
-    children: []
-  }
-]
-```
-
-传入到子组件中展示，需要好几个v-for，非常不便，此时就可使用递归组件，递归组件一定要有结束条件。
-
-方式一，子组件自己引入自己并使用：
-
-```
-<template>
-  这是子组件son1
-  <div v-for="i in data">
-    {{i.title}}
-    <son1 v-if="i?.children?.length" :data="i.children" />
-  </div>
-</template>
-
-<script>
-import son1 from './son1.vue'  //son1里面引入自己son1
-export default {
-  props: {
-    data: Object
-  }
-}
-</script>
-```
-
-方式二，使用name作为标签：
-
-```
-<template>
-  <div v-for="i in data">
-    {{i.title}}
-    <xxx v-if="i?.children?.length" :data="i.children" />
-  </div>
-</template>
-
-<script>
-export default {
-  name: 'xxx',
-  props: {
-    data: Object
-  }
-}
-</script>
-
-<! --
-如果使用script setup语法糖，则没有name配置项，所以
-需要再弄一个script标签来给name
-<script setup>
-defineProps({
-  data: Object
-})
-</script>
-<script>
-export default {
-  name: 'xxx'
-}
-</script>
--- >
-```
-
-（4）动态组件：
-
-可以实现多个组件的互相切换，功能类似于tabBar
-
-需要用到Vue3内置组件 <component />
-
-```
-<template>
-  <button @click="cpnIndex = cpnIndex == 0 ? 1 : 0">点我切换组件</button>
-  <component :is="cpnArr[cpnIndex]" />
-  <!-- 
-  若在配置项components注册了，如：
-  components: {
-    xxx: son1  
-  }
-  那也可以这样用 is="xxx" 
-  -->
-</template>
-
-<script>
-import {ref} from 'vue'
-import son1 from './son1.vue'
-import son2 from './son2.vue'
-export default {
-  setup(){
-    let cpnIndex = ref(0)
-    let cpnArr = [son1,son2]
-    return {cpnIndex,cpnArr}
-  }
-}
-</script>
-```
-
-（5）异步组件和分包：
-
-setup()被async修饰，该组件就会变成异步组件
-
-script setup语法糖里使用await，则setup会自动加上async，就会变成异步组件
-
-异步组件需要配合<Suspense>和异步引入组件才能使用
-
-异步引入组件：
-
-引入同步组件：此时只有当子组件引入完时，父组件才会引入，否则就会一直等待子组件引入
-
-```
-import xxx from '...'
-```
-
-动态引入异步组件：即使子组件没有引入完，父组件也会直接先引入
-
-```
-import {defineAsyncComponent} from 'vue'
-const xxx = defineAsyncComponent(() => import('...'))
-```
-
-Vue3新的内置组件<Suspense>
-
-动态引入异步组件时，子组件还未引入完时，应该给用户提示还在加载中
-
-有两个具名插槽
-
-```
-<Suspense>
-  <template v-slot:default>
-    <xx></xxx>
-  </template>
-  <template v-slot:fallback>
-    <h3>loading...</h3>
-  </template>
-</Suspense>
-```
-
-此外，使用异步组件和后，setup中就可以return一个Promise了，setup当然也可以用async修饰，使得setup里面可以使用await
-
-在没有使用异步组件和之前，setup不能return一个Promise，因为这样模板就拿不到setup中的东西，setup自然也不能用async修饰
-
-分包：
-
-若不使用异步组件，则打包时所有的组件的资源都会放到一起，用户在加载时由于文件过大，页面就会有一段时间的空白，用户体验性差。
-
-使用异步组件后，每个一部组件打包时都会单独抽离它的资源称为另一个包，只有在使用这个组件时才会加载，这样就节省了主包的体积，加载每个包时都加快了速度。
-
-如tabBar对应的页面都会分为独立的包
-
-（6）缓存组件
-
-<keep-alive>里面也可以放普通组件了，使得里面的组件即便被销毁了也能缓存状态。
-
-同时，生命周期发生了变化，不再走onUnMounted，新增了onActivated和onDeactivated
-
-在页面初次加载时，同时走onMounted和onActivated，在以后的每次展示和销毁缓存组件时走onActivate和onDeactivate
-
-因此，缓存组件内只执行一次的操作（如请求数据）可在onMounted内写
-
-<keep-alive>属性
-
-max="整数"   限制缓存组件的最大个数
-
-include和exclude  包含和排除组件，值为该组件的name，多个用空格隔开
-
-3 其他新的内置组件
+2 新的内置组件
 
 （1）<Fragment>
 
@@ -1413,7 +801,41 @@ include和exclude  包含和排除组件，值为该组件的name，多个用空
 </Teleprot>
 ```
 
-<Teleport>的父元素使用了v-show对其无效，但是v-if有效
+（3）<Suspense>
+
+目前该组件还在实验阶段，以后用法可能会变
+
+静态引入同步组件：此时只有当子组件引入完时，父组件才会引入，否则就会一直等待子组件引入
+
+```
+import xxx from '...'
+```
+
+动态引入异步组件：即使子组件没有引入完，父组件也会直接先引入
+
+```
+import {defineAsyncComponent} from 'vue'
+const xxx = defineAsyncComponent(() => import('...'))
+```
+
+但是动态引入异步组件，子组件还未引入完时，应该给用户提示还在加载中
+
+<Suspense>有两个具名插槽
+
+```
+<Suspense>
+  <template v-slot:default>
+    <xx></xxx>
+  </template>
+  <template v-slot:fallback>
+    <h3>loading...</h3>
+  </template>
+</Suspense>
+```
+
+此外，使用异步组件和<Suspense>后，setup中就可以return一个Promise了，setup当然也可以用async修饰，使得setup里面可以使用await
+
+在没有使用异步组件和<Suspense>之前，setup不能return一个Promise，因为这样模板就拿不到setup中的东西，setup自然也不能用async修饰
 
 # 六、其他变化
 
@@ -1441,7 +863,7 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 4. 删除了过滤器
 
-5. 过渡类名变更：v-enter v-leave 变为 v-enter-from  v-leave-from
+5. 过渡类名变更：v-enter 变为 v-enter-from
 
 6. 删除了按键编码作为事件修饰符，因为兼容性差
 
@@ -1449,23 +871,11 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 8. 其他变化详见官方文档
 
-# 七、vscode插件
-
-在新的语法下，vue2的vetur不再够用，vue3的语法提示插件试验volar
-
-Vue Language Features (Volar)
-
-TypeScript Vue Plugin (Volar)
-
-为了防止冲突，在使用vue3时，启用volar并禁用vetur，在使用vue2时，启用vetur禁用volar
-
-# 八、Vue3↑ 新特性
+# 七、Vue3↑ 新特性
 
 1 Vue3.2
 
-1.1 <script setup>语法糖
-
-（1）基本
+（1）<script setup>语法糖
 
 1. 引入子组件不需要注册就能使用
 
@@ -1485,156 +895,9 @@ let a = ref(123)
 </script>
 ```
 
-（2）setup语法糖的父子组件通信写法
+（2）<style>内使用v-bind
 
-由于script setup语法下无法写PotionsAPI，也拿不到setup()的参数，这样之前Vue3.0的父子组件写法就需要新的写法，需要defineProps()和defineEmits()，这两个函数不需要引入。
-
-props
-
-```
-//js写法
-defineProps({
-  aaa: String,
-  arr: Number
-})
-//ts写法一
-defineProps<{aaa: string, arr: number[]}>()
-//ts写法二
-type props = {aaa: string, arr: number[]}
-defineProps<props>()
-/*
-defineProps接收的变量可以在<template>中直接使用，但是无法直接在setup中使用，解决：
-可以 const aaa = defineProps()  然后在 aaa. 来使用
-*/
-```
-
-带默认值的props
-
-```
-//js写法与原来一样
-//ts写法
-type props = {
-  aaa: string
-  bbb: number[]
-}
-withDefaults(defineProps<props>(),{
-  //引用数据类型需要函数形式
-  aaa: 'asdf',
-  bbb: () => [1,2,3]
-})
-```
-
-emit
-
-```
-const emit = defineEmits(['aaa','bbb']) //这条相当于Vue3.0的emits配置项
-//某事件函数
-const clickEvent = () => {
-  emit('aaa')
-}
-/*
-当需要传递多个参数时，js直接传对象，而ts因为不好限定这个对象的类型，所以分多个参数
-emit('aaa',{a:1,b:2})   //js，父组件接收时一个对象形参
-emit('aaa',a:number,b:number)  //ts，父组件接收时多个形参
-*/
-```
-
-（3）script setup语法下获取子组件实例
-
-若子组件使用了script setup，那么父组件默认是可以拿到子组件实例，但是拿不到子组件的任何属性和方法，需要在子组件中主动暴露才能拿到：
-
-```
-<script setup>
-let sonName = '157894'
-//不需要引入，可直接使用
-defineExpose({
-  sonName
-})
-</script>
-```
-
-1.2 <style>新特性
-
-（1）<style>内使用v-bind
-
-以script setup的写法为例
-
-```
-<template>
-  <div class="box">123</div>
-</template>
-
-<script setup>
-import {ref,reactive} from 'vue'
-const size = '50px'
-let border = ref('1px solid #000')
-let center = reactive({
-  va: 'center'
-})
-</script>
-
-<style>
-.box {
-  font-size: v-bind('size');
-  border: v-bind('border');
-  text-align: v-bind('center.va');
-}
-</style>
-```
-
-（2）新选择器
-
-```
-<style>
-:deep(选择器){
-  /* 样式穿透，用于修改第三方组件UI库的样式 */
-}
-:slotted(选择器){
-  /* 插槽选择器，可以设置插槽的样式了 */
-}
-:global(选择器){
-  /* 全局选择器，
-     Vue2是在App.vue的style不设置scoped来设置全局样式
-     现在可以在让任何组件中设置全局样式了(scoped里面也可以)
-  */
-}
-</style>
-```
-
-（3）<style module>
-
-```
-<template>
-  <div :class="$style.a">默认module</div>
-  <div :class="[m1.b,m1.c]">m1</div>
-</template>
-
-<script setup>
-//下面的常用于render函数
-import {useCssModule} from 'vue'
-console.log(useCssModule)  //默认module
-console.log(useCssModule('m1'))  //m1
-</script>
-
-<style module>
-.a {
-  width: 100px;
-  height: 100px;
-  border: 1px solid #000;
-}
-</style>
-<style module="m1">
-.b {
-  width: 50px;
-}
-.c {
-  height: 50px;
-  border: 10px solid #000;
-}
-</style>
-```
-
-# 十、Vue使用ts
+# 八、Vue使用ts
 
 Vue2以及Vue3中使用OptionsAPI，要用ts需要借助vue-class-component或vue-class-decoretor
 
@@ -1642,47 +905,4 @@ vue-class-compoennt是vue官方出的
 
 vue-class-decorator是社区出的，具有vue-class-compoennt的全部功能，在此之上又增加了一些新功能
 
-Vue3中ts直接用就行，写在setup里面或者export default{}外面都行
-
-使用示例：
-
-```
-<script setup lang="ts">
-//父子组件通信是传递值，所以props给普通类型
-//祖孙组件通信传递响应式数据是传递引用，所以接收时的类型时ref对象或reactive对象
-//Ref,Reactive是ref类型和reactive类型，在需要这些类型时可以使用，如Ref<number>
-
-import {ref,Ref,reactive,Reactive} from 'vue'
-//基本数据类型以及基本数据类型的数组
-const name: string = 'lgx'
-let age = ref<number>(23)
-let hobbit: Ref<string[]> = ref(['music','play']) 
-let useCode = reactive<string[]>(['js','c++'])
-
-//对象以及对象数组
-//定义类型
-type lgxType = {
-  name: string,
-  age: number
-}
-interface LgxInt {
-  name: string,
-  age: number
-}
-//有了类型，就可以使用了
-//方式一
-class LgxClass {
-  aaa: LgxInt = { //或者aaa: lgxType 也行
-    name: 'lgx',
-    age: 23
-  }
-}
-let b = reactive(new LgxClass)
-//方式二
-let a = reactive<lgxType>({  //或者reactive<LgxInt>()也行
-  name: 'a',
-  age: 1
-})
-
-</script>
-```
+Vue3组合式API使用ts直接用就行

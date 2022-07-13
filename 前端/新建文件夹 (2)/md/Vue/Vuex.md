@@ -166,8 +166,6 @@ moduls建立一个文件夹
 
 # 九、Vuex4
 
-vue3使用的vuex版本，但是很不方便，推荐使用pinia
-
 # 十、Pinia
 
 1 基本介绍
@@ -186,8 +184,6 @@ npm install --save pinia
 
 5. 代码简洁
 
-Pinia支持Vue2和Vue3，下面只记录Vue3的写法
-
 创建store：
 
 ```
@@ -203,17 +199,12 @@ const mainStore = defineStore('main',{
     }
   },
   getters: {
-    //功能类似于计算属性，也有缓存
-    //通过this可调用state，getters
     phoneNumberHide(){
       return this.phoneNumber.toString().replace(/^(\d{3})\d{4}(\d{4})$/,'$1****$2')
-      //使用ts时，ts无法根据return自动判断类型，所以需要自行设置返回类型，如 xxx
     }  
   },
   actions: {
-    //可定义同步/异步函数
     xxx(){
-      //通过this调用store自己的state，actions，getters
       this.aaa += 10
     }  
   }
@@ -243,9 +234,7 @@ import {mainStore} from './store'
 const store = mainStore()
 
 //1.使用state的变量
-//1.1 直接使用
 console.log(store.aaa)
-//1.2 解构使用
 /*
 注意，如果再从store结构出来state变量，取出来的不是响应式数据
 let {aaa} = store
@@ -253,7 +242,7 @@ console.log(aaa)
 解决方法,类似于toRef()
 import {storeToRefs} from 'pinia'
 let {aaa} = storeToRefs(store)
-console.log(aaa.value)
+console.log(aaa)
 */
 
 //2.修改state的变量
@@ -269,16 +258,12 @@ store.$patch((state) => {
 })
 //2.4 当球盖的业务逻辑很复杂时，使用actions修改
 store.xxx()
-//2.5 修改整个state，不常用
-store.$state = {
-  //全部属性都要改，否则报错
-  aaa: 666,
-  ...
-}
 
 //3 getters
 console.log(state.phoneNumber)
 console.log(state.phoneNumberHide)
+
+
 ```
 
 store之间的调用：
@@ -295,27 +280,11 @@ const store1 = defineStore('store1',{
     }  
   }
 })
-const store2 = defineStore('store2',{
+const store1 = defineStore('store1',{
   state(){
     return {
       store1Num: store1().store1Num
     }  
   }
 })
-```
-
-store实例上的API
-
-除了$patch外，还有其他几个
-
-```
-//1 $patch
-//2 $reset  将state的数据还原成初始值
-store.$reset()
-//3 $subscrib  每当state的任一属性值发生变化就回调
-store.$subscrib((args,state) => {
-  
-})
-//4 $onAcition 每当action的方法被调用就回调
-store.$onAction((args) => {})
 ```

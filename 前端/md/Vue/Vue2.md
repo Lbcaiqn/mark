@@ -679,7 +679,7 @@ enterActive(el,done){
 <transition-group>
     <div v-for="i in arr" :key="i" v-show="flag" class="box"></div>
   </transition-group>
-  ```
+```
 
 # 九、组件
 
@@ -796,7 +796,7 @@ props: {
 //方式三
 props: {
   xxx: {
-    tupe: Number
+    type: Number
     //基本数据类型的默认值写法如下，引用数据类型则需要函数形式，如数组默认值 default:()=>[1,2]
     default: 789                //默认值，为了严禁，最好要设置默认值
     require: true               //是否必须传入，默认false
@@ -814,6 +814,51 @@ default(){
 //3.子组件中的props的变量就能显data()的变量一样使用
 
 //props和data的变量是放在内存不同地方的，但使用方法相同
+
+//4.当父组件传给子组件的数据很复杂时，如
+父组件中：
+<子组件 :xxx="{a: {aa: {aaa: 123}"></子组件>
+子组件接收
+props: {
+  xxx: {
+    type: Object,
+    default(){
+      return {}
+    }
+  }
+}
+子组件的模板中使用：
+{{xxx.a.aa.aaa}}
+
+会出问题，不能从undefine中读取undefine，这是因为有一个时间节点，子组件还未获取到
+践传过来的数据，此时xxx为空对象，在模板中展示就是从undefine的属性中.undefind
+解决：
+方式一(不推荐)：
+子组件接收
+props: {
+  xxx: {
+    type: Object,
+    default(){
+      return {
+        aa: {aaa: 0}
+      }
+    }
+  }
+}
+子组件的模板中使用：
+{{xxx.a.aa.aaa}}
+方式二，使用可选链操作符(推荐)：
+子组件接收
+props: {
+  xxx: {
+    type: Object,
+    default(){
+      return {}
+    }
+  }
+}
+子组件的模板中使用：
+{{xxx?.a?.aa?.aaa}}
 ```
 
 ```
@@ -824,7 +869,7 @@ fun(){
   //方式一
   this.$emit('xxx')
   //方式二
-  this.$emit('yyy',{}
+  this.$emit('yyy',{
     a: 123
   )
 }

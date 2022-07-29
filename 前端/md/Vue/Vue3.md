@@ -361,6 +361,8 @@ export default {
 }
 ```
 
+使用ts时，父组件接收自定义事件的$event参数的类型是 xxx: Event
+
 （3）父组件中获取子组件实例
 
 由于setup中的this指向undefined，所以不能像Vue2一样使用this.$refs，Vue3使用的方法如下：
@@ -417,7 +419,6 @@ export default {
   }
 }
 </script>
-
 ```
 
 ```
@@ -483,6 +484,7 @@ export default {
     modelValue: Boolean,
     num: Number
   },
+  emits: ['update:modelValue','update:num'],
   setup(props,context){
     function fun1(){
       context.emit('update:modelValue',!props.modelValue)
@@ -554,6 +556,31 @@ v-slot: 可以简写为 #  如 v-slot:aaa 简写为 #aaa  v-slot:[xxx] 简写为
 ```
 
 作用域插槽的 v-slot:defalt="..."  变成了  v-slot="..."  可简写为 #defalut="..."
+
+（6）事件总线
+
+由于Vue3的createApp创建的app没有了$emit，所以Vue2的写法不再适用，官方推荐使用mitt
+
+npm install --save mitt
+
+监听要在派发之前，多注意生命周期
+
+```
+// /src/EventBus/index.js
+import mitt from 'mitt'
+export default new mitt()
+
+//mitt是比较老的库了，实现基于ES5的构造函数且没有做ts支持，会报错，这里童年过类型断言为any解决
+//export default new (mitt as any)()
+
+
+//用到的组件中
+import EventBus from '...'
+EventBus.emit('xxx',aaa)
+function func(aaa){}
+EventBus.on('xxx',func)
+EventBus.off('xxx',func)
+```
 
 # 三、常用的组合式API
 
@@ -896,6 +923,22 @@ const vMove = (el,dir) => {
 2 使用：‘
 
 ```
+/*
+//Vue2就有
+setup (beforeCreate,created)
+onBeforeMount
+onMounted
+onBeforeUpdate
+onUpdated
+onBeforeUnmount
+onUnmounted
+onErrorCaptured
+onActivated
+//Vue3新增
+onDeactivated
+onRenderTracked
+onRenderTriggered
+*/
 import {onMounted} from 'vue'
 export default {
   setup(){
@@ -1375,6 +1418,12 @@ Vue3新的内置组件<Suspense>
 
 如tabBar对应的页面都会分为独立的包
 
+总结：
+
+* setup()使用async修饰后（Vue3.2 script setup 内，函数外使用await后setup()直接变async）,必须使用defineAsyncComponent引入组件，且在<Suspense>内使用引入的异步组件
+
+* 由于路由js文件无法使用<Suspense>，所以路由组件不能使用async setup()
+
 （6）缓存组件
 
 <keep-alive>里面也可以放普通组件了，使得里面的组件即便被销毁了也能缓存状态。
@@ -1404,6 +1453,8 @@ include和exclude  包含和排除组件，值为该组件的name，多个用空
 （2）<Teleport>
 
 用来传送DOM结构，to="css选择器"，里面的html就会传送到对应的位置作为子元素，如to="body"将会把里面的html传送到body作为body的子元素，此时style里面设置对应的样式将会以body作为父元素
+
+但是，动态绑定的数据和事件函数等还是以所在组件的script内为准
 
 经典应用是带有遮蔽层的弹窗
 
@@ -1471,7 +1522,7 @@ TypeScript Vue Plugin (Volar)
 
 2. script setup中的数据，函数等不再需要return就能在模板中使用
 
-3. script setup内若使用了await，则setup会自动变成async函数
+3. script setup内，函数外若使用了await，则setup会自动变成async函数（注意，是script setup里面的函数外使用await后setup才变async，函数内使用await则是正常的async，await语法）
 
 ```
 <template>
@@ -1503,7 +1554,7 @@ defineProps<{aaa: string, arr: number[]}>()
 type props = {aaa: string, arr: number[]}
 defineProps<props>()
 /*
-defineProps接收的变量可以在<template>中直接使用，但是无法直接在setup中使用，解决：
+defineProps接收的变量可以在<template>和<style>中直接使用，但是无法直接在setup中使用，解决：
 可以 const aaa = defineProps()  然后在 aaa. 来使用
 */
 ```
@@ -1539,19 +1590,26 @@ emit('aaa',a:number,b:number)  //ts，父组件接收时多个形参
 */
 ```
 
-（3）script setup语法下获取子组件实例
+（3）script setup语法下获取子组件实例或子组件的资源
 
 若子组件使用了script setup，那么父组件默认是可以拿到子组件实例，但是拿不到子组件的任何属性和方法，需要在子组件中主动暴露才能拿到：
 
+由于默认拿不到资源，所以子组件本身的样式也是拿不到的，需要暴露子组件实例
+
 ```
 <script setup>
+import {ref} from 'vue'
+let sonRef = ref(null)
 let sonName = '157894'
 //不需要引入，可直接使用
 defineExpose({
+  sonRef,
   sonName
 })
 </script>
 ```
+
+但是defineExpose暴露的变量不是响应式的（即使是ref和reactive也不行），要想获得子组件实例且是响应式的，可以用发射自定义事件传递响应式数据来代替
 
 1.2 <style>新特性
 
@@ -1643,6 +1701,16 @@ vue-class-compoennt是vue官方出的
 vue-class-decorator是社区出的，具有vue-class-compoennt的全部功能，在此之上又增加了一些新功能
 
 Vue3中ts直接用就行，写在setup里面或者export default{}外面都行
+
+1. 定义了变量但未赋值，需要指定ts类型
+
+2. 定义了变量且赋值了，则不需要指定ts类型，它自己类型推论就行，但是有时候推论不出来就需要指定ts类型
+
+3. 定义了变量且赋了初始值（如null），但未来可能会赋别的类型，此时需要制定联合类型如 xxx | null
+
+4. 函数形参都要指定ts类型，而返回值一般不用，它自己类型推论就行（但有时候推论不出来就需要指定ts类型）
+
+5. 是在不知道用什么类型那就用any或unkown凑合，如网络请求的数据，传给子组件的网络请求数据等。
 
 使用示例：
 

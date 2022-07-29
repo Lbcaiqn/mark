@@ -218,11 +218,7 @@ b.set('age',23)
 //3.迭代器
 letarr = [1,2,3]
 let c:Iterator<number> = arr[Symbpl.iterator]()
-
-
 ```
-
-
 
 DOM：
 
@@ -366,9 +362,23 @@ HTML标签对应的类型：
 圣
 ```
 
-声明文件：
+闭包：
 
-在使用第三方库时，需要从第三方库的声明文件中引入它里面要用的一些类型
+ts没有闭包了，要想实现闭包的功能，有两种方式：
+
+* 定义成全局变量，但是肯定会产生变量冲突问题
+
+* 定义一个class，存放闭包使用的变量和原来闭包的函数
+
+BOM：
+
+```
+//定时器
+let timer1: Number | null = null
+let timer2: Number | null = null
+clearTimeout(Number(timer1))
+clearInterval(Number(timer2))
+```
 
 2 联合类型，交叉类型
 
@@ -429,6 +439,34 @@ type myType4 = (a: number) => number
 let a: myType2
 ```
 
+5 其他内置类型
+
+Partiai，Pick
+
+```
+
+```
+
+6 声明文件：
+
+在使用第三方库时，需要从第三方库的声明文件中引入它里面要用的一些类型
+
+如nodejs需要@types/node    express需要@types/express
+
+```
+npm install --save @types/node
+npm install --save @types/express
+```
+
+这是由于历史原因，比较新的第三方库直接使用就行，而较老的第三方库就需要声明文件
+
+自定义声明文件：
+
+```
+// xxx.d.ts
+declare var xxx: yyy
+```
+
 # 四、面向对象
 
 1 类
@@ -482,8 +520,6 @@ let aa = new a(5)
 console.log(aa.x)
 ```
 
-
-
 面向对象三大特性之多态：
 
 父类不对方法具体实现，而由子类来进行实现，使得每个子类都有不同的形态，这就是多态。可以看出，多态是基于继承的重写
@@ -502,6 +538,7 @@ abstract class a {
   /* 抽象方法，只定义方法的结构，不做具体实现
   不知道方法具体要怎么实现，就先不实现，使用抽象方法
   抽象方法没有方法体，只能在抽象类/接口内定义，继承的子类必须重写抽象方法来实现
+  抽象方法噶箭头函数写法：(n: number) => number
   */
  abstract fun(a: number): void
 }
@@ -623,7 +660,79 @@ class mymy extends coder implements lgx {
 }
 ```
 
+4 混入
 
+```
+//1.对象混入
+let a: {name: string} = {name: 'lgx'}
+let b: {age: number} = {age: 23}
+let c: {sex: boolean} = {sex: true}
+//a,b,c混入到obj，obj的类型被推论为a，b，c的交叉类型
+let obj = Object.assign(a,b,c)
+console.log(obj)
+
+//2.类的混入
+```
+
+5 装饰器
+
+可以给属性，方法，类等等添加默认的一些东西
+
+类装饰器：
+
+可以给类添加属性方法
+
+```
+//不带参数
+const xxx: ClassDecorator = (target: Function) => {
+  console.log(target)  //使用该装饰器的class的构造函数
+  //可以给原型上添加属性方法
+  target.prototype.aaa = (a: number) => a
+}
+//带参数
+const yyy: ClassDecorator = (canshu: string): ClassDecorator => {
+  return (target: Function) => {
+    target.prototype.aaa = (a: number) => a
+  }
+}
+
+
+@xxx
+class A {}
+let obj = new A()
+console.log(obj.aaa(123))
+
+@yyy('asdf')
+class B {}
+
+@xxx @yyy('asdf')
+class C {}
+
+@xxx
+@yyy('asdf')
+class D {}
+```
+
+属性装饰器，方法噶装饰器和参数装饰器：
+
+```
+const propD: PropertyDecorator = (target,propName) => {
+
+}
+const funcD: MethodDecorator = (target,funcName,tag) => {
+
+}
+const paramsD: ParameterDecorator = (target,paramsName,paramsLoc) => {
+
+}
+
+class A {
+  @propD
+  aaa: string
+  @funcD
+  fun(@paramsD n: numebr): number{ return n }
+}
+```
 
 # 五、泛型
 
@@ -637,6 +746,7 @@ function fun0(a: number): number{
 function fun1<xxx>(a: xxx): xxx{
   return a
 }
+//或 const fun1 = <xxx>(a: xxx): xxx => a
 fun1(5)             //会自动判断类型，但有时不一定奏效
 fun1<string>('123') //手动设置类型
 
@@ -667,6 +777,24 @@ interface len {
   length: number
 }
 let getLength<T extends len> = (a:T) => a.length
+
+//泛型的keyof约束
+//先看个例子
+let o1 = {
+  name: 'lgx'
+}
+
+function getValue<T>(obj:T,key:string){
+  return obj[key]
+}
+console.log(getValue(o1,'name'))  //OK
+console.log(getValue(o1,'age'))   //不报错，但是因为o1没有age属性，返回undefined
+
+//若有一个需求，当取的属性该对象没有时，需要报错，就可以使用 extends keyof 来限制
+function get<T,K extends keyof T>(obj:T,key:K){
+  return obj[key]
+}
+// console.log(get(o1,'age'))  报错，达到需求
 ```
 
 ```
@@ -700,9 +828,11 @@ ts的模块分为内部模块（也叫命名空间）和外部模块（也叫模
 
 外部模块与es6是一样的
 
-命名空间用于组织代码和避免命名冲突
+1 命名空间用于组织代码和避免命名冲突
 
 ```
+//基本使用
+//若有重名的namespace，则与接口合并一样的规则合并
 namespace aaa {
  export let a:number = 123
 }
@@ -711,6 +841,41 @@ namespace bbb {
 }
 console.log(aaa.a)
 console.log(bbb.a)
+
+//命名空间可以嵌套
+namespace A {
+  export namespace B {
+    export let C = 123  
+  }
+}
+console.log(A.B.C)
+//起别名来简化
+import AAA = A.B
+console.log(AAA.C)
+
+//导出给外部文件使用
+export namespace asd {...}
+//使用的文件中
+import {asd} from '...'
 ```
 
 命名空间也可以放到外部模块中，再导出使用
+
+2 三斜线指令
+
+用于引入ts文件，引入后可以直接使用那个文件里面的资源，缺点就是会产生命名冲突
+
+```
+///<reference path="./aaa.ts" />
+console.log(a)  //a是aaa.ts里面的变量，可以直接使用
+```
+
+也可引入声明文件，如nodejs的声明文件 @types/node
+
+```
+///<reference types="node" />
+```
+
+# 七、ts配置文件
+
+tsconfig.json

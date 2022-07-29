@@ -393,8 +393,6 @@ export default [
 <router-view name="aaa" />  展示名为aaa的组件
 ```
 
-
-
 3 动态路由新增
 
 （1）可选参数
@@ -432,6 +430,8 @@ router.beforeEach((to,from) => {
 （2）组件内守卫
 
 变为组合式API，onBeforeRouteUpdate，onBeforeRouteLeave，但是没有onBeforeRouteEnter，只能写成OptionsAPI
+
+使用多个<script>，语言必须相同
 
 ```
 <script>
@@ -487,10 +487,10 @@ Vue3要对<router-view>使用<transition>和<keep-alive>必须是这种写法
   </router-view>
 ```
 
-
-
 7 修复了vue2路由的两个bug
 
 bug1：当跳转的路由就是当前路由时，不再像vue2会有警告
+
+bug2：nest()跳转路由时功能正常却有警告
 
 7 其他的用法基本与vue2一样

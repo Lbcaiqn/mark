@@ -1524,6 +1524,22 @@ let reg = [
 ]
 console.log(reg.every( r => r.test(密码)))
 
+
+
+js内置对象RegExp
+
+RegExp会保存上一次使用正则的分组的匹配结果，如：
+
+```
+let reg1 = /xxx/, reg2 = /yyy/
+console.log(/(x+)/.test('xxx5x')
+console.log(RegExp.$1)  //结果字符串xxx
+console.log(/(y+)/.test('xyyxxxx')
+console.log(RegExp.$1)  //结果为字符串yy
+```
+
+
+
 ```
 ES9正则
 ```

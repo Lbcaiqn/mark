@@ -859,6 +859,13 @@ props: {
 }
 子组件的模板中使用：
 {{xxx?.a?.aa?.aaa}}
+方式三：方式二 + v-if，更加安全
+有些时候用了方式二还是会报错，这可能是子组件内部拿到undefined的原因，可以直接用v-if，
+如果数据为undefined就直接不创建DOM了，一劳永逸（v-show不行，因为show是隐藏但不删除
+，if是不符合直接删除）
+
+//5.如4，使用数组时{{xxx[0]}}，若xxx还未传入也会报错，可以在父元素中v-if解决
+//4和5在网络请求数据等情况也会出现，解决方法一样
 ```
 
 ```
@@ -937,6 +944,8 @@ export default {
 
 （1）事件总线
 
+可以js文件中return再引入使用，也可以绑定到vue原型上
+
 ```
 //1.EventBus.js,使用时导入这个js文件
 import Vue from 'vue'
@@ -951,8 +960,11 @@ EventBus.$on('...',参数 => {})     //参数是发发射里的参数
 /*4.在接收的组件中，离开当前组件时，一定要$off将该组件的事件总线监听的事件关掉，否则
 会出现一些难以解决的报错（如找不到better-scroll），一般在beforeDestroy中关闭*/
 beforeDestroy(){
-  EventBus.$off('xxx')
+  EventBus.$off('xxx')     //关闭所有组件中xxx的监听
+  EventBus.$off('xxx',fun) //只关闭该组件监听xxx的fun事件函数，监听也需要$on('xxx',fun)
 ```
+
+第三方库mitt的用法的emit，on，off用法完全一样
 
 （2）Vuex，和订阅者观察者模式的第三方库也是非父子组件通信
 

@@ -122,6 +122,47 @@ let xhr=null  //必须是let，因为xhr涉及改变
 
 * onreadystatechange事件函数内，当readystate==4时就设为false，不需要进入判断状态码。
 
+时间戳格式化：
+
+后端接口返回的时间数据一般都是时间戳，这是为了能够多样化的显示时间，所以前端需要将时间戳格式化为自定义的时间格式才能展示
+
+```
+function formatDatetime(datetime,fmt){
+  /*使用说明
+  参数： datetime(数值或字符串类型，时间戳)，fmt(字符串类型，正则)
+  示例：
+  yyyy-MM-dd               2022-8-10
+  dd/MM yyyy               10/8 2022
+  yyyy年0M月0d日 0h:0m:0s  2022年08月01日 15:25:49
+  
+  */
+  /*
+  时间戳有三种：
+  第一种：精确到毫秒，共13位
+  第二种：精确到秒，共13位（最后三位为0）
+  第三种：精确到秒，共10位
+  所以传入的时间戳若是10位，需要*1000才能获得正确的时间
+  该函数若传入精确到毫秒的时间戳也能正常使用，只是没有写获取毫秒数的代码
+  */
+  let date = new Date(String(datetime).length == 10 ? Number(datetime)*1000 : Number(datetime))
+  let o = {
+    'M+': date.getMonth() + 1,
+    'd+': date.getDate(),
+    'h+': date.getHours(),
+    'm+': date.getMinutes(),
+    's+': date.getSeconds()
+  }
+
+  if(/(y+)/.test(fmt))  fmt = fmt.replace(RegExp.$1,(date.getFullYear() + ''))
+  for(let i in o){
+    let str = o[i] + ''
+    if(new RegExp(`(0${i})`).test(fmt) && str.length >= 2) fmt = fmt.replace(RegExp.$1,str)
+    else if(new RegExp(`(${i})`).test(fmt)) fmt = fmt.replace(RegExp.$1,str)
+  }
+  return fmt
+}
+```
+
 
 
 （4）jQuery的ajax
@@ -143,10 +184,7 @@ $.ajax({
   timeout: 2000,
   header:{}
 })
-
 ```
-
-
 
 （5）axios
 
@@ -161,15 +199,15 @@ http://123.207.32.32:8000/home/multidata
 ```
 Import axios from ‘axios’
 //方式一
-axios({				
+axios({                
 //配置选项除了url都可以省略
   baseURL:’’,   //最终url=baseURL+url，默认为空
   url:’...’ ,   // 可传params参数如：?key=’val’&key=’val’…
   method: ‘…’ , //省略后默认为get请求
-  params: {…},	//get专用，可以将url的?后面的参数写在里面，简化url
-  data:{},		//poet专用，请求体	
+  params: {…},    //get专用，可以将url的?后面的参数写在里面，简化url
+  data:{},        //poet专用，请求体    
   …..
-}).then( res => {…})		//axios会return一个promise对象，then，catch在axios()后面
+}).then( res => {…})        //axios会return一个promise对象，then，catch在axios()后面
 
 //方式二
 axios.请求类型(‘url’,{config})
@@ -180,15 +218,14 @@ fetch(‘url’,{config})
 一个请求需要多个子请求都完成后再开始
 除了Promise.all(),还有更简便的方法
 */
-axios.all([		//传入数组
+axios.all([        //传入数组
   axios(),
   axios()
-]).then(res=>{})	//所有子请求的结果都在res数组里
+]).then(res=>{})    //所有子请求的结果都在res数组里
 /*
 若不想通过下标访问res数组，可以
 then( axios.spread( (.. .. ..) => {} ) ) 就可以直接用小括号里的…变量直接访问
 */
-
 ```
 
 封装使用：
@@ -237,8 +274,6 @@ Import {request1} from ‘…’
 rsequest1({
   config
 }).then().catch()
-
-
 ```
 
 ts：
@@ -279,8 +314,6 @@ export function HomeRequestGoods(type: string, page: number){
   })
 }
 ```
-
-
 
 # 二、GET请求，POST请求
 

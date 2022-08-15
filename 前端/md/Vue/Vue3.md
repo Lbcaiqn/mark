@@ -169,7 +169,7 @@ export default {
     let a1 = ref(111)
     let a2 = ref(['111'])
     let a3 = reactive({val: 111, arr: ['111']})
-    
+
      let b1 = a1.value   //取出基本数据类型，bbb3不是响应式数据
      let b2 = a2.value   //取出引用数据类型，bbb4是响应式数据
      let {val,arr} = a3    //val不是响应式数据，arr是
@@ -197,8 +197,6 @@ export default {
 }
 </script>
 ```
-
-
 
 情况三，用ref，reactive来整个重新赋值，这种情况下也会丢失响应式
 
@@ -1581,7 +1579,7 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 5. 过渡类名变更：v-enter v-leave 变为 v-enter-from  v-leave-from
 
-6. 删除了按键编码作为事件修饰符，因为兼容性差
+6. 删除了按键编码作为事件修饰符，因为兼容性差。删除了案件编码，只能用DOM的addEventListen拿到事件对象中的按键码来监听了
 
 7. 删除了事件修饰符.native，Vue2中自定义组件会将绑定的事件都认为是自定义事件，所以才需要.native告诉他是原生事件；Vue3的自定义组件绑定的事件都认为是原生事件，自定义事件需要在子组件的配置项emits中声明
 

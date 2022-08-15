@@ -109,8 +109,6 @@ vite不需要安装，直接使用即可
 npm init vite@latest
 ```
 
-
-
 安装依赖
 
 ```
@@ -131,8 +129,6 @@ npm init vue@latest
 cd projectname
 npm install
 ```
-
-
 
 3 启动，打包
 

@@ -158,7 +158,28 @@ typeof 变量 检测变量的数据类型（注意prompt和任何表单获取的
 
 3 流程控制
 
-使用循环时，需要注意var会被提升成全局变量（闭包或let解决），其他与c一样
+使用循环时，需要注意var会被提升成全局变量（闭包或let解决）
+
+此外，js有特有的循环forEach
+
+```
+//只能用于遍历数组
+var arr = [123,456,789]
+arr.forEach(function(item,index,arr){
+  console.log('值为',item)
+  console.log('下标为',index)
+  console.log('遍历的原数组为',arr)
+},this)
+/*参数
+1 function(){}  若arr为空则不会回调
+  1.1 item  必传
+  1.2 index 可选
+  1.3 arr   可选
+2 this 若不传，undefined或空则默认为this
+*/
+```
+
+其他与C语言一样
 
 4 函数
 
@@ -841,7 +862,7 @@ const [.. .. .. ..]=数组名
 const {属性名1，属性名2…} = 对象名
 与顺序和取出数量无关，会根据属性名/方法名取出对象中的属性值/方法
 取出后属性名/方法名作为const常量名
-解构的变量可以设置别名：{变量:别名}
+解构的变量可以设置别名：{变量:别名}，只有对象解构才能起别名
 对象连续解构；
 const {xxx: {aaa}或[aaa] }=obj 从obj解构出xxx对象或数组，再解构xxx中的aaa
 ```
@@ -1447,6 +1468,9 @@ async function a(){
 }
 a()
 
+await失败的另一种写法，返回数组
+const [err,res] = await xxx.catch(err => err)
+
 ```
 3.2 对象方法的扩展：
 ```
@@ -1524,8 +1548,6 @@ let reg = [
 ]
 console.log(reg.every( r => r.test(密码)))
 
-
-
 js内置对象RegExp
 
 RegExp会保存上一次使用正则的分组的匹配结果，如：
@@ -1537,8 +1559,6 @@ console.log(RegExp.$1)  //结果字符串xxx
 console.log(/(y+)/.test('xyyxxxx')
 console.log(RegExp.$1)  //结果为字符串yy
 ```
-
-
 
 ```
 ES9正则

@@ -314,7 +314,7 @@ store实例上的API
 store.$reset()
 //3 $subscrib  每当state的任一属性值发生变化就回调
 store.$subscrib((args,state) => {
-  
+
 })
 //4 $onAcition 每当action的方法被调用就回调
 store.$onAction((args) => {})

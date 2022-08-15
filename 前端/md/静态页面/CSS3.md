@@ -180,6 +180,8 @@ clear: value;  值为left,right,both，分别为清除左浮，右浮，左右�
 }
 
 3 定位：
+脱标的定位后，width不再自动100%
+
 将盒子定到某一位置不动，由定位模式和边偏移两部分组成。
 1)、定位模式：
 position: value;  value值为static,relative,absolute,fixed,sticky
@@ -250,11 +252,51 @@ cursor: value; value为default,pointer,move,text,not-allowed
 6 溢出文字省略号表示：
 单行文本：先white-space: nowrao; 强制转为一行显示，overflow: hidden; 隐层溢出，最后text-overflow: ellipsis;显示省略号。
 多汗文本（有较大的兼容性问题）：
-overflow: hidden;                    
+
+```
+overflow: hidden;  
 text-overflow: ellipsis;
-display: -webkit-box;                //弹性伸缩盒子
--webkit-line-clamp: 2;            //第几行省略号
--webkit-box-orient: vertical;        //垂直居中
+display: -webkit-box; //弹性伸缩盒子
+-webkit-line-clamp: 2; //第几行省略号
+-webkit-box-orient: vertical; //垂直居中
+```
+
+7 图片放置方案
+
+两个img上下之间有空隙，display;block; 解决
+
+```
+<div class="img-box"><img /></div>
+
+//1.盒子宽高都不固定，或宽高其中一个固定，一个不固定（若固定宽，img的width:100%，若固定高，img的height:100%），不固定的被图片撑开
+//2.盒子宽高都固定，图片多出的裁剪
+.img-box {
+  display: flex;
+  justify-cntent: center;
+  align-items: center;
+  overflow: hidden;
+}
+.img-box img {
+  width: 100%;  /*或者height: 100%;*/
+}
+//3.盒子宽高都固定，图片多出的尽量不裁剪
+.img-box {
+  display: flex;
+  justify-cntent: center;
+  align-items: center;
+  overflow: hidden;
+}
+/*若 宽>高 */
+.img-box img {
+  width: 100%;
+}
+/*若 高>宽 */
+.img-box img {
+  height: 100%;
+}
+```
+
+
 
 # 七、CSS3新特性
 
@@ -418,11 +460,13 @@ E:nth-of-type(n) {} 选择父的第n个孩子,n从1开始
 用CSS创建一个模拟的新标签，就叫伪元素，在文档中找不到，就可以不用新增HTML标签，简化HTML。应用如侧边栏三角，遮层。清除浮动，配合字体图标。
 
 ```
-::before {} 在E里面的最前面(有文字也跳过文字)生成，作为第一个孩子
+E::before {} 在E里面的最前面(有文字也跳过文字)生成，作为第一个孩子
 E::after {} 在E里面的最后面(有文字也跳过文字)生成，作为最后一个孩子
 before,after都是作为E的孩子，它们必须要有content属性，值可以为空。
 伪元素默认是行内元素。
 ```
+
+伪元素一般配合绝对定位
 
 3.2 制作遮层鼠标经过时 E:hover::after
 3.3 清除浮动原理：在父盒子最后面生成一个伪元素卡住，若再加上before更严谨的闭合浮动。

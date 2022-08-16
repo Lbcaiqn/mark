@@ -24,7 +24,8 @@ JS书写位置：
 # 二、ES5
 
 注释方法与c一样，每个语句也是以分号结尾(但是不加分号也不会报错)
-1 输入输出
+
+## 1 输入输出
 
 ```
 var a = prompt('提示文本'); 页面出现带有提示文本的输入框
@@ -32,10 +33,9 @@ alert('输出文本'); 页面出现警示框
 consolo.log('输出文本'); 控制台输出
 ```
 
-2 变量，数据类型，类型转换，运算符
-2.1 变量：
+## 2 变量，数据类型，类型转换，运算符
 
-2.1.1 var声明变量
+### 2.1 变量
 
 1. 变量声明用var，不加var会变成全局变量（但此时必须赋值）
 
@@ -45,7 +45,7 @@ consolo.log('输出文本'); 控制台输出
 
 4. 命名：还可以用$命名，变量属性，函数方法小驼峰，对象，构造函数大驼峰，其他与c一样
 
-2.1.2 数据类型
+### 2.2 数据类型
 
 JS属于弱类型语言，未赋值的变量数据类型不确定，赋值后才自动确定。JS属于动态语言，变量重新赋值时可以赋值另外的数据类型，JS分为简单数据类型，复杂数据类型
 
@@ -114,7 +114,7 @@ typeof 变量 检测变量的数据类型（注意prompt和任何表单获取的
    ar obj = new Object()
    ```
 
-2.1.3 类型转换
+### 2.3 类型转换
 
 1. 转成String
    
@@ -131,21 +131,22 @@ typeof 变量 检测变量的数据类型（注意prompt和任何表单获取的
    
    Boolean(xxx) 空的否定的值如0 ‘’ NaN null undefind转换成false，其余true
 
-2.1.4 运算符：
-4.1 浮点数由于有精度，所以比较浮点数时需要处理
-4.2 短路运算（逻辑中断）：当逻辑运算符两边其中一个不是布尔而是算数表达式或值时的情况，根据左的真假返回相应的值（若左非布尔，则会隐转成布尔）
+### 2.4 运算符：
+
+（1）浮点数由于有精度，所以比较浮点数时需要处理
+（2）短路运算（逻辑中断）：当逻辑运算符两边其中一个不是布尔而是算数表达式或值时的情况，根据左的真假返回相应的值（若左非布尔，则会隐转成布尔）
 
 1. 逻辑与短路运算：左真用右，左假用左（中断右）
 
 2. 逻辑或短路运算：左真用左（中断右），左假用右
 
-4.3 == 和 ===
+（3）== 和 ===
 
 1. == != 先转换成相同类型再比较
 
 2. !== 先判断类型是否一致，不一致直接true，再比较
 
-4.4 检测数据类型
+（4）检测数据类型
 
 1. typeof 变量        检测变量的数据类型
 
@@ -156,7 +157,7 @@ typeof 变量 检测变量的数据类型（注意prompt和任何表单获取的
 
 其他运算符与C一样
 
-3 流程控制
+## 3 流程控制
 
 使用循环时，需要注意var会被提升成全局变量（闭包或let解决）
 
@@ -181,7 +182,7 @@ arr.forEach(function(item,index,arr){
 
 其他与C语言一样
 
-4 函数
+## 4 函数
 
 JS只有值传递没有引用传递。
 
@@ -200,13 +201,13 @@ fun2()
 形参是函数时，是将形参，函数体传进来
 ```
 
-JS函数的实参个数可以和形参不一样：
+（1）JS函数的实参个数可以和形参不一样：
 
 1. 实参比形参多：多出的实参忽略
 
 2. 实参比形参少或没有实参：缺失的实参看作undefind
 
-返回值：
+（2）返回值：
 
 1. 有多个返回值时只返回最后一个（如ruturn n1,n2;返回n2，想返回多个用数组 [] ）
 
@@ -214,16 +215,16 @@ JS函数的实参个数可以和形参不一样：
 
 函数不一定要声明在执行前，即使函数内嵌函数也是。（会被提升）
 
-arguments：
+（3）arguments：
 
 所有函数都有的内置对象，存储所有实参，是一个伪数组，在函数内直接当做名字为arguments的数组使用即可。
 arguments作用：在不知道要设置多少形参时使用，不管多少实参都行。
 
-伪数组：
+（4）伪数组：
 
 具有length属性，也按索引方式存储元素，但没有真正数组的内置的Array方法。
 
-作用域：
+（5）作用域：
 var没有块级作用域（if，for等{}包含的区域），所以局部作用域只在函数内部和形参。
 在函数内部（不是形参）不加var声明但赋值的变量是全局变量。
 作用域链：
@@ -231,11 +232,11 @@ var没有块级作用域（if，for等{}包含的区域），所以局部作用�
 函数内嵌函数，内部函数可调用外部函数变量，反之不可，调用时找最近一级有该变量的外部函数（链式查找）。全局变量是最远的一级。
 其他与c一样
 
-形参默认值：
+（6）形参默认值：
 可以给形参设置默认值，函数体中
 var a = 形参 || 默认值
 
-立即执行函数：
+（7）立即执行函数：
 
 ```
 (function(形参){})(实参)
@@ -245,12 +246,13 @@ var a = 形参 || 默认值
 当整个js文件都在立即执行函数中时，引入多个js文件就不会产生变量名冲突的问题。
 ```
 
-5 与解析（预编译）
+## 5 预解析（预编译）
 
 JS引擎运行JS代码分预解析和执行两步：
 预解析，将各作用域var和function声明提升到当前作用域最前。
 执行：由上至下一行行解释运行。
-5.1 var的预解析：
+
+### 5.1 var的预解析：
 
 将var 的声明提升，赋值不提升（注意是要有var声明的）
 因为匿名函数是var声明，所以与var一样。
@@ -265,14 +267,17 @@ console.log(n)
 n = 10
 ```
 
-5.2 具名函数预解析：
+### 5.2 具名函数预解析：
 
 提升function声明，不提升调用。即命名函数调用可以在声明前。（匿名函数不行）
 
-6 对象
+## 6 对象
 
-6.1 创建对象：属性，方法都是逗号隔开的键值对，方法都是匿名函数
-6.1.1 字面量创建对象：
+### 6.1 创建对象：
+
+属性，方法都是逗号隔开的键值对，方法都是匿名函数
+
+（1）字面量创建对象：
 
 ```
 var obj = {
@@ -288,13 +293,13 @@ var obj = {
 */
 ```
 
-6.1.2 new创建对象：
+（2）new创建对象：
 
 ```
 var obj = new Object(); 创建空对象
 ```
 
-6.1.3 构造函数创建对象
+（3）构造函数创建对象
 
 前面两种方式一次只能创建一个对象，当需要创建多个对象，且属性方法很多相同时，代码会冗余。此时就需要构造函数。
 构造函数里放各个对象公共的属性和方法，各个对象根据需要另行追加属性方法。
@@ -322,7 +327,7 @@ var obj = new xxx(实参); //构造函数不需要return就能返回一个对象
 
 new创建对象过程：内存创建空对象，this指向该空对象，执行构造函数里面代码追加属性方法，最后返回这个对象。
 
-6.2 调用对象，天极爱属性方法噶
+### 6.2 调用对象，添加属性方法
 
 ```
 obj,key
@@ -338,7 +343,7 @@ undefined.undefined会报错
 if(obj['key'])  //可判断key是否存在
 ```
 
-6.3 ES5对象继承
+### 6.3 ES5对象继承
 
 分为原型继承，组合继承，构造函数继承
 
@@ -362,8 +367,9 @@ ch.prototype.func=function(){}
 let chi=new ch(1,2,3)
 ```
 
-6.4 Object与原型：
-6.4.1 Object：
+### 6.4 Object与原型：
+
+（1）Object：
 
 Object是所有对象的原型，具有内置的属性和方法，此外，Array，String，Number，Boolean都是继承于Object，都可以使用Object的属性方法
 
@@ -384,12 +390,14 @@ Object.defineProperty(objname,'key'或变量,{
 })
 ```
 
-6.5 常用内置对象
+（2）原型
+
+### 6.5 常用内置对象
 
 查阅文档：https://developer.mozilla.org/zh-CN/
 非构造函数直接可以使用，而构造函数需要var objname=new 对象名();
 
-6.5.1 Math    
+#### 6.5.1 Math
 
 非构造函数，不用new        使用 Math.方法()
 
@@ -409,7 +417,7 @@ return Math.floor(Math.random()*(max-min+1))+min;
 }
 ```
 
-6.5.2 Date()    
+#### 6.5.2 Date()
 
 构造函数，需要new     使用 对象名.方法()
 
@@ -430,7 +438,7 @@ date.getSeconds() 返回当前秒
 date.valueOf(); date.getTime(); +new Date() Date.now()（H5新增）
 ```
 
-6.5.3 Array()    
+#### 6.5.3 Array()
 
 构造函数需要new        使用 对象名.方法()
 只有一个参数为长度，>=2个参数为初始化数组元素
@@ -458,7 +466,7 @@ sort( function(a,b) { return a-b; } ) //升序
 sort( function(a,b) { return b-a; } ) //降序
 ```
 
-6.5.4 String        
+#### 6.5.4 String
 
 基本包装类型，不用new，直接     字符串变量.方法()使用
 普通字符串本身是简单数据类型却具有length属性，是因为它是基本包装类型（简单数据类型包装成复杂数据类型，可给属性和方法，就是Java的包装类，JS有Number，String，Bool三种）
@@ -504,7 +512,7 @@ DOM树：
 DOM把以上都看成对象，有自己的属性和方法
 注意点：若b.js依赖于a.js 则a必须在b之前引入
 
-1 获取元素
+## 1 获取元素
 
 ```
 //Id，querySelector，返回element对象，找不到返回none
@@ -522,7 +530,7 @@ var f=document.body //body
 var g=document.documentElement //html
 ```
 
-2 读写文本，属性，样式 
+## 2 读写文本，属性，样式
 
 以下e代表element元素对象
 
@@ -554,7 +562,8 @@ e.dataset.xxx    e.data.xxxXxx
 e.dataset[‘xxx’]  e.dataset[‘xxxXxx’]
 ```
 
-3 节点操作：
+## 3 节点操作：
+
 页面的所有内容都是节点，节点操作是对元素的父子兄的操作
 如获得e的子元素对象，需要：
 获取element对象e后，通过e.getElement... e.query…获取它的子元素对象
@@ -595,9 +604,9 @@ let n=e.children[0].cloneNode() //复制e的第一个元素节点，但还未放
 cloneNode(true) 深拷贝，拷贝包括元素，文本等所有节点
 ```
 
-4 事件
+## 4 事件
 
-4.1 事件三要素：
+### 4.1 事件三要素：
 
 * 事件源：触发该事件的元素对象
 
@@ -605,7 +614,7 @@ cloneNode(true) 深拷贝，拷贝包括元素，文本等所有节点
 
 * 事件函数：触发事件后的操作，事件函数里的this指向事件源
 
-4.2 注册事件（绑定事件）：
+### 4.2 注册事件（绑定事件）：
 
 ```
 //html标签也可以绑定事件，如<button onclick="fun()"></button>
@@ -622,7 +631,8 @@ e.removeEventListener(‘click’,func) //注册事件时，事件函数不能�
 e.detachEvent(‘onclick’,func) //注册事件时，事件函数不能是匿名函数
 ```
 
-4.3 事件类型：
+### 4.3 事件类型：
+
 onclick  点击
 onfocus 获得焦点
 onblur  失去焦点
@@ -645,7 +655,8 @@ event.keyCode 可获得按键码，up，down不区分大小写，press区分
 
 onscroll  滚动事件
 
-4.4 事件对象：
+## 4.4 事件对象：
+
 事件函数给个形参event，事件函数内 console.log(event) 可以看到
 事件对象保存了事件类型，事件源等信息，如event.type 事件类型
 只有事件触发事件时，事件对象才会创建。
@@ -658,7 +669,8 @@ event.preventDefault()
 onclick事件函数内：
 event.returnValue   或  return false
 
-4.5 事件流：
+## 4.5 事件流：
+
 即事件的传播过程
 捕获阶段：触发事件后，从document-html-body-…，一旦有有定义该事件的事件函数就会执行
 冒泡阶段：从…-body-html-document传播，一旦有定义该事件的时间函数就会执行
@@ -674,7 +686,7 @@ event.stopPropagation()  有兼容性问题
 事件冒泡的应用：事件委托（事件代理/事件委派）
 只给父元素注册事件，子都不注册，当子触发事件后，通过事件冒泡执行父的事件函数，里面用event.target处理子。这样就只操作了一次DOM。
 
-4.6 其他
+## 4.6 其他
 
 ```
 //offset：动态获取元素距父元素的偏移（不带单位的数值）
@@ -722,7 +734,7 @@ window是全局对象，多以全局变量和 全局函数都会鞭策window的�
 同样，调用全局变量/全局函数，window.可省略
 alert()也是window的方法
 
-1 事件：
+## 1 事件：
 
 ```
 //面加载事件：
@@ -739,7 +751,8 @@ pageshow 与onload基本一样，但是在火狐浏览器中，前进页面后�
 Onresize 浏览器窗口大小发生变化时触发
 ```
 
-2 异步和定时器：
+## 2 异步和定时器：
+
 *异步：
 JS是单线程的，是为了防止DOM冲突，默认是同步
 同步：代码按顺序执行，只有执行完一行才会执行下一行
@@ -764,7 +777,7 @@ setInterval第一次执行会延迟xms，所以想要一开始就执行，可以
 clearTimeout(xxx)
 clearInterval(xxx)
 
-3 location对象
+## 3 location对象
 
 ```
 用来获取/设置/解析窗体的url
@@ -793,7 +806,7 @@ location.reload()  参数为空或false重新刷新页面，true为强制刷新
 非强制刷新会缓存一些页面内容，速度快一点，强制刷新则全部重新加载，速度慢一点
 ```
 
-4 navigation对象
+## 4 navigation对象
 
 ```
 存放浏览器的信息，可以知道是PC端的浏览器还是移动端的浏览器，由此可以知道显示PC端还是移动端页面
@@ -801,7 +814,7 @@ Navigator.userAgent.match()
 但是代码比较复杂
 ```
 
-5 history对象
+## 5 history对象
 
 ```
 跟浏览器的历史记录进行交互，保存了用户浏览过的地址
@@ -810,13 +823,13 @@ history.back()  后退
 history.go(x)  正数前进x步  负数后退x步
 ```
 
-# 五、ES6↑
+# 五、ES6-ES11
 
 ES6↑兼容性问题：babel可以把ES6↑转化成ES5，解决兼容性问题。
 
-1 ES6
+## 1 ES6
 
-1.1 let，const
+### 1.1 let，const
 
 let 变量     const 常量
 var其实是JS设计上的缺陷，var没有块级作用域，会带来非常多的问题且解决很麻烦，而let有，以后尽量都用let。
@@ -833,7 +846,7 @@ const：
 4、具有块级作用域
 ```
 
-1.2 模板字符串
+### 1.2 模板字符串
 
 ```
 1.声明：let str=`…`
@@ -847,7 +860,7 @@ let str2=`${str1}world`
 3、模板字符串中，${xxx}，xxx可以是表达式，变量，函数，对象等
 ```
 
-1.3 结构赋值
+### 1.3 解构赋值
 
 将数组/对象中的元素/属性一次赋值给多个变量，若x变量多于数组元素/变量名在对象中没有对应的属性，则x变量为undefine
 
@@ -867,7 +880,7 @@ const {属性名1，属性名2…} = 对象名
 const {xxx: {aaa}或[aaa] }=obj 从obj解构出xxx对象或数组，再解构xxx中的aaa
 ```
 
-1.4 对象属性方法的新写法
+### 1.4 对象属性方法的新写法
 
 ```
 1)、es6对象中，属性名和方法名可以是表达式/函数，用[]包裹
@@ -881,7 +894,7 @@ name,      //等同于 name:name
 fun(){}  //等同于 fun:function(){}
 ```
 
-1.5 新数据类型Symbol
+### 1.5 新数据类型Symbol
 
 ```
 七个基本数据类型：
@@ -912,7 +925,7 @@ obj.run=function(){}   s//与对象内的run是不同的
 作为对象的属性 [Symbol.hasInstance] : …
 ```
 
-1.7 新运算符
+### 1.7 新运算符
 
 ```
 扩展运算符 … 将数组转化成逗号分隔的列表
@@ -928,7 +941,7 @@ xxx((...aaa) => {
 })
 ```
 
-1.8 新for循环和迭代器
+### 1.8 新for循环和迭代器
 
 ```
 for in 和 for of
@@ -956,117 +969,157 @@ next()返回一个对象，value属性为当前成员的值，done属性为是�
 注意最后一个成员的done为false，继续指向下一个成员done才为true，value为undefine，表明遍历完成。
 也就是，一个数据结构包括：起始位置-各成员-结束位置
 过程：
-*创建一个指针对象指向该数据结构的起始位置
-*调用指interator接口的next()，使指针指向第一个成员
-*继续调用next()，遍历每一个成员，直到最后一个成员
-*此时指针指向最后一个成员，再调一次next()后，done为true，结束
+
+* 创建一个指针对象指向该数据结构的起始位置
+
+* 调用指interator接口的next()，使指针指向第一个成员
+
+* 继续调用next()，遍历每一个成员，直到最后一个成员
+
+* 此时指针指向最后一个成员，再调一次next()后，done为true，结束
+  
+
+```
 let arr=[1,2]
 let arrite=arr[Symbol.iterator]()
 console.log(arrite.next()) //第一个成员
 console.log(arrite.next()) //第二个成员
 ……
+```
+
+
 
 自定义遍历数据：
 有一个对象o，需求是使用for of遍历o里面的arr的每一个值
-虽然可以直接 for( I of o.arr ) 或其它方法进行遍历，但不符合面向对象的思想，此时是给o部署iterator接口。
+虽然可以直接 for( I of o.arr ) 或其它方法进行遍历，但不符合面向对象的思想，此时是给o部署iterator接口
+
+```
 const o={
-    name:'lgx',
-    arr:[1,2,3],
-    [Symbol.iterator](){
-      let i=0 //索引
-      let _this=this //_this指向o
-      return {  //return这个对象的里面的this指向return的这个对象，所以才需要_this，或用箭头函数
-        next(){
-          if(i < _this.arr.length)
-            return {value:_this.arr[i++],done:false}
-          else return {value:undefine,done:true}
-        }
-      }
-    }
-  }
+  name:'lgx',
+  arr:[1,2,3],
+  [Symbol.iterator](){
+   let i=0 //索引
+   let _this=this //_this指向o
+   return { //return这个对象的里面的this指向return的这个对象，所以才需要_this，或用箭头函数
+ next(){
+   if(i < _this.arr.length)
+   return {value:_this.arr[i++],done:false}
+   else return {value:undefine,done:true}
+ }
+ }
+ }
+ }
 for(i of o) console.log(i)
-
-```
-1.9 函数相关
 ```
 
-①函数形参
-1).rest参数
+## 1.9 函数相关
+
+#### 1.9.1函数形参
+
+（1）rest参数
 再形参列表的最后放一个（一定在最后） …args 作为数组接收实参
 函数内args是数组名使用
 
-2).形参默认值
+（2）形参默认值
 形参=值，当没有给该形参传入实参时，使用默认值
 与对象解构配合使用时：
 形参obj ---- 形参{.. .. .. ..}，..也可以设置默认值
 
-②箭头函数        常用于作为形参
+#### 1.9.2 箭头函数
+
+常用于作为形参
 具名：const/let name=(形参列表)=>{函数体}
 匿名：(形参列表)=>{函数体}
-*当形参只有一个时，小括号可以省略
-*当函数体只有一行时，大括号可以省略，注意省略后，会隐含return
-*箭头函数没有arguments
-*对象的构造函数声明写法，不能用箭头函数
-*箭头函数的this
-*箭头函数的this是静态的，指向声明此箭头函数的那个对象的作用域，如对象o中声明了一个箭头函数f，则f的this指向o的作用域window
-*this指向无法修改
-*一般代码中的this是指向window的
-但是箭头函数中的this指向最近的上一级，若在类obj中的箭头函数中，指向obj，若在普通函数中的箭头函数中，指向window
-但是若this在箭头函数中的普通函数中，指向window
 
-③高阶函数
+* 当形参只有一个时，小括号可以省略
+
+* 当函数体只有一行时，大括号可以省略，注意省略后，会隐含return
+
+* 箭头函数没有arguments
+
+* 对象的构造函数声明写法，不能用箭头函数
+
+* 箭头函数的this
+  
+  * 箭头函数的this是静态的，指向声明此箭头函数的那个对象的作用域，如对象o中声明了一个箭头函数f，则f的this指向o的作用域window
+    
+    * this指向无法修改
+    
+    * 一般代码中的this是指向window的
+      但是箭头函数中的this指向最近的上一级，若在类obj中的箭头函数中，指向obj，若在普通函数中的箭头函数中，指向window
+      但是若this在箭头函数中的普通函数中，指向window
+
+#### 1.9.3 高阶函数
+
 高阶函数指的是可以以用函数作为形参的函数。体现了函数式编程思想。
 回调函数：自动遍历数组，以数组的每个值作为形参执行的函数。
 
 JS三种常用的高阶函数：分别用来筛选，操作，汇总。
-1)。filter()
+（1）filter()
+
+```
 let 型数组=原数组.filter( function(n){
-    return 布尔值（变量/表达式）;
+  return 布尔值（变量/表达式）;
 });
+```
+
+
+
 参数为回调函数，作用是：true时，将元素n加入新数组（用数组接收）
 
-2)。map()
+（2）map()
+
+```
 let 型数组=原数组.map( function(n){
-    return 对n的操作（如n*2）;
+  return 对n的操作（如n*2）;
 });
+```
+
+
+
 参数为回调函数，作用是：对每个n执行操作，并返回给新数组（用数组接收） 
 
-3)。reduce()
+（3）reduce()
+
+```
 let 变量=原数组.reduce( function(pre,n){
-    return 汇总（如pre+n 是计算数组元素值的和）;
+  return 汇总（如pre+n 是计算数组元素值的和）;
 },0);
+```
+
+
+
 第一个参数为回调函数，第二个参数为pre的初始化值，一般为0.
 作用：pre保存上一次return的值，n为此次遍历的值，每次执行完汇总，将值返回给pre。（最终用一个变量接收）
 
-高阶函数有链式写法：
-1)。filter()
-let 变量=原数组.filter( function(n){
-    return 布尔值（变量/表达式）;
-}).map( function(n){
-    return 对n的操作（如n*2）;
-}).reduce( function(pre,n){
-    return 汇总（如pre+n 是计算数组元素值的和）;
-},0);
-
-链式写法+箭头函数：
-let 变量=原数组.filter( n => … ).map( n => … ).reduce( ( pre , n ) => … , 0 ); 
+（4）高阶函数有链式写法：
 
 ```
-1.10 生成器
+let 变量=原数组.filter( n => … ).map( n => … ).reduce( ( pre , n ) => … , 0 );
 ```
+
+### 1.10 生成器
 
 本质是一个函数,但是语法与传统函数完全不同，是es6提供的一个异步解决方案，进行异步编程。解决了回调地狱。
 以前的异步解决方案是单纯使用回调函数。
 
 定义：三种都一样
-function * xxx(){}  function* xxx(){}  function *xxx(){}
-调用：生成器定义后是一个迭代器对象，所以
+
+```
+function * xxx(){} 
+function* xxx(){} 
+function *xxx(){}
+
+//调用：生成器定义后是一个迭代器对象，所以
 xxx().next() 
-或：
+//或：
 let x=xxx()
 x.next()
+```
 
 yield语句 在生成器函数体中定义，将代码区域上下分割，n条yield语句将代码分割成n+1个代码块，每次调用next()都只执行当前代码块，然后将指针指向下一个代码块。
+
+```
 function * xxx(){
   console.log(111)
   yield '分割线1'
@@ -1081,109 +1134,132 @@ console.log(x.next())
 console.log(x.next())
 //也可使用for of，这样调可不用将生成器赋值给变量
 for(i of xxx()) console.log(i)
+```
+
+
 
 生成器函数参数：
-*生成器可以定义形参
-*next()可传实参，生成器用 let x=yield 123 接收，x的值就是实参的值
- 第n次调用的next，则第n-1个yield接收
+
+* 生成器可以定义形参
+
+* next()可传实参，生成器用 let x=yield 123 接收，x的值就是实参的值
+   第n次调用的next，则第n-1个yield接收
 
 应用：
+
+```
 //回调地狱，代码杂乱
 //1s后输出111，再2s后输出222，再3s后输出333，共6s
 setTimeout(()=>{
-  console.log(111)
-  setTimeout(()=>{
-    console.log(222)
-    setTimeout(()=>{
-      console.log(333)
-    },3000)
-  },2000)
+ console.log(111)
+ setTimeout(()=>{
+ console.log(222)
+ setTimeout(()=>{
+ console.log(333)
+ },3000)
+ },2000)
 },1000)
 
 //用生成器实现同样的功能
 function * xxx(a){
-  yield setTimeout(()=>{ //改成let xxx=yield ... 就能接收第二个next参数
-    console.log(111)
-    x.next() //若此时想传递参数，x.next(数据)，此时第二次调next，所以被第一个yield接收
-  },1000)
-  yield setTimeout(()=>{
-    console.log(222)
-    x.next()
-  },2000)
-  yield setTimeout(()=>{
-    console.log(333)
-    x.next()
-  },3000)
+ yield setTimeout(()=>{ //改成let xxx=yield ... 就能接收第二个next参数
+ console.log(111)
+ x.next() //若此时想传递参数，x.next(数据)，此时第二次调next，所以被第一个yield接收
+ },1000)
+ yield setTimeout(()=>{
+ console.log(222)
+ x.next()
+ },2000)
+ yield setTimeout(()=>{
+ console.log(333)
+ x.next()
+ },3000)
 
 }
 let x=xxx()
 x.next()
+```
 
-```
-1.11 Promise
-```
+### 1.11 Promise
 
 一种异步解决方案
 用于封装异步代码，使得异步代码结构更加清晰
-举例，这里的异步使用setTimeout()举例
+
+```
+//举例，这里的异步使用setTimeout()举例
 //格式 new Promise().then().catch()
 //reject可以不传
 new Promise((resolve,reject) => {
-  setTimeout(()=>{
-    //这里用来进行判断请求是否成功，成功则执行then，失败执行catch
-    //都可以传递参数,对应的then，catch可以接收此参数
-    if(…..) resolve()
-    else      reject('err')
-  },1000)
+ setTimeout(()=>{
+ //这里用来进行判断请求是否成功，成功则执行then，失败执行catch
+ //都可以传递参数,对应的then，catch可以接收此参数
+ if(…..) resolve()
+ else reject('err')
+ },1000)
 }).then(() => {
-  console.log(111)
-  //嵌套下一层请求
-  return new Promise((resolve,reject) => {
-    setTimeout(() => {
-      resolve()
-    },1000)
-  }).then(() => {
-    console.log(222)
-  })
+ console.log(111)
+ //嵌套下一层请求
+ return new Promise((resolve,reject) => {
+ setTimeout(() => {
+ resolve()
+ },1000)
+ }).then(() => {
+ console.log(222)
+ })
 }).catch((str) => {
-  console.log(str)
+ console.log(str)
 })
 //catch()可以不写，在then()中传入第二个回调函数即可代替catch()
 
+/*
 then()返回的也是Promise，所以可以then().then()这样链式调用
-
 Promise的三种状态：等待（执行中），成功（执行resolve触发，后执行then），失败（执行reject后触发，后执行catch）
+*/
+```
+
+
 
 简写：
-1、return new Promise()里面只有一个reslove或一个reject时，可以简写为：
-return Promise.reslove()  return Promise.reject()
-2、仅reslove使用：当满足1时，且有参数，简写为：return 参数
-3、仅reject适用：1可再简写为：throw 字符串  该字符串会作为参数传入catch
-PS：这里不管是return还是reslove，reject，当return/传入 变量+字符串后，下面then，catch使用该变量时，值就是 变量+字符层
+
+* return new Promise()里面只有一个reslove或一个reject时，可以简写为：
+  return Promise.reslove()  return Promise.reject()
+
+* 仅reslove使用：当满足1时，且有参数，简写为：return 参数
+
+* 仅reject适用：1可再简写为：throw 字符串  该字符串会作为参数传入catch
+  PS：这里不管是return还是reslove，reject，当return/传入 变量+字符串后，下面then，catch使用该变量时，值就是 变量+字符层
 
 Promise处理多个异步操作：
 当一个请求需要多个子请求的结果时，是不好判断子请求的完成顺序的，代码写起来就复杂。但是promise方便很多。
 all() 传入一个数组，当成功完成封装的所有请求时，再执行all().then()
+
+```
 Promise.all([
-  new Promise(),
-  new Promise(),
-  ….
+ new Promise(),
+ new Promise(),
+ ….
 ]).then( )
+```
+
+
+
 then里面的箭头函数的参数是一个数组（自己命名），该数组按顺序保存all封装的所有reslove的参数
 由于封装的都是异步，所以all执行总时间就是执行最慢的那一个异步操作的时间。
 
-```
-1.12 新数据结构
+## 1.12 新数据结构
 
-1.12.1 Set
-```
+#### 1.12.1 Set
 
-//Set 集合
-//*成员的值是惟一的，有相同的会去重
-//*具有iterator接口，可使用for of（遍历出每个元素） 和 ...
+Set 集合
+
+成员的值是惟一的，有相同的会去重
+具有iterator接口，可使用for of（遍历出每个元素） 和 ..
+
+```
 //声明
 let set0=new Set()
 let set1=new Set([1,2,3])
+
 /*
 Set本质是对象，具有属性和方法
 size 元素个数
@@ -1192,84 +1268,93 @@ delete(元素) 删
 has(元素) 查 存在返回true
 clear() 清空
 */
+
 //应用
 //数组去重 (求交集/并集/差集时，为了效率一般先对数组去重)
 let arr=[1,1,2,2,3]
 let arr0=[...new Set([...arr])]
+
 //求交集
 let arr1=[1,1,2,2,3]
 let arr2=[3,4,4,5,5]
 let arr3=[...new Set([...arr1])].filter( i => new Set([...arr2]).has(i))
+
 //求并集
 let arr4=[...new Set([...arr1,...arr2])]
+
 //求差集 (a-b a有但b没有)
 let arr5=[...new Set([...arr1])].filter( i => !new Set([...arr2]).has(i))
-
-```
-1.12.2 Map
 ```
 
-//键值对的集合，键是唯一的，若增加了相同的键，会覆盖原有
- //键和值都可以是任何数据类型，也可以函数
-//有iterator接口，可使用for of（遍历出每个键值对） 和 ...
+#### 1.12.2 Map
+
+键值对的集合，键是唯一的，若增加了相同的键，会覆盖原有
+
+键和值都可以是任何数据类型，也可以函数
+
+有iterator接口，可使用for of（遍历出每个键值对） 和 ...
+
+```
 //声明
 let m=new Map()
+
 /*Map本质是对象，具有属性和方法
 size 键值对个数
 set(key,value) 增，不像c++中set相同的键会自动+1，可能有其他map方法
 get(key) 返回对应的key
 delete(key) 删
 clear() 清空
-
-```
-1.12.3 Class
+*/
 ```
 
-使用：
+#### 1.12.3 Class
+
 class里的this永远不会指向window，硬要指向window也会指向undefine
+
+```
 //声明，class不会被提升
 class c {
-  //构造函数定义属性，它在new时调用
-  constructor(a){
-    this.a=a
-    this.b=2
-  }
-  Aa = 10  //定义属性
-  //定义方法，必须是这种简写的写法，非静态/静态this为实例对象/类本身
-  func(){}
-  //静态属性/方法，实例化对象无法调用，只能类本身调用
-  //未被static修饰的职能new后调用
-  static c=5
-  static cc(){}
+ //构造函数定义属性，它在new时调用
+ constructor(a){
+ this.a=a
+ this.b=2
+ }
+ a = 10 //定义属性
+ //定义方法，必须是这种简写的写法，非静态/静态this为实例对象/类本身
+ func(){}
+ //静态属性/方法，实例化对象无法调用，只能类本身调用
+ //未被static修饰的职能new后调用
+ static c=5
+ static cc(){}
 }
 //实例化类
 let a=new c(123)
 
-类继承：
+//类继承：
 //父类
 class fa {
-  constructor(a){
-    this.a=a
-  }
-  xxxfa(){}
+ constructor(a){
+ this.a=a
+ }
+ xxxfa(){}
 }
 //子类继承父类
 class ch extends fa {
-  constructor(a,b,c){
-    //子类中必须有super()，才能使用this
-    super(a)  //调用父类的constructor函数
-    this.b=b
-    this.c=c
-  }
-  xxxch(){
-    //子类的新方法中，用 super.xxxfa()  可以调用父类的方法
+ constructor(a,b,c){
+ //子类中必须有super()，才能使用this
+ super(a) //调用父类的constructor函数
+ this.b=b
+ this.c=c
+ }
+ xxxch(){
+ //子类的新方法中，用 super.xxxfa() 可以调用父类的方法
 }
-  //重写，重写后子类以后调用的就是重写的方法
-  //重写的方法内是无法用super()调用父类的同名方法的
+ //重写，重写后子类以后调用的就是重写的方法
+ //重写的方法内是无法用super()调用父类的同名方法的
 //若未重写，子类对象调用父类方法实际是自动 super.xxxfa()
-  xxxfa(){
-    //super.xxxfa()  
-    //重写的带am
+ xxxfa(){
+ //super.xxxfa()  
+ //重写的带am
 }
 }
 //实例化子类,可调用子类和父类中的属性和方法
@@ -1277,20 +1362,19 @@ let chi=new ch(1,2,3)
 
 类属性的存取器：
 class c {
-  //定义了a的存取器，就有了a这个属性，不用另外定义
-  get a(){
-    return 123  //类实例对象可以直接 obj.a 来调用这个get,获得属性a的值
-  }
-  set a(newVal){
-    //操作    //也是直接 obj.a = 5  会调用set，来修改值
-  }
+ //定义了a的存取器，就有了a这个属性，不用另外定义
+ get a(){
+ return 123 //类实例对象可以直接 obj.a 来调用这个get,获得属性a的值
+ }
+ set a(newVal){
+ //操作 //也是直接 obj.a = 5 会调用set，来修改值
+ }
 }
-
 ```
-1.13 其他
 
-1.13.1 数值相关
-```
+### 1.13 其他
+
+#### 1.13.1 数值相关
 
 Number.EPSILON   js表示的最小精度
 作用：浮点数运算
@@ -1314,13 +1398,15 @@ Number.isNaN(x) x只有NaN才返回true，因为它不对数据进行转换。
 Math.trunc(x)  将x的小鼠部分抹掉
 Math.sign(x)   x为正数/负数/0返回1/-1/0
 
-```
-1.13.2 对象方法的扩展
-```
+#### 1.13.2 对象方法的扩展
 
 Js的数组，字符层，Set，Map本质都是对象，所以这些方法都可以调用
-*数组，字符层可以正常调用
-*Set，Map可以调，但结果为空
+
+* 数组，字符层可以正常调用
+
+* Set，Map可以调，但结果为空
+
+
 Object.keys(x)  将x对象的所有key以数组形式返回
 Object.values() 将x的所有value以数组的形式返回
 Object.entries(x) 返回一个对象数组，每个对象里是一对 key和value的数组
@@ -1329,34 +1415,40 @@ Object.assign(a,b) 合并a，b两个类，有重复的key则b的value覆盖a的v
 Object.setPrototypeOf(a,b)  将b设置为a的原型对象
 Object.getPrototypeOf(a)    返回a的原型对象
 
-```
-1.13.3 数组方法的扩展
-```
+#### 1.13.3 数组方法的扩展
 
+```
 let a=[1,2,3,4]
+
 //遍历数组，当所有值都符合条件时，才返回true v值，i索引，arr原数组
 let res0=a.every((v,i,arr) => v>=2)
+
 //遍历数组，当有一个值符合条件时，就返回true v值，i索引，arr原数组
 let res1=a.some((v,i,arr) => v>=2)
+
 //遍历数组，返回由符合条件的值组成的数组，不改变原数组
 let arr0=a.filter(i => i>=2)
+
 //遍历数组，0为pre的初始值，pre为上一次return的值，v为值，，i为索引，、、
 //arr原数组，常用来汇总
 let res2=a.reduce((pre,v,i,arr) => pre+v ,0)
 let res3=a.reduceRight((pre,v,i,arr) => pre+v ,0) //从右边开始遍历
+
 //遍历数组，查找数组中是否存在该值，存在返回true，形参：查找的值，开始//索引，结束索引
 let res4=a.includes(4,0,3)
+
 //遍历数组，返回符合条件的值，一旦找到就结束遍历并返回值，找不到返回//undefine，形参v值，i索引，arr原数组
 let res5=a.find((v,i,arr) => v>=2)
 let res6=a.find((v,i,arr) => v>=2) //返回的是索引值
+
 //改变原数组，形参：值，开始索引，结束索引，用值替换掉开始到结束索引(左//闭右开)的值
 a.fill(5,0,3)
+
 //复制数组
 let aCopy=Array.from(a)
+```
 
-```
-1.13.4 模块化
-```
+#### 1.13.4 模块化
 
 没有模块化时，引入多个js文件会有全局变量的冲突，可以用闭包，但是闭包后必须导出，否则无法复用。
 模块化的核心：导出，导入
@@ -1368,112 +1460,154 @@ CommonJS：nodejs，Browserify使用
 
 引入：
 
+
+
+```
 <script type="module" src="..."></script>
-
 或
-
 <script type="module">
-  import ...
+  import ... from '...'
 </script>
+```
 
 但是这样会有报错，而在实际开发项目中也不会使用这种方式，项目中会将模块化代码用babel转成ES5代码整合成main.js文件，html只引入这个js文件。
 
-<script src=”./main.js”></script>
+```
+<script src="main.js"></script>
+```
+
+
 
 导出语法：
+
+```
 export {
  …
 }
-或
-定义变量/函数/类的最前面加export
-或
-export default 定义好的变量等
-default 只能有一个
+//或,定义变量/函数/类的最前面加export
+//或
+export default 定义好的变量等  //default 只能有一个
+```
+
+
+
 导入语法：
 导入的路径规则;
 *在当前文件夹或在当前文件夹的一个文件夹内 最前面 ./ 下一级用 /
 *在上一级文件夹 最前面 ../ 多级就用多个 ../
 *导入包，直接写包名
 
+123
+
+```
 Import {…} from ‘路径’
-或
-Import * as 别名 from ‘路径’
-别名.调用
-或
-Import 别名 from ‘路径’ 
-与default配合
+
+//或
+Import * as 别名 from ‘路径’  //别名.调用
+
+//或
+Import 别名 from ‘路径’ //与default配合
+```
+
+
 
 使用CommomJS的NodeJS模块化语法：
 导出语法：
-module.exports={
-    变量名或函数名
-}
-导入语法：
-路径规则与ES6一样
-const {变量名或函数名} = require(‘路径’)
 
-babel：
+```
+module.exports={
+ 变量名或函数名
+}
+```
+
+
+
+导入语法：
+
+```
+//路径规则与ES6一样
+const {变量名或函数名} = require(‘路径’)
+```
+
+#### 1.13.5 babel：
+
 js编译器，将ES6以上代码，typescript代码转化成ES5代码。
 
-```
-2 ES7
-```
+## 2 ES7
 
 arr.includes(参数)  若数组中有该参数，返回true，否则false（以前的indexOf有则返回下标，否则返回-1）
 新运算符  **  幂运算  2**5  2的5次方
 
-```
-3 ES8
+## 3 ES8
 
-3.1 async和await
+### 3.1 async和await
 
 新的异步解决方案，以类似同步的方式使用异步
-async用来声明async函数，该函数一定会返回一个Promise对象，return的值是reslove()的参数，根据async函数返回的Promise的成功或失败状态，可以使用.then()和.catch()
-```
+（1）async
 
+用来声明async函数，该函数一定会返回一个Promise对象，return的值是reslove()的参数，根据async函数返回的Promise的成功或失败状态，可以使用.then()和.catch()
+
+```
 async function a(){
-  return 123
+ return 123
 }
 a().then(val => {
-  console.log(val)  //输出123
+ console.log(val) //输出123
 })
 //上述代码相当于
 new Promise((resolve,reject) => {
-  resolve(123)
+ resolve(123)
 }).then(val => {
-  console.log(val)  //输出123
+ console.log(val) //输出123
 })
-若async函数的返回值为：
-*该函数没有return 或只有return，Promise的值为undefine  状态为成功
-*该函数return xxx  Promise内容为xxx 状态为成功 （xxx为非Promise对象）
-*该函数return Promise对象 a，a成功/失败则返回的成功/失败、值为成功/失败的值
-*该函数内跑出异常，返回的Promise状态为失败
+```
 
-await后面可以放一个表达式称为await表达式（一般为Promise对象）
+
+
+若async函数的返回值为：
+
+* *该函数没有return 或只有return，Promise的值为undefine  状态为成功
+
+* 该函数return xxx  Promise内容为xxx 状态为成功 （xxx为非Promise对象）
+
+* 该函数return Promise对象 a，a成功/失败则返回的成功/失败、值为成功/失败的值
+
+* 该函数内跑出异常，返回的Promise状态为失败
+
+
+
+（2）await
+
+后面可以放一个表达式称为await表达式（一般为Promise对象）
 await必须放在async函数里面，但async函数里不一定要有await
 await语句的返回结果：若后面Promise成功/失败，返回成功的值/跑出异常（可通过捕获异常得到失败的值）
 
+```
 const p = new Promise((resolve,reject) => {
-  resolve(321)
-  //reject(456)
+ resolve(321)
+ //reject(456)
 })
 async function a(){
-  try{
-    let val = await p  //val值为321
-    console.log(val)
-  }
-  catch(e){
-    console.log(e)  //e的值为456
+ try{
+ let val = await p //val值为321
+ console.log(val)
+ }
+ catch(e){
+ console.log(e) //e的值为456
 }
 }
 a()
+```
 
-await失败的另一种写法，返回数组
+
+
+awsait失败的另一种写法，返回数组
+
+```
 const [err,res] = await xxx.catch(err => err)
+```
 
-```
-3.2 对象方法的扩展：
-```
+### 3.2 对象方法的扩展
 
 Object.keys(obj)  //返回一个数组，值为对象中所有的键
 Object.values(obj)  //返回一个数组，值为对象中所有的值
@@ -1484,43 +1618,49 @@ let m = new Map(Object.entries(obj))
 Object.getOwnPropertyDescriptors(obj) /*返回obj的属性的描述对象（描述对象就是用Object.create()创建出来的对象的那种格式，内容有是否可枚举/可删除等），*/
 Object.getOwnPropertyDescriptors()  的主要作用是实现更深层次的对象拷贝，把是否可枚举/可删除等都拷贝了。
 
-```
-4 ES9
+## 4 ES9
 
-4.1 为对象提供了像ES6数组一样的rest参数和扩展运算符
-```
+### 4.1 对象rest参数和扩展运算符
 
-//对象的rest：
-…hobbit会保存除了name，age之后的所有参数，保存为一个对象
+为对象提供了像ES6数组一样的rest参数和扩展运算符
+
+（1）对象的rest：
+
+```
+//…hobbit 会保存除了name，age之后的所有参数，保存为一个对象
 function a({name,age,...hobbit}){
-  console.log(name)
-  console.log(age)
-  console.log(hobbit)
+ console.log(name)
+ console.log(age)
+ console.log(hobbit)
 }
 a({
-  name: 'asd',
-  age: 20,
-  hobbit1: 'sleep',
-  hobbit2: 'run',
-  hobbit3: 'eat'
+ name: 'asd',
+ age: 20,
+ hobbit1: 'sleep',
+ hobbit2: 'run',
+ hobbit3: 'eat'
 })
+```
 
-//对象的扩展运算符：
+（2）对象的扩展运算符：
+
+```
 let a = {
-  name: 'asd',
-  age: 20
+ name: 'asd',
+ age: 20
 }
 let b = {
-  ...a,
-  sex: '男'
+ ...a,
+ sex: '男'
 }
 console.log(b)
-
 ```
-4.2 正则扩展
+
+### 4.2 正则扩展
 
 在ES5中就可以使用正则表达式了
-```
+
+
 
 创建：
 字面量创建（编译时就创建）；let reg = /正则/
@@ -1541,12 +1681,17 @@ while((res = reg.exec(‘…’)))  console.log(res)  //lastIndex属性只有在
 字符串.replace()   字符串.split()  的参数也可以是正则
 有些需求需要多个正则配合，将多个正则放到数组中，用every()，全真才真，如：
 密码由数字和字母组成，限制6到10位，且必须包含大写字母的数字
+
+```
 let reg = [
-  /[a-zA-Z0-9]{6,10}/,
-  /[A-Z]/,
-  /[0-9]/
+ /[a-zA-Z0-9]{6,10}/,
+ /[A-Z]/,
+ /[0-9]/
 ]
 console.log(reg.every( r => r.test(密码)))
+```
+
+
 
 js内置对象RegExp
 
@@ -1560,158 +1705,189 @@ console.log(/(y+)/.test('xyyxxxx')
 console.log(RegExp.$1)  //结果为字符串yy
 ```
 
-```
 ES9正则
-```
 
 1.对分组可进行命名：左括号后加?<别名>  如 \w+(?<num>\d+)
 exec和match，matchAll获得的匹配结果可用  匹配结果.groups.num 获得该分组
 2.ES9增加了ES5不支持的负向后行断言，正向后行断言
 3.新的匹配模式：dotAll模式（使用s），使得.包括换行符
 
-```
-5 ES10
 
-5.1 Object.fromEntries(xxx)  用二维数组创建一个对象
-xxx如   [[k1,v1],[k2,v2]]
+
+## 5 ES10
+
+（1）Object.fromEntries(xxx) 
+
+用二维数组创建一个对象
+xxx如 [[k1,v1],[k2,v2]]
 Object.entries()返回的和Map就是这种形式，既可以将Map转为对象
 
-5.2 字符串方法噶新增trimStart，trimEnd
-```
+（2）字符串方法噶新增
 
-let str=’   123   ’
-console.log(str.trim())      //ES5的方法，清空两侧空格
-console.log(str.trimStart())  //清空左侧空格
-console.log(str.trimEnd())  //清空右侧空格
+trimStart，trimEnd
 
 ```
-5.3 数组方法新增 flat() flatMap() ,用于数组降维
+let str=’ 123 ’
+console.log(str.trim()) //ES5的方法，清空两侧空格
+console.log(str.trimStart()) //清空左侧空格
+console.log(str.trimEnd()) //清空右侧空格
 ```
 
+（3）数组方法新增 
+
+flat() flatMap() ,用于数组降维
+
+```
 let arr2 = [1,2,[3,4]]
 let arr3 = [1,2,[3,4,[5,6]]]
-console.log(arr2.flat()) // [1,2,3,4]   二维转化一维
-console.log(arr3.flat()) // [1,2,3,4,[5,6]]  三维转二维
-console.log(arr3.flat(2)) // [1,2,3,4,5,6]  三维转一维，2表示深度2,3-1=2，空参则默认为1
+console.log(arr2.flat()) // [1,2,3,4] 二维转化一维
+console.log(arr3.flat()) // [1,2,3,4,[5,6]] 三维转二维
+console.log(arr3.flat(2)) // [1,2,3,4,5,6] 三维转一维，2表示深度2,3-1=2，空参则默认为1
 
 let arr = [1,2,3]
 console.log(arr.map(item => item * 10))
-console.log(arr.map(item=>[item*10,item*20]))   
-console.log(arr.flatMap(item => [item * 10,item * 20]))  //相当于map之后使用flat()
-
-```
-5.4 Sysbol新增description，获取Sysbol的描述字符串
+console.log(arr.map(item=>[item*10,item*20]))  
+console.log(arr.flatMap(item => [item * 10,item * 20])) //相当于map之后使用flat()
 ```
 
+（4）Sysbol新增description
+
+获取Sysbol的描述字符串
+
+```
 let a = Symbol('123456')
-console.log(a.description)  //输出123456
-
-```
-6 ES11
-
-6.1 class增加私有属性，类外不可调用，类内可以调用，用#声明，类内调用时，不能少了#
+console.log(a.description) //输出123456
 ```
 
+## 6 ES11
+
+（1）class增加私有属性
+
+类外不可调用，类内可以调用，用#声明，类内调用时，不能少了#
+
+```
 class a {
-  name;
-  #age;
-  constructor(name,age){
-    this.name = name
-    this.#age = age
-  }
-  getAge(){
-    console.log(this.#age)
-  }
+ name;
+ #age;
+ constructor(name,age){
+ this.name = name
+ this.#age = age
+ }
+ getAge(){
+ console.log(this.#age)
+ }
 }
 let aaa = new a('lgx',20)
 console.log(aaa) //看不到age
-console.log(aaa.name,aaa.age)  //无法调用私有属性，结果为undefine
-aaa.getAge()  //通过类内的方法噶来则可以调用
+console.log(aaa.name,aaa.age) //无法调用私有属性，结果为undefine
+aaa.getAge() //通过类内的方法噶来则可以调用
+```
 
-```
-6.2 Promise.allSettle(xxx)
-```
+（2）6.2 Promise.allSettle(xxx)
 
 xxx为由Promise对象组成的数组
 它会返回一个成功的Promise对象，成功的值为一个对象数组，对象数组中的每一个对象保存了xxx各个Promise的状态和对应的值
+
+```
 let p1 = new Promise((resolve,reject)=>{
-  resolve(1)
+ resolve(1)
 })
 let p2 = new Promise((resolve,reject)=>{
-  resolve(2)
+ resolve(2)
 })
 let p3 = new Promise((resolve,reject)=>{
-  reject(3)
+ reject(3)
 })
 let res = Promise.allSettled([p1,p2,p3])
 res.then( r => {
-  console.log(r)
+ console.log(r)
 })
-输出
+
+/*输出
 [
-  { status: 'fulfilled', value: 1 },
-  { status: 'fulfilled', value: 2 },
-  { status: 'rejected', reason: 3 }
+ { status: 'fulfilled', value: 1 },
+ { status: 'fulfilled', value: 2 },
+ { status: 'rejected', reason: 3 }
 ]
+*/
+```
+
+
 
 与all()的区别：all(xxx)中，
 若xxx数组中的Promise有一个失败，那all()返回的Promise就失败，失败的值为出错的那个Promise的值，
-Promise.all([p1,p2,p3]).catch( r => {
-  console.log(r)
-})  //输出 3
-只有全部成功时，all()才成功，成功的值为各个Promise成功的值的数组
-Promise.all([p1,p2]).then( r => {
-  console.log(r)
-})  //输出 [1,2]
 
 ```
-6.3 可选链操作符  ?. 
+Promise.all([p1,p2,p3]).catch( r => {
+ console.log(r)
+}) 
+//输出 3
+```
 
-语法 obj?.属性  当obj存在时，才会调用属性，防止出现 undefined.属性 的情况
+
+
+只有全部成功时，all()才成功，成功的值为各个Promise成功的值的数组
+
+```
+Promise.all([p1,p2]).then( r => {
+ console.log(r)
+}) 
+//输出 [1,2]
+```
+
+（3）可选链操作符 ?.
+
+语法 obj?.属性 当obj存在时，才会调用属性，防止出现 undefined.属性 的情况
+
+```
+/*
 若node环境中报错，则需要安装依赖
 npm install @babel/plugin-proposal-optional-chaining --save-dev
-```
+*/
 
 function a(config){
-  //原本必须这样做，通过短路运算判断是否传入了这个对象或属性
-  let userName = config && config.db && config.db.userName
-  console.log(userName)
-  /* console.log(config.db.passWord)  报错，没有传入passWord，
-     也没有用短路运算判断，不能有 undefine.属性 这种错做*/
-  console.log(config?.db?.passWord)  //没有传入passWord输出undefine，但是不报错，也不用短路运算
+ //原本必须这样做，通过短路运算判断是否传入了这个对象或属性
+ let userName = config && config.db && config.db.userName
+ console.log(userName)
+ /* console.log(config.db.passWord) 报错，没有传入passWord，
+ 也没有用短路运算判断，不能有 undefine.属性 这种错做*/
+ console.log(config?.db?.passWord) //没有传入passWord输出undefine，但是不报错，也不用短路运算
 }
 a({
-  db:{
-    userName: 'lgx'
-  }
+ db:{
+ userName: 'lgx'
+ }
 })
-
 ```
-6.4 动态import
+
+（4）动态import
 
 ES6的是静态import，这里的动态import实现按需加载（懒加载）
-```
 
+```
 import(‘…’).then(r=>{
-  //r为导出的东西
+ //r为导出的东西
 })
-const a = import(‘xxx’)  //路由懒加载
-
-```
-6.5 新数据类型，大整型：BigInt
+const a = import(‘xxx’) //路由懒加载
 ```
 
-let a = 123n  //声明
-let b = BigInt(567)  //将Number的整数转为BigInt，浮点数不能转
-let c = 123n + 456n  //BigInt只能与BigInt运算
-let a=Number.MAX_SAFE_INTEGER + 1  //Number能表示的最大整数
+（5）6.5 新数据类型，大整型：BigInt
+
+```
+let a = 123n //声明
+let b = BigInt(567) //将Number的整数转为BigInt，浮点数不能转
+let c = 123n + 456n //BigInt只能与BigInt运算
+let a=Number.MAX_SAFE_INTEGER + 1 //Number能表示的最大整数
 console.log(BigInt(a+10)) //再大就要转为BigInt
-
 ```
-6.6 新关键字：globalThis   
+
+（6）新关键字：globalThis
 
 始终指向全局环境（浏览器是window，node是global）
 
 字符串使用正则的新方法：
-str.matchAll(reg)   解决了match在全局模式下不显示全部信息的情况
-```
+str.matchAll(reg) 解决了match在全局模式下不显示全部信息的情况
+
+
+
+end

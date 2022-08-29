@@ -180,6 +180,17 @@ arr.forEach(function(item,index,arr){
 */
 ```
 
+for...in...循环
+
+需要特别注意，无论遍历的是数组，对象还是属性的键类型不为string的对象，i的类型都是string
+
+```
+for(var k in xxx){
+  console.log('key',k);         
+  console.log('value',xxx[k]);    
+}
+```
+
 其他与C语言一样
 
 ## 4 函数
@@ -896,73 +907,112 @@ fun(){}  //等同于 fun:function(){}
 
 ### 1.5 新数据类型Symbol
 
-```
-七个基本数据类型：
-ussonnb  undefine string symbol object null number boolean
-①Symbol数据类型
-  /*ES6新的基本数据类型，类似于字符层
-  *值唯一，可用来解决命名冲突问题
-  *无法运算与比较，只能用== != === !==比较
-  *Symobole可以转为字符串，可转为布尔值且值为true
-  *对象中用Symbol定义的属性不能遍历出来，但可用Reflect.ownKeys遍历出所有键名遍历出来*/
-  //声明，注意symbol的值是不可见的
-  let s0=Symbol()
-  //里面的字符层并不是值，只是做一个说明，相当于注释，字符层相同的symbpl值也是不一样的
-  let s1=Symbol('abc')
-  //函数对象创建
-  let s2=Symbol.for() //这样创建的两个symbol值一样，但与空字符串''创建的值不一样'
-  let s3=Symbol.for('123') //这样创建，字符串相同，值就相同
+七个基本数据类型：us so nnb
+undefine string symbol object null number boolean
+Symbol数据类型：
+ ES6新的基本数据类型，具有以下特性：
 
-  //应用：给对象添加独一无二的属性和方法
+* 值唯一，可用来解决命名冲突问题
+
+* 无法运算与比较大小，只能用== != === !==比较
+
+* Symobole可以转为字符串，可转为布尔值且值为true
+
+* 对象中用Symbol定义的属性不能遍历出来，但可用Reflect.ownKeys遍历出来
+
+```
+//声明，注意symbol的值是不可见的
+let s0=Symbol()
+//里面的字符串并不是值，只是做一个说明，相当于注释，字符层相同的symbpl值也是不一样的
+let s1=Symbol('abc')
+//函数对象创建
+let s2=Symbol.for() //这样创建的两个symbol值一样，但与空字符串''创建的值不一样'
+let s3=Symbol.for('123') //这样创建，字符串相同，值就相同
+
+//应用：给对象添加独一无二的属性和方法
 let obj={
-  run:Symbol(),              //第一种
+  run:Symbol(),     //第一种
   [Symbol('sleep')]:function(){}  //第二种
 }
 obj.run=function(){}   s//与对象内的run是不同的
+```
 
-//Symbol内置属性，作用是作为对象的属性
-如Symbol.hasInstance
-作为对象的属性 [Symbol.hasInstance] : …
+Symbol有内置属性，作用是作为对象的属性，如Symbol.hasInstance，作为对象的属性 [Symbol.hasInstance] : …
+
+Symbol作为对象属性的键时，需要特定的方式才能看到这个属性
+
+```
+let obj = {
+  [Symbol('123')]: '123',
+  a: 'a'
+}
+
+//以下四种方式都无法看到Symbol定义的属性
+for (let i in obj) console.log(i)
+console.log(Object.keys(obj))
+console.log(Object.getOwnPropertyNames(obj))
+console.log(JSON.stringify(obj))
+
+//以下一种方式只能看到Symbol定义的属性
+console.log(Object.getOwnPropertySymbols(obj))
+
+//以下两种方式可以看到所有属性
+console.log(obj)
+console.log(Reflect.ownKeys(obj))
 ```
 
 ### 1.7 新运算符
 
-```
-扩展运算符 … 将数组转化成逗号分隔的列表
+扩展运算符...
+
+将数组转化成逗号分隔的列表
 具备iterator接口的数据类型才可使用
+
+```
 const arr=[‘a’,’b’,’c’]
-1、fun(…arr)        //传入了’a’,’b’,’c’三个字符串作为实参
-2、let arr_arr=[…arr,…arr]      arr_arr为[‘a’,’b’,’c’,‘a’,’b’,’c’]
-3、let arr_copy=[…arr]        拷贝
-4、将伪数组（如querySelectAll得到的）转化为真正的数组
-5. 使用第三方库的函数时，若不知道里面的回调函数有几个形参，可以这样查看有什么参数
+
+//传入了’a’,’b’,’c’三个字符串作为实参
+fun(...arr)
+
+//arr_arr为[‘a’,’b’,’c’,‘a’,’b’,’c’]
+let arr_arr=[...arr, ...arr]
+
+//数组深拷贝
+let arr_copy=[...arr]
+
+//将伪数组（如querySelectAll得到的）转化为真正的数组
+let arr_new = [...伪数组]
+
+//使用第三方库的函数时，若不知道里面的回调函数有几个形参，可以这样查看有什么参数
 xxx((...aaa) => {
   console.log(aaa)
 })
 ```
 
-### 1.8 新for循环和迭代器
+### 1.8 迭代器和for of
+
+for...of..
+
+for of与for in的区别就在于for of的i。遍历出来的是value
+
+对象不能用for of
 
 ```
-for in 和 for of
-for in    只能用来遍历数组，字符串，对象
-for(var k in 数组名/字符串名/对象名)        //通常用k或key
-{
-console.log(k);         //k为每个数组或字符串的下标或对象属性名和方法名
-console.log(数组串对象[k]);    //遍历每个数组/字符串元素或对象属性的值，不执行方法
+for(let i of xxx){
+  console.log('value',i)
 }
-遍历对象数组时，第一行获得下标，第二行获得各个对象。
-
-for of与for in的区别就在于for of的i是数组/字符串元素的值,对象数组的对象实体。注意对象不能用for of
 ```
 
 迭代器：
 ES6提供了iterator接口，为不同的数据结构提供统一的访问机制。一种数据结构只要部署了interator接口，就能通过 for of 遍历
 一般iterator接口是各数据结构的原型对象中的一个方法：
+
+```
 [Symbo.iterator] : function(){}
+```
 
 自带iterator接口的数据结构：
-Array，String，Arguments，Set，Map，NodeList，typedArray（没有Object）
+Array，String，Arguments，Set，Map，NodeList，typedArray（没有Object），其中Set，Map无法用for in循环，对象无法用for of循环
 
 迭代器原理：
 next()返回一个对象，value属性为当前成员的值，done属性为是否遍历完（true为遍历完），随后指向下一个成员
@@ -977,38 +1027,37 @@ next()返回一个对象，value属性为当前成员的值，done属性为是�
 * 继续调用next()，遍历每一个成员，直到最后一个成员
 
 * 此时指针指向最后一个成员，再调一次next()后，done为true，结束
-  
 
 ```
-let arr=[1,2]
-let arrite=arr[Symbol.iterator]()
+let arr = [1,2]
+let arrite = arr[Symbol.iterator]()
 console.log(arrite.next()) //第一个成员
 console.log(arrite.next()) //第二个成员
-……
+...
 ```
-
-
 
 自定义遍历数据：
-有一个对象o，需求是使用for of遍历o里面的arr的每一个值
-虽然可以直接 for( I of o.arr ) 或其它方法进行遍历，但不符合面向对象的思想，此时是给o部署iterator接口
+需求：有一个对象o，需求是使用for of遍历o里面的arr的每一个值
+虽然可以直接 for( I of o.arr ) 或其它方法进行遍历，但不符合面向对象的思想，此时要给o部署iterator接口
+
+此外，也可以根据其他的需求来进行自定义
 
 ```
-const o={
+const o = {
   name:'lgx',
   arr:[1,2,3],
   [Symbol.iterator](){
-   let i=0 //索引
-   let _this=this //_this指向o
-   return { //return这个对象的里面的this指向return的这个对象，所以才需要_this，或用箭头函数
- next(){
-   if(i < _this.arr.length)
-   return {value:_this.arr[i++],done:false}
-   else return {value:undefine,done:true}
- }
- }
- }
- }
+    let i=0 //索引
+    let _this=this //_this指向o
+    return {
+      //return这个对象的里面的this指向return的这个对象，所以才需要_this，或用箭头函数
+      next(){
+        if(i < _this.arr.length)  return {value:_this.arr[i++],done:false}
+        else return {value:undefine,done:true}
+      }
+    }
+  }
+}
 for(i of o) console.log(i)
 ```
 
@@ -1063,8 +1112,6 @@ let 型数组=原数组.filter( function(n){
 });
 ```
 
-
-
 参数为回调函数，作用是：true时，将元素n加入新数组（用数组接收）
 
 （2）map()
@@ -1075,8 +1122,6 @@ let 型数组=原数组.map( function(n){
 });
 ```
 
-
-
 参数为回调函数，作用是：对每个n执行操作，并返回给新数组（用数组接收） 
 
 （3）reduce()
@@ -1086,8 +1131,6 @@ let 变量=原数组.reduce( function(pre,n){
   return 汇总（如pre+n 是计算数组元素值的和）;
 },0);
 ```
-
-
 
 第一个参数为回调函数，第二个参数为pre的初始化值，一般为0.
 作用：pre保存上一次return的值，n为此次遍历的值，每次执行完汇总，将值返回给pre。（最终用一个变量接收）
@@ -1100,12 +1143,11 @@ let 变量=原数组.filter( n => … ).map( n => … ).reduce( ( pre , n ) => �
 
 ### 1.10 生成器
 
-本质是一个函数,但是语法与传统函数完全不同，是es6提供的一个异步解决方案，进行异步编程。解决了回调地狱。
+本质是一个函数，但是语法与传统函数完全不同，是es6提供的一个异步解决方案，进行异步编程。解决了回调地狱。
 以前的异步解决方案是单纯使用回调函数。
 
-定义：三种都一样
-
 ```
+//定义：三种都一样
 function * xxx(){} 
 function* xxx(){} 
 function *xxx(){}
@@ -1113,11 +1155,13 @@ function *xxx(){}
 //调用：生成器定义后是一个迭代器对象，所以
 xxx().next() 
 //或：
-let x=xxx()
+let x = xxx()
 x.next()
 ```
 
-yield语句 在生成器函数体中定义，将代码区域上下分割，n条yield语句将代码分割成n+1个代码块，每次调用next()都只执行当前代码块，然后将指针指向下一个代码块。
+yield语句 
+
+在生成器函数体中定义，将代码区域上下分割，n条yield语句将代码分割成n+1个代码块，每次调用next()都只执行当前代码块，然后将指针指向下一个代码块。
 
 ```
 function * xxx(){
@@ -1127,54 +1171,60 @@ function * xxx(){
   yield '分割线21'
   console.log(333)
 }
+
 /*注意，这样调用必须将生成器赋值给一个变量，这样x.next()才是在同一个生成器内，而xxx().next()调用的话都是临时变量，都是在不同的生成器中，所以一般生成器最好赋值给一个变量*/
-let x=xxx()
+let x = xxx()
 console.log(x.next())
 console.log(x.next())
 console.log(x.next())
+
 //也可使用for of，这样调可不用将生成器赋值给变量
 for(i of xxx()) console.log(i)
 ```
-
-
 
 生成器函数参数：
 
 * 生成器可以定义形参
 
 * next()可传实参，生成器用 let x=yield 123 接收，x的值就是实参的值
-   第n次调用的next，则第n-1个yield接收
+
+* 第n次调用的next，则第n-1个yield接收
 
 应用：
+
+回调地狱的代码：
 
 ```
 //回调地狱，代码杂乱
 //1s后输出111，再2s后输出222，再3s后输出333，共6s
 setTimeout(()=>{
- console.log(111)
- setTimeout(()=>{
- console.log(222)
- setTimeout(()=>{
- console.log(333)
- },3000)
- },2000)
+  console.log(111)
+  setTimeout(()=>{
+    console.log(222)
+    setTimeout(()=>{
+      console.log(333)
+    },3000)
+  },2000)
 },1000)
+```
 
+同样的逻辑用生成器实现，简化代码：
+
+```
 //用生成器实现同样的功能
 function * xxx(a){
- yield setTimeout(()=>{ //改成let xxx=yield ... 就能接收第二个next参数
- console.log(111)
- x.next() //若此时想传递参数，x.next(数据)，此时第二次调next，所以被第一个yield接收
- },1000)
- yield setTimeout(()=>{
- console.log(222)
- x.next()
- },2000)
- yield setTimeout(()=>{
- console.log(333)
- x.next()
- },3000)
-
+  yield setTimeout(()=>{ //改成let xxx=yield ... 就能接收第二个next参数
+    console.log(111)
+    x.next() //若此时想传递参数，x.next(数据)，此时第二次调next，所以被第一个yield接收
+  },1000)
+  yield setTimeout(()=>{
+    console.log(222)
+    x.next()
+  },2000)
+  yield setTimeout(()=>{
+    console.log(333)
+    x.next()
+  },3000)
 }
 let x=xxx()
 x.next()
@@ -1217,8 +1267,6 @@ Promise的三种状态：等待（执行中），成功（执行resolve触发，
 */
 ```
 
-
-
 简写：
 
 * return new Promise()里面只有一个reslove或一个reject时，可以简写为：
@@ -1240,8 +1288,6 @@ Promise.all([
  ….
 ]).then( )
 ```
-
-
 
 then里面的箭头函数的参数是一个数组（自己命名），该数组按顺序保存all封装的所有reslove的参数
 由于封装的都是异步，所以all执行总时间就是执行最慢的那一个异步操作的时间。
@@ -1406,7 +1452,6 @@ Js的数组，字符层，Set，Map本质都是对象，所以这些方法都可
 
 * Set，Map可以调，但结果为空
 
-
 Object.keys(x)  将x对象的所有key以数组形式返回
 Object.values() 将x的所有value以数组的形式返回
 Object.entries(x) 返回一个对象数组，每个对象里是一对 key和value的数组
@@ -1460,8 +1505,6 @@ CommonJS：nodejs，Browserify使用
 
 引入：
 
-
-
 ```
 <script type="module" src="..."></script>
 或
@@ -1476,8 +1519,6 @@ CommonJS：nodejs，Browserify使用
 <script src="main.js"></script>
 ```
 
-
-
 导出语法：
 
 ```
@@ -1488,8 +1529,6 @@ export {
 //或
 export default 定义好的变量等  //default 只能有一个
 ```
-
-
 
 导入语法：
 导入的路径规则;
@@ -1509,8 +1548,6 @@ Import * as 别名 from ‘路径’  //别名.调用
 Import 别名 from ‘路径’ //与default配合
 ```
 
-
-
 使用CommomJS的NodeJS模块化语法：
 导出语法：
 
@@ -1519,8 +1556,6 @@ module.exports={
  变量名或函数名
 }
 ```
-
-
 
 导入语法：
 
@@ -1562,8 +1597,6 @@ new Promise((resolve,reject) => {
 })
 ```
 
-
-
 若async函数的返回值为：
 
 * *该函数没有return 或只有return，Promise的值为undefine  状态为成功
@@ -1573,8 +1606,6 @@ new Promise((resolve,reject) => {
 * 该函数return Promise对象 a，a成功/失败则返回的成功/失败、值为成功/失败的值
 
 * 该函数内跑出异常，返回的Promise状态为失败
-
-
 
 （2）await
 
@@ -1598,8 +1629,6 @@ async function a(){
 }
 a()
 ```
-
-
 
 awsait失败的另一种写法，返回数组
 
@@ -1660,8 +1689,6 @@ console.log(b)
 
 在ES5中就可以使用正则表达式了
 
-
-
 创建：
 字面量创建（编译时就创建）；let reg = /正则/
 构造函数创建（运行时才创建）：let reg = new RegExp(‘正则’)
@@ -1691,8 +1718,6 @@ let reg = [
 console.log(reg.every( r => r.test(密码)))
 ```
 
-
-
 js内置对象RegExp
 
 RegExp会保存上一次使用正则的分组的匹配结果，如：
@@ -1711,8 +1736,6 @@ ES9正则
 exec和match，matchAll获得的匹配结果可用  匹配结果.groups.num 获得该分组
 2.ES9增加了ES5不支持的负向后行断言，正向后行断言
 3.新的匹配模式：dotAll模式（使用s），使得.包括换行符
-
-
 
 ## 5 ES10
 
@@ -1812,8 +1835,6 @@ res.then( r => {
 */
 ```
 
-
-
 与all()的区别：all(xxx)中，
 若xxx数组中的Promise有一个失败，那all()返回的Promise就失败，失败的值为出错的那个Promise的值，
 
@@ -1823,8 +1844,6 @@ Promise.all([p1,p2,p3]).catch( r => {
 }) 
 //输出 3
 ```
-
-
 
 只有全部成功时，all()才成功，成功的值为各个Promise成功的值的数组
 
@@ -1887,7 +1906,5 @@ console.log(BigInt(a+10)) //再大就要转为BigInt
 
 字符串使用正则的新方法：
 str.matchAll(reg) 解决了match在全局模式下不显示全部信息的情况
-
-
 
 end

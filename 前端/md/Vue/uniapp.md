@@ -49,19 +49,65 @@ HBuilder的项目运行到微信开发者工具查看效果：
 
 unpackage为了防止没有文件而不提交的本地库，需要在里面新建.gitkeep文件占位
 
-# 语法
+appid：
 
-采用Vue语法+微信小程序配置文件的开发模式
+除了各个小程序的appid外，uniapp自己本身也有一个appid
 
-uniapp的顶级对象是uni，有各个端的api，微信小程序的全部api都可以通过uni调用，
+目录结构：
 
-可以通过 uni.xxx = yyy 来挂载到uni
+可以像温馨小程序一样，新建页面、新建组件等快速创建文件
 
-每个页面对应一个.vue文件，可以使用所有的Vue语法，此外还可以使用微信小程序的组件、生命周期
+* pages：存放tabbar页面的.vue文件
 
-注意：若使用了div，span，img，input，button，编译成微信小程序会变成view，text，image，input，button
+* components：存放自定义组件，放在这里的自定义组件不需要引入注册就可以在任何页面上使用；其他文件夹下的组件要使用就需要引入注册
 
-Vue3.2
+* static：存放静态资源文件（图片等），注意static里面的文件不会被webpack编译，需要webpack编译的文件（如es6，ts，less等）不能放在里面
+
+* uni_modules：存放dcloud插件市场下载的第三方库（如uni-ui）
+
+* app.vue：编写应用声明周期，全局样式，不需要写<template>
+
+* uni.scss：系统会自动引入，配置全局样式（需要自行npm安scss）
+
+* manifast.json：H5，小程序，安卓，ios的配置文件
+
+* pages.json：相当于微信小程序的app.json
+
+* vue.config.json：webpack配置文件（需要自己创建）
+
+# 二、语法
+
+采用Vue语法+微信小程序配置文件的开发模式，规范如下：
+
+* uniapp的顶级对象是uni，有各个端的api，微信小程序的全部api都可以通过uni调用，可以通过 uni.xxx = yyy 来挂载到uni，保留了H5的定时器。
+
+* 每个页面对应一个.vue文件，可以使用所有的Vue语法，此外还可以使用微信小程序的组件、生命周期（应用生命周期都写在app.vue）
+
+* uniapp事件总线：
+  
+  uni.$emit()
+  
+  uni.$on()
+  
+  uni.$off()
+
+* 若使用了div，span，img，input，button，编译成微信小程序会变成view，text，image，input，button，为了兼容多端推荐使用微信小程序的标签
+
+* css为了兼容多端，推荐使用flex布局
+
+* 引入资源时，不推荐使用相对路径，推荐使用绝对路径， ‘@/xxx.png’  是根目录下的xxx.png（但如果是路径保存为js的变量，就不能加@）；非引入资源时（如路由跳转），就根据各自的语法规范。
+
+Vue3使用：
+
+需要在manifast.json中配置：
+
+```
+...
+"vueVersion": "3",
+...
+```
+
+Vue3.2的使用：
 
 ```
 //微信小程序的生命周期和上拉加载等等在Vue2 Vue3.0都可以写在配置项中，而Vue3.2的script setup用法如下：
@@ -79,12 +125,18 @@ onLoad((options) => {
 //app.vue
 <style>
 page {
-    
+
 }
 </style>
 ```
 
+生产环境判断：
 
+```
+if(process.env.NODE_ENV == 'development')
+  console.log('开发环境')
+else console.log('生产环境')
+```
 
 配置文件：
 
@@ -117,8 +169,6 @@ pages.json和微信小程序的app.json用法一样，可配置页面，导航�
 自定义组件都放在 /components 目录下，可通过右键新建组件快速创建
 
 自定义组件不用像vue需要引入注册，也不需要像微信小程序需要配置json，而是直接使用
-
-
 
 uni-ui：
 
@@ -166,15 +216,137 @@ uni.$http.get('/api/public/v1/home/swiperdata').then(res => {
 
 注意，由于项目最终运行到微信小程序端，所以网络请求的要求也和微信小程序一样，需要配置合法域名，或勾选不检验合法域名
 
-# 多端兼容
+# 跨平台兼容
 
-uniapp编写微信小程序，最终是编译成微信小程序代码的，一些微信小程序的限制也会存在，如id选择器，通配符选择器无效
+## 1 平台判断
 
-ios设备，即使是ios的小程序对.webp格式的图片支持都不太好
+大部分组件和API，uniapp已经做了跨平台的封装，可以直接使用；但是部分的组件和API由于平台特性而无法跨平台（组件和API在哪个平台可使用详见文档）
+
+在需要自己做跨平台，或不同平台需要不同的个性化，就需要自己进行平台判断。
+
+运行时判断：
+
+```
+switch(uni.getSystemInfoSync().platform){
+  case 'android':
+    console.log('安卓')
+    breeak
+  ...
+}
+```
+
+编译时判断：
+
+使用注释条件编译
+
+```
+<template>
+  <!-- #ifdef h5 -->
+  <text>h5</text>
+  <!-- #endif -->
+  <!-- #ifdef MP-WEIXIN -->
+  <text>weixin</text>
+  <!-- #endif -->
+</template>
+
+<script>
+export default {
+  onLoad(){
+    // #ifdef h5
+    console.log('h5')
+    // #endif
+    // #ifdef MP-WEIXIN
+    console.log('weixin')
+    // #endif
+  }  
+}
+</script>
+/* #ifdef h5 */
+...
+/* #endif */
+/* #ifdef MP-WEIXIN */
+...
+/* #endif */
+<style>
+
+</style>
+```
+
+| #ifdef  | 仅在当前平台 |
+| ------- | ------ |
+| #ifndef | 除了该平台  |
+
+具体的平台类型详见文档，此外还可以判断是在Vue2还是Vue3
+
+```
+// #ifdef VUE3
+...
+// #endif
+```
+
+还可以在pages.json中使用（只有pages.json这个json文件可以用）：
+
+由于JSON的严格性，最后一个属性不能加逗号，而条件编译若不成立则整个代码块都不变异，所以需要特别注意逗号。
+
+```
+{
+  ...
+  "xxx":{...}
+  // #ifdef h5
+  ,"yyy":{},
+  // #endif
+  ...
+}
+```
+
+若是globalStyle想实现跨平台，不推荐使用条件编译，推荐使用平台节点：
+
+节点里面的配置，建议参考各平台的说明，直接使用各平台的特有属性
+
+```
+{
+  "globalStyle":{
+    ...
+    "mp-weixin":{...}
+  }
+}
+```
+
+此外，static目录也可使用条件编译，在对应平台打包对应的文件夹爱，以此减少打包体积，具体详见文档。
+
+运行时判断和编译时判断的区别：
+
+* 编译时判断，若不符合条件直接不编译，而运行时编译则会全部编译，且运行时多了个判断平台的操作，所以性能上编译时判断占优
+
+* 编译时判断可以在模板、js、css、pages.json中使用，运行时判断只能在js，模板（v-if，v-show）使用，使用上编译时判断也占优
+
+* 编译时判断无法判断安卓，ios，此时只能用运行时编译
+
+## 2 各平台注意事项
+
+（1）安卓
+
+（2）ios
+
+* ios设备，即使是ios的小程序对.webp格式的图片支持都不太好
+
+* 地图的覆盖物，使用高清图时，文件名要以@2或@3结尾，如 xxx@2.png
+
+（3）微信小程序
+
+* 不支持id选择器和通配符选择器
+
+（4）支付宝小程序
+
+* 项目中不允许出现以@等特殊符号命名的文件
+
+（5）
 
 
 
-# 发布
+
+
+# 打包发布
 
 uniapp发布微信小程序：
 1.微信后台-开发-开发管理-开发设置-服务器域名-来设置合法域名
@@ -184,4 +356,4 @@ uniapp发布微信小程序：
 5.弹出的微信开发者工具-上传-输入版本号上传
 6.微信后台-管理-版本管理-提交审核
 
-123
+end

@@ -6,6 +6,14 @@ tsc xxx.ts   编译出js文件
 
 tsc xxx.ts -w  观察模式，代码已修改就自动编译（单个文件）
 
+tsc编译ts文件后生成js文件，还需要运行js文件才能看到效果，比较麻烦，使用ts-node能够一键编译运行
+
+```
+npm install -g ts-node
+npm install --save-dev @types/node
+ts-node xxx.ts
+```
+
 ts.config.json   ts的编译配置文件
 
 有了这个文件后，tsc 就会编译所有ts文件，tsc -w 就会观察所有ts文件的修改
@@ -20,171 +28,395 @@ js类型是大写开头，而ts是小写开头
 
 给变量声明数据类型，赋值时只能赋值对应的数据类型
 
-```
-/基本谁用
+## 1 基本使用
 
-//变量
+```
 let a: number
 let b: number = 5
 let c = 5   //这样ts会自动给变量number类型
 let d; symbpl = Symbol(123)
 ```
 
+ts中应当尽量避免不同类型的值进行比较，==和===的效果一样了都是先检查类型，如果类型不同，==会得到false
+
+编译器可能会报错 ‘该条件始终为false’
+
 ```
-//比较简单的类型
+let a: number = 123
+let b: string = '123'
+console.log(a == b)
+console.log(a === b)
 
-
-//可以用typeof检查类型
-
-//1.字面量类型，声明后不能修改，相当于常量
-let a1: 5
-
-//2.any,表示任意类型，相当于关闭了类型检查（不建议使用，不然使用ts干嘛）
-let b1: any = 'hello'  //显示any
-let b2       //隐式any
-
-//3.unknown，表示未知类型，推荐用来替代any，相当于类型安全的anys
-let b3: unknown = '123'
-//-与any的区别
-let b4: string = b1  //成功，可以将any类型赋值给任何的类型，相当于把b4的类型检查也关了
-// let b5: string = b3 //报错，不能把unknown类型赋值给其他类型
-//--
-//--那么我们知道unknown是什么类型，需要赋值时怎么办
-let b5: string = b3 as string  //类型断言，告诉编译器我就是string类型(注意，若b3不是string，也会赋值成功，但类型不是string而是真正的类型)
-let b6: string = <string>b3 //效果一样
-//--
-
-//4.函数返回值void never
-//5.1没有指定类型，则类型根基return的类型
-function fun1(){  //number类型
-  return 123
+//若实在有比较不同类型的需求，可以先比较类型，再比较值
+if(typeof a === typeof === b){
+  if(a === b){}
 }
-function fun2(){  //没有return或reture; 类型undefined
+```
 
-}
-function fun3(): void{ //void表示空返回值，此时不能有return，或return;或returnundefined
-  //空返回值也是一种返回值
-}
-function fun4(): never{ //表示从来没有返回值，如异常了代码直接停止运行，自然没有返回值
+
+
+## 2 基本类型
+
+js对应的类型是大写开头，而ts对应的类型是小写开头
+
+### 2.1 number,string,boolean,symbol
+
+```
+let a: number = 5    //其他进制、NaN，Infinity等都是number类型
+let b: string = 'aaa'
+let c: boolean = true
+let d: symbol = Symbol(123)
+```
+
+也能通过构造函数赋值
+
+```
+let a: number = Number(5)
+//let a: number = new Number(5)  //报错，因为生成的是对象类型，不能赋值给number类型
+
+let b: Number = new Number(5)  //Number是Number对象类型
+console.log(b.valueOf())
+```
+
+### 2.2 undefined,null,void
+
+```
+//void，值只有null和undefined两种，通常作为函数返回值的类型
+let v1: void = null
+let v2: void = undefined
+
+
+//undefined
+/*
+null，它们是所有类型包括void的子类型，计所有类型都可以赋值为null，undefined
+undefined类型和null类型都有且只有两种值，undefined和null
+与js一样，未赋值的变量输出并不会报错，值为undefined，但这不规范，如number类型的值不应该是undefined
+若值有number或undefined等类似情况，可以用联合类型
+*/
+let a1: number = null
+let a2: number = undefined
+let b1: undefined = undefined
+let b2: undefined = null
+let c1: null = null
+let c2: null = undefined
+let d: number | undefined | null = null
+
+//void类型的变量只能赋值给void类型的变量，而undefiend可以和null类型的变量可以赋值给其他类型的变量
+let aaa: void = null
+let bbb: void = aaa  //正确
+//let ccc: null = aaa   //报错
+//let ddd: number = aaa //报错
+
+let xxx: null = null
+let yyy: undefined = xxx
+let zzz: void = xxx
+let mmm: number = xxx
+```
+
+为了实现更严格的类型检查，在tsconfig.json配置文件中，
+
+### 2.3 字面量类型
+
+字面量也能作为类型，值职能是这个类型，声明后不能修改，相当于常量
+
+对象属性的键的类型也是字面量类型
+
+```
+let a: 5
+let b: 'aaa'
+a = 5
+b = 'aaa'
+```
+
+### 2.4 any,unknown
+
+any和unknown是ts的顶级类型
+
+any，表示任意类型，相当于关闭了类型检查（不建议使用，不然使用ts就没意义了）
+
+unknown，表示未知类型，推荐用来替代any，相当于类型安全的any
+
+```
+let a1: any = 'hello'  //显式any
+let a2                 //隐式any
+let b1: unknown = '123'
+//可以再次赋值其他类型的值
+a1 = 5
+b1 = 7
+
+/*any，unknown区别
+1.类型检查的区别
+2.any类型变量可以赋值给其他任何的类型的变量，而unknown类型的变量只能赋值给any类型变量或unknown类型变量
+3.unknown类型变量若是对象，无法访问里面的属性和方法，而any可以
+*/
+let c1: string = a1  //成功
+// let c2: string = b1 //报错
+//若确定unknown是什么类型，需要赋值时的办法
+let c3: string = b3 as string  //类型断言，告诉编译器我就是string类型(注意，若b3不是string，也会赋值成功，但类型不是string而是真正的类型)
+let c4: string = <string>b3    //类型断言另一组写法
+
+let d1:any = {a: 123}
+let d2:unknown = {a: 123}
+console.log(d1.a)   //正确
+//console.log(d2.a) //报错
+```
+
+### 2.5 never
+
+表示不存在的状态，或永远无法达到的状态
+
+```
+//报错,因为不可能同时是number又是string，推论为never类型并报错
+let a: number & string
+
+//返回类型never表示从来没有返回值，如异常了代码直接停止运行，自然没有返回值
+function f3(): never{ 
   throw 'never'
 }
+function f3(): never{ 
+  while(true){}
+}
 
-//undefined，null
-/*
-与js一样，未赋值的变量输出并不会报错，值为undefined，但这不规范，如number类型的值不应该是undefined
-undefined，null是never的子类型，它们的值也只能是undefined，null
-若值有number或undefined等类似情况，可以用关联类型来
+/*实际应用
+作为兜底逻辑，如switch的default里面never作为兜底逻辑，若到了default则会因为never
+而报错，需要修改代码
 */
-let a:number
-let b:undefined
-let c:null
-let d:number|undefined|null
 ```
 
-```
-//对象定义与赋值
+## 3 对象
 
+```
 //因为js中number，string甚至函数都是对象，所以这样写其实没什么意义
-let obj :object;
+let obj: object;
 
 //通常这样指定对象类型
-let obj1 :{
-  name :string,
-  age :number
-  job? :string  //表示为可选属性，赋值时可赋可不复
+let obj1: {
+  name: string,
+  readonly age: number  //只读属性，不能修改
+  job?: string          //表示为可选属性，赋值时可赋可不复
 }
-//注意赋值时，属性必须是对应类型，且属性数量必须给全(?除外)
+//注意赋值时，属性必须是对应类型，且属性数量必须给全(可选属性除外)
 obj1 = {
   name: 'lgx',
   age: 23
 }
 
-//不知道赋值有几个属性，可以这样做，表示属性名为字符串，属性值为any类型
-let obj2: {name: string, [xxx: string]: any}
+//由于对象的类型已经给定了，所以无法增加、删除属性
+//若不知道该对象未来有多少属性，表示属性名为字符串，属性值为any类型
+let obj2: {
+  name: string, 
+  [xxx: string]: any  //xxx任意起名，any也可以换成其他类型
+}
 obj2 = {name: 'lgx',a:'5',b:55}
 ```
 
-```
-//定义一个函数结构
-let fun: (a: number,b: number) => number
-//赋值时，形参名可以不一样，但形参个数和类型必须一样
-fun = function(n1: number,n2: number): number{
-  return n1+n2
-}
-```
+## 4 数组、元组、枚举
+
+ts的数组里面都是相同的类型(所以不建议使用any)，有两种声明方式
 
 ```
-//ts的数组里面都是相同的类型(所以不建议使用any)，有两种声明方式
 let arrStr: string[]
 let arrNum: Array<number>
 arrStr = ['a','f']
 arrNum = [5,8]
+//多维数组
+let xy: number[][] = [[1,2]]
+let ab: Array<Array<number>> = [[1,2]]
+//接口来实现数组，通常用来实现伪数组
+interface myArr {
+  [index: number]: number
+}
+let a:  myArr = [1,2]
+//函数arguments是伪数组，类型为IArguments
+function(a:number, b:number){
+  let arg: IAguments = arguments
+}
+```
 
-//元组tuple，即长度固定的数组
+元组tuple，即固定长度，类型不同的元素组合，是数组的变种，每个元素的类型可以不同
+
+```
 let tup: [string,number]
 //赋值时，类型和长度必须一样
 tup = ['hh',55]
+//每个元素会被推断为联合类型 string | number
+tup.push(true) //报错，不能把boolean赋值给 string | number
+//经典应用
+let excel: [string,number][] = [
+    ['lgx',23]
+]
+```
 
-//枚举enum，适合值在几个值选择时使用
-enum sexVal{
+枚举enum，适合值在几个值选择时使用
+
+```
+//自定义数字枚举
+enum sexVal {
   Male = 0,
   Female = 1
 }
 let o: {name: string,sex: sexVal}
 o = {name: 'lgx',sex: sexVal.Male}
+
+//数字枚举，若不给值，则自动重上到下一次从0开始赋值
+enum aaa {
+  red,   //0
+  green, //1
+  blue   //2
+}
+
+//数字枚举的增长枚举，给第一个赋值，其他的根据这个值一次递增
+enum aaa {
+  red = 2,   
+  green, //3
+  blue   //4
+}
+
+//字符串枚举，值全部要给，值全部是字符串则是字符串枚举，值可有数字或字符串则是异构枚举
+enum aaa {
+  a = 'aaa',
+  b = 'bbb'
+}
+
+//接口枚举
+enum aaa {
+  a: 1
+}
+interface int [
+  a: aaa.a
+]
+let obj: int = {
+  a: aaa.a  //也可以 a: 1
+}
 ```
 
-# 二、函数
+枚举可以被const修饰（不能使用let，var）
 
 ```
-//1.使用返回值类型下的函数形式
+const enum a {
+  a = 0,
+  b = 1
+}
+let aaa = a.a
+//编译后的js
+var aaa = 0
+
+enum b {
+  a = 0,
+  b = 1
+}
+let bbb = a.a
+//编译后的js
+var b;
+(function (b) {
+  b[b["a"] = 0] = "a";
+  b[b["b"] = 1] = "b";
+})(b || (b = {}));
+var bbb = b.a;
+```
+
+枚举的反向映射，可以用key得到value，也可以用value得到key
+
+不能用const修饰enum，值必须是number
+
+```
+enum a { 
+  a = 0,
+  b = 1
+}
+let value = a.a
+let key = a[value]
+console.log(key,value)
+//编译后js的部分代码
+a[a[a] = 0] = 'a'
+```
+
+## 5 函数
+
+对象类型，type，类、接口或函数形参若有函数成员，不确定具体的实现，可以给类型为Function
+
+### 5.1 形参、返回值类型
+
+若未指定返回值类型，则返回值类型默认为void
+
+```
+//1.返回值类型
+//各种形式的写法
 let fun1 = function():number{
   return 1
 }
+
 function fun2():number{
   return 2
 }
-let fun3 = ():number => {
+
+//箭头函数若参数只有一个，且此时需要传递类型，则小括号不能省略
+let fun3 = (a: number):number => {
   return 3
 }
 
-//2.函数形参
-/*
-js中，实参少了其他为undefined，多了忽略
-ts中，实参少了多了都不行，必须与形参个数一致（可选参数和剩余参数除外）
-*/
-function fun4(a: string = '123'){}  //给形参指定类型,同时制定默认值
-//可选参数，所有可选参数必须放到必选参数后剩余参数前,若未传且无默认值则为undefined
-function fun5(a: string, b?:number, c?:number){} 
-function fun6(a: string,b?:number,...r:number[]){} //类型必须是数组，放到最后且只有一个，作为数组接收多余的参数
-//可选参数是ts新增的，剩余参数es6就有
+let fun4: (a: number,b: number) => number
 
-//3.重载
-//js中函数重复声明则会覆盖前面的，ts则可以使用重载
-//js的重载与java很不同，是因为为了兼容es低版本
+
+//返回值推断，空返回值，never
+//若没有给定返回值类型，则会根据return自动推断
+function f1(){ return 123 }
+
+//返回类型void，当没有return，或return undefined，return null，return;时使用
+function f2(): void{}  //void也可以不写，会自动推断为void类型
+//return undefined，return null，return;时使用，没有return不能使用
+function f2(): undefined{ return; }
+function f2(): null{ return; }
+//不能 return void 因为void不是值，而是类型，不能return类型
+```
+
+js中，实参少了其他为undefined，多了忽略
+ts中，实参少了多了都不行，必须与形参个数一致（可选参数和剩余参数除外），类型也必须一样
+
+可选参数是ts新增的，剩余参数es6就有
+
+```
+//形参类型
+
+//给形参指定类型,同时制定默认值
+function fun1(a: string = '123'){}  
+
+//可选参数，所有可选参数必须放到必选参数后剩余参数前,若未传且无默认值则为undefined
+function fun2(a: string, b?:number, c?:number){} 
+
+//类型必须是数组，放到最后且只有一个，作为数组接收多余的参数
+function fun3(a: string,b?:number, ...r:number[]){} 
+```
+
+### 5.2 函数重载
+
+js中函数重复声明则会覆盖前面的，ts则可以使用重载
+js的重载与java很不同，是因为为了兼容es低版本
+
+```
 //例1
-function fun7(age:number):number
-function fun7(name:string):string
-function fun7(a:any):any{
+function fun1(age:number):number
+function fun1(name:string):string
+function fun1(a:any):any{
   if(typeof a === 'number') return a
   else return `姓名：${a}`
 }
 //例2
-function fun8(name:string):string
-function fun8(name:string, age?:number):string
-function fun8(a:any,b?:any):any{
+function fun2(name:string):string
+function fun2(name:string, age?:number):string
+function fun2(a:any,b?:any):any{
   if(b) return `${a}${b}岁`
   else return `姓名${a}`
 }
-console.log(fun7('lgx'))
-console.log(fun7(23))
-console.log(fun8('lgx'))
-console.log(fun8('lgx',23))
+console.log(fun1('lgx'))
+console.log(fun1(23))
+console.log(fun2('lgx'))
+console.log(fun2('lgx',23))
 ```
 
-# 三、高级类型语法
+# 二、js内置对象类型和DOM、BOM类型
 
-## 1 js内置对象类型和DOM、BOM类型
+## 1 js内置对象类型
 
 这些类型ts也内置了
 
@@ -218,9 +450,17 @@ b.set('age',23)
 //3.迭代器
 letarr = [1,2,3]
 let c:Iterator<number> = arr[Symbpl.iterator]()
+
+//4.Promise,Promise和res的类型都可以自动退出，而resolve参数的类型就必须用泛型指定
+function p(): Promise{
+  return new Promise<number>((resolve,reject) => {
+    resolve(123)
+  })
+}
+p().then((res :number) => {})
 ```
 
-DOM：
+## 2 DOM类型
 
 ```
 //1.HTMLElement，DOM元素
@@ -362,6 +602,8 @@ HTML标签对应的类型：
 圣
 ```
 
+## 3 BOM类型
+
 闭包：
 
 ts没有闭包了，要想实现闭包的功能，有两种方式：
@@ -370,17 +612,18 @@ ts没有闭包了，要想实现闭包的功能，有两种方式：
 
 * 定义一个class，存放闭包使用的变量和原来闭包的函数
 
-BOM：
+定时器：
 
 ```
-//定时器
 let timer1: Number | null = null
 let timer2: Number | null = null
 clearTimeout(Number(timer1))
 clearInterval(Number(timer2))
 ```
 
-## 2 联合类型，交叉类型
+# 三、高级类型语法
+
+## 1 联合类型，交叉类型
 
 ```
 //联合类型
@@ -395,12 +638,15 @@ let obj: {name: string} & {age: number}
 obj = {name: 'lgx',age: 23}
 ```
 
-## 3 类型推论，类型断言
+## 2 类型推论，类型断言
 
 ```
 //类型推论，会根据值来自动推断类型
 let a = 5  //相当于 let a: numebr = 5
-let b   //未赋值，推论为any类型
+let b      //未赋值，推论为any类型
+let obj = {a: 123}  //相当于 let obj:{a:number} = {a:123}
+...其他情况以此类推
+
 //返回值简单可以屯轮出来，但当返回值比较复杂时，可能推论不出来，此时需要手动写类型
 let aaa = () => 123   //相当于 let aaa = (): number => 123
 
@@ -425,7 +671,7 @@ b(true)
 // b(123) 报错
 ```
 
-## 4 类型别名
+## 3 类型别名
 
 ```
 type myType1 = string
@@ -439,12 +685,240 @@ type myType4 = (a: number) => number
 let a: myType2
 ```
 
-## 5 其他内置类型
+## 4 类型操作
 
-Partiai，Pick
+类型和值要区分开，类型不能像值一样使用，只能用类型自己的实验方式，定义类型的方式只有type，接口和对象的临时定义类型，三者操作一样，以下就以type为例
+
+### 4.1 查看类型：
+
+```
+type myType = {
+  name: string,
+  age: number
+}
+console.log(type) //报错，类型不是值，不能输出
+//需要查看类型，可以把鼠标放到myType上就会展示
+```
+
+### 4.2 获取类型：
+
+```
+//通过索引获取type，接口的某个属性的类型
+type myType = {
+  a: number
+}
+type a = myType['a]
+
+//typeof获取变量的类型
+let obj = {
+  a: 123
+}
+//获取正确的ts类型
+type objType = typeof obj
+//console只会输出object，不会输出具体的ts类型
+console.log(typeof obj)
+
+//获取函数返回值类型
+const fun = () => 123
+type funType = ReturnType<typeof fun>
+
 
 ```
 
+### 4.3 keyof
+
+用于将某类型所有属性的字面量类型组合成一个联合类型
+
+```
+type myType = {
+  name: string,
+  age: number
+}
+// 'name' | 'age'
+type p1 = keyof myType
+
+
+```
+
+对象属性的键的类型只能是number,string,symbol或字面量，所以keyof any获得的联合类型是 number | string | symbol
+
+```
+type p2 = keyof any
+```
+
+for，forEach，for...in...，for...of...遍历时，遍历的那个临时变量不能也不需要指定类型，它会自己类型推论，唯一的特殊情况就是for...in...遍历对象的key时，由于对象的key可能是number，string，symbol或字面量，所以会类型推论隐式具有any类型
+
+解决：在使用i的地方使用类型断言为obj属性键字面量类型组合成的联合类型
+
+```
+let obj = {
+  name: 'lgx',
+  age: 23
+}
+for(let i in obj){
+  //console.log(obj[i])
+  console.log(obj[i as keyof typeof obj])
+}
+```
+
+
+
+### 4.4 索引签名
+
+一个对象一旦指定了类型，或未指定由类型推论退出，它的类型就已经定好，若不做一定的处理就无法添加和删除属性
+
+当不知道一个对象未来会有多少属性时，可以使用索引签名，解决添加属性的问题
+
+索引签名无法用?修饰，可以用readonly修饰
+
+```
+type objType = {
+  //索引签名不一定要放到首位，可以放到任意位置，键类型也可以是number，symbol
+  //key只是一个标识，可以换成其他名字，any也可以换成其他类型
+  [key: string]: any,
+  name: string,
+  age: number
+}
+//多出的属性可以写在任意地方
+let obj: objType = {
+  name: 'lgx',
+  sex: true,
+  age: 23
+}
+console.log(obj)
+```
+
+因为数组的对象的一种，所以若里面只有索引签，则是定义数组
+
+```
+//number也可以换成string，symbol，但是使用时还是arr[0]，所以一般都用number
+type arrType = {
+  [index: number]: any
+}
+let arr: arrType = [1,'a']
+console.log(arr[0])
+```
+
+用对象的形式定义数组，可以增加一些属性
+
+```
+type arrType = {
+  [index: number]: string
+  length: number
+}
+let arr: arrType = {
+  0: 'a',
+  1: 'b',
+  length: 2
+}
+console.log(arr[0])
+```
+
+
+
+### 4.5 映射类型
+
+类型内使用in可用于映射遍历联合类型
+
+映射类型可以用?和readonly修饰
+
+```
+type myType = {
+  //使用映射类型后，不能再有其他属性
+  //P只做标识作用，可以换成其他名字
+  [P in 'aaa' | 'bbb' | 'ccc']: string,
+}
+/*
+{
+  'aaa': string,
+  'bbb': string,
+  'ccc': string
+}
+*/
+```
+
+
+
+## 5 Utility Types
+
+ts内置的实用类型，用于类型转换
+
+简单的类型转换就和js一样
+
+```
+let a: string = '123'
+let b: number = Number(a)
+console.log(b)
+```
+
+复杂的类型转换就可以使用Utility Types
+
+Partial，Readonly，，Pick，Record
+
+```
+type Person = {
+  name; string,
+  age: number,
+  sex: boolean
+}
+
+//Partial，将所有属性变成可选属性
+type p1 = Partial<Person>
+/*
+{
+  name?: string,
+  age?: number,
+  sex?: boolean
+}
+*/
+/*ts原码
+type Partial<T> = {
+  [P in keyof T]?: T[P]
+}
+*/
+
+//Readonly，将所有属性变成readonly
+type p2 = Readonly<Person>
+/*
+{
+  readonly name: string,
+  readonly age: number,
+  readonly sex: boolean
+}
+*/
+/*ts原码
+type Readonly<T> = {
+  readonly [P in keyof T]: T[P]
+}
+*/
+
+//Pck，根据传入的泛型取出对应的属性
+type p3 = Pick<Person,'name' | 'age'>
+/*
+{
+  name: string,
+  age: number
+}
+*/
+/*ts原码
+type Pick<T,K extends keyof T> = {
+  [P in K]: T[P]
+}
+*/
+
+//Record，生成的是每个属性的类型都是Person
+type p4 = Record<'a' | 'b',Person>
+/*
+{
+  'A': Person,
+  'B': Person
+}
+*/
+/*ts原码
+type Record<K extends keyof any,T> = {
+  [P in K]: T
+}
+*/
 ```
 
 ## 6 声明文件：
@@ -471,18 +945,20 @@ declare var xxx: yyy
 
 ## 1 类
 
-属性方法以及构造器的形参都用每 :类型
+与ES6的class有些区别
 
-构造器内 this.xxx = ...   xxx必须在类内已经定义，如 xxx: number
+* 属性方法，以及构造器的形参都可以指定类型
 
-新增修饰符readonly，表示该属性只读，若readonly和static同时使用，则 static readonly
+* 定义的属性必须要使用
 
-readonly只能修饰属性
+* 构造器内 this.xxx = ...   xxx必须在类内已经定义，如 xxx: number
+
+* 新增修饰符readonly，表示该属性只读，若readonly和static同时使用，则 static readonly，readonly只能修饰属性
 
 ```
 //类也可以作为类型使用
 class user {
-  constructor(public username:string, public password:string){}
+  constructor(public username:string, public password: string){}
 }
 function fun(u:user){
   console.log(u)
@@ -494,52 +970,57 @@ fun(u2)
 
 面向对象三大特性之封装：
 
-```
-/*属性/方法的新增修饰符 public，private，protected
-不加这些修饰符的属性和方法默认是public，public类内外都可以访问
-private只能在类内访问，可以类内定义getxxx，setxxx方法给类外访问，此外，子类中也无法访问（相当于无法继承private）
-protected在类外无法访问，在类内以及子类可以访问
-修饰符顺序：private static readonly
-*/
+属性/方法的新增修饰符 public，private，protected
 
-/*此外，就public可以修饰构造函数的形参
-这样就相当于直接声明赋值了，不用再this也不用先声明属性
-可以看成语法糖
-*/
-class a {
-  // x: number
-  // constructor(x: number){
-    // this.x = x
-  // }
-  //简写
-  constructor(public x:number){
+* 不加这些修饰符的属性和方法默认是public，public类内外都可以访问
 
+* private只能在类内访问，可以类内定义getxxx，setxxx方法给类外访问，此外，子类中也无法访问（相当于无法继承private）
+
+* protected在类外无法访问，在类内以及子类可以访问
+
+* 修饰符顺序举例：private static readonly
+
+* 只有public可以修饰构造函数的形参，这样就相当于直接声明赋值了，不用再this也不用先声明属性，是一个语法糖
+  
+  ```
+  class a {
+    // x: number
+    // constructor(x: number){
+      // this.x = x
+    // }
+    //简写
+    constructor(public x:number){
+  
+    }
   }
-}
-let aa = new a(5)
-console.log(aa.x)
-```
+  let aa = new a(5)
+  console.log(aa.x)
+  ```
 
 面向对象三大特性之多态：
 
 父类不对方法具体实现，而由子类来进行实现，使得每个子类都有不同的形态，这就是多态。可以看出，多态是基于继承的重写
 
-其他与ES6的类一样
+继承、重写和其他特性与ES6的类一样
 
 ## 2 抽象类
 
+当父类涵盖的范围比较大，具体的属性方法不好定义，而且我们也不想实例化这个父类，这时候，就可以使用抽象类，专门用来做继承。抽象类不能被实例化
+
+抽象类无法new实例化
+
+抽象类可以有普通类的属性方法构造器，抽象类内还可以写抽象方法
+
+抽象方法：
+
+* 抽象方法，只定义方法的结构，不做具体实现，若不知道方法具体要怎么实现，就先不实现，使用抽象方法
+
+* 抽象方法没有方法体，只能在抽象类/接口内定义，继承的子类必须重写抽象方法来实现
+
+* 抽象方法箭头函数写法：(n: number) => number
+
 ```
-/*
-当父类涵盖的范围比较大，具体的属性方法不好定义，而且我们也不想实例化这个父类，这时候
-就可以使用抽象类，专门用来做继承。抽象类不能被实例化
-*/
 abstract class a {
-  //抽象类可以有普通类的属性方法构造器
-  /* 抽象方法，只定义方法的结构，不做具体实现
-  不知道方法具体要怎么实现，就先不实现，使用抽象方法
-  抽象方法没有方法体，只能在抽象类/接口内定义，继承的子类必须重写抽象方法来实现
-  抽象方法噶箭头函数写法：(n: number) => number
-  */
  abstract fun(a: number): void
 }
 class ch extends a {
@@ -552,13 +1033,12 @@ class ch extends a {
 
 ## 3 接口
 
-```
-/*
 接口用来定义类或对象的结构，属性不能赋值，方法都是抽象方法噶
-接口可以重复声明，类或对象使用接口时是同名接口合在一起（属性方法相同则忽略，使用代码靠前的）
-类和对象使用接口时，属性方法必须类型相同，且必须全部给到(但方法的形参不一定要给，类型也不一定要一样)
+接口可以重复声明，类或对象使用接口时是同名接口合在一起（属性方法相同则忽略靠后的，使用代码靠前的）
+类和对象使用接口时，属性方法必须类型相同，且必须全部给到(（可选属性除外），但方法的形参不一定要给，类型也不一定要一样)
 注意，接口内的方法虽然都是抽象方法，但是不加abstract
-*/
+
+```
 interface a {
   name: string
   fun(): number
@@ -578,7 +1058,7 @@ let obj: a = {
   }
 }
 /*与type定义类型别名的区别
-type不能呢个重复声明，而接口可以
+type不能重复声明，而接口可以
 */
 
 //给类使用
@@ -667,11 +1147,13 @@ class mymy extends coder implements lgx {
 let a: {name: string} = {name: 'lgx'}
 let b: {age: number} = {age: 23}
 let c: {sex: boolean} = {sex: true}
-//a,b,c混入到obj，obj的类型被推论为a，b，c的交叉类型
+//a,b,c混入到obj，obj的类型被推论为a，b，c的交叉类型 a & b & c
+//若有重复的属性，即使类型不同，后面的也会覆盖前面的
 let obj = Object.assign(a,b,c)
 console.log(obj)
 
 //2.类的混入
+...
 ```
 
 ## 5 装饰器
@@ -736,9 +1218,10 @@ class A {
 
 # 五、泛型
 
+当不知道未来将会使用什么类型，就可以使用泛型。
+
 ```
-//当不知道未来将会使用什么类型，就可以使用泛型
-//使用前，未来使用这个方法不一定是number类型
+//未使用泛型前，未来使用这个方法不一定是number类型
 function fun0(a: number): number{
   return a
 }
@@ -769,16 +1252,24 @@ let o:i<number> = {a:123}
 //同时传入多个泛型
 function aaa<xxx,yyy>(a:xxx,b:yyy){}
 
-//泛型约束
-//有时需要对泛型进行约束，如下，a是number就会出问题
+
+```
+
+泛型约束
+
+有时需要对泛型进行约束，泛型可以根据接口等等做一些限制 <xxx extends 接口/类/抽象类> 注意都用extends，只有符合条件才不会报错
+
+```
+//若不做泛型约束，如下，a是number就会出问题
 let getLength<T> = (a:T) => a.length  
-//泛型可以根据接口等等做一些限制  <xxx extends 接口/类/抽象类>  注意都用extends
+
+//泛型约束后
 interface len {
   length: number
 }
 let getLength<T extends len> = (a:T) => a.length
 
-//泛型的keyof约束
+//配合keyof进行约束
 //先看个例子
 let o1 = {
   name: 'lgx'
@@ -797,11 +1288,13 @@ function get<T,K extends keyof T>(obj:T,key:K){
 // console.log(get(o1,'age'))  报错，达到需求
 ```
 
+
+
+泛型应用举例：
+
+MySQL和MongoDB的操作可能不同，可以统一一下操作，以对用户的增改查删为例
+
 ```
-/*泛型应用举例
-MySQL和MongoDB的操作可能不同，可以统一一下操作
-以对用户的增改查删为例
-*/
 interface DB<T> {
   add(info:T):boolean
   update(info:T, id:number):boolean
@@ -821,6 +1314,8 @@ class MongoDB<T> implements DB<T> {
   delete(id:number):boolean{return true}
 }
 ```
+
+
 
 # 六、模块
 

@@ -1,4 +1,4 @@
-# 一、路由介绍
+## 1 路由介绍
 
 url的完整写法：协议://服务器地址:端口/….?...
 其中?后面的内容就是query，可以通过 $route.query 得到
@@ -17,7 +17,7 @@ url在后端服务器中取得网站的内容（此时的html，css，js都是�
 ③前端路由：单网页富应用（各个网页实际上是一个个组件），静态后台服务器只有一个html文件，甚至css，js都只有一个。
 访问网站时，会一次性从后台服务器得到所有的网页资源。当访问相应的网页时，相应的内容就会显示，其他隐藏，各个网页组件也对应一个url，此时的映射关系都在前端中，就叫做前端路由。
 
-# 二、基本使用
+## 2 基本使用
 
 路由的组件不需要注册
 未使用的路由组件不创建；跳转新路由后，旧路由销毁。
@@ -35,7 +35,8 @@ const bbb = () => import('...')  //懒加载导入组件，只有使用该组件
 const routes = [
   //name可不写，name在路由跳转时可替代path
   {
-    //默认路由，一进入页面就进入该路由
+    //默认路由，一进入页面就进入该路由，写在普通路由的前面后面都行
+    //默认路由不是必须的
     path: '',   //也可以是 '/'
     redirect: ‘/aaa’,  //有多钟写法，但这种最常用
   },
@@ -128,13 +129,13 @@ fun(0}{、
 
 router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:’…’}，只有path可简写成’/…’
 
-# 三、动态路由与参数传递
+## 3 路由参数传递
 
-1 动态路由
+1 params
 
-有些情况path是不能写死的，如用户id，此时需要配置动态路由
+有些情况path是不能写死的，如用户id，此时需要配置params参数
 
-动态路由是传递参数的方式之一，但一次只能传递一个参数（params）
+params是传递参数的方式之一，但一次只能传递一个参数（params）
 
 ```
 //如user组件
@@ -187,7 +188,7 @@ props传递路由参数：
   获得params或query参数，形参$router可以解构赋值
 ```
 
-# 四、嵌套路由
+## 4 嵌套路由
 
 使用嵌套路由时，嵌套的路由组件也要再用<router-view>，如：
 
@@ -211,7 +212,59 @@ to="/aaa/bbb"
 this.$router.push('/aaa/bbb')
 ```
 
-# 五、导航守卫
+## 5 动态路由
+
+通常用于权限管理
+
+```
+//新增路由，传入的对象和路由配置一样，若添加的路由已存在则会忽略
+this.$router.addRoute({
+  //添加路由
+  path: '/aaa',
+  name: 'aaa',
+  component: () => import('...')
+  ...
+))
+this.$router.addRoute('aaa',{
+  //新增嵌套路由'/aaa/bbb'，第一个参数aaa必须是路由的name
+  path: 'bbb',
+  ...
+))
+this.$router.addRoutes(...)  //同时添加多个路由，不过vue3的router4删除了这个
+
+//删除路由，参数必须是路由的name
+this.$router.removeRoute('aaa')
+
+//判断是否有某个路由，参数必须是路由的name
+onsole.log(this.$router.hasRoute('aaa')
+
+//查看所有路由
+console.log(this.$router.getRouters())
+```
+
+## 6 NotFound路由
+
+ruo访问了没有配置的路由，则<router-view />不显示任何内容，<router-view>外面的正常显示，此时可以路由到自己的404页面
+
+```
+[
+  ...
+  {
+    path: '/*',
+    //或 path: '/:catchAll(.*)',
+    component: () => import('...')    
+  }
+ ...
+]
+```
+
+和默认路由一样可以写在蹼泳路由前面后面都行
+
+若是 '/*'，NotFound路由必须写在默认路由之后，否则默认路由会是NotFound
+
+若是 '/:catchAll(.*)'  则没有这个问题
+
+## 7 导航守卫
 
 路由元数据：路由配置项meta，可以定义该路由需要用到的数据
 
@@ -272,7 +325,7 @@ beforeRouteEnter((to,from,next)=>{})
 afterRouteLeave((to,from)=>{})
 ```
 
-# 六、keep-alive
+## 8 keep-alive
 
 keep-alive：缓存路由
 当在一个父路由a中访问了子路由，切换到另一个父路由b再访问路由a，由于a的子路由不使用则被destory()了，不会显示。keep-alive就是不destory，使得再次访问a时，显示子路由
@@ -288,9 +341,11 @@ exclude="ccc"       除了name为ccc的路由无效，其他都生效
 </keep-alive>
 ```
 
-# 七、滚动行为
+一般会配合路由钩子activated和deactivated使用
 
-# 八、Vue Router4
+## 9 滚动行为
+
+## 10 Vue Router4
 
 vue3使用的路由版本
 

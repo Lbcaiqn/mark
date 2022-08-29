@@ -1,4 +1,4 @@
-# 一、基本介绍和npm
+# 一、基本介绍和npm，yum
 
 Vue是一定要打包的，否则页面加载会很慢
 
@@ -21,6 +21,40 @@ npm run dev     脚手架2运行vue
 npm run serve   脚手架3/4 运行vue
 
 npm run build   打包项目的dist文件夹           
+```
+
+npm缺点：
+
+* 下载速度慢
+
+* 由于package.json版本号的特点，不同人安装的版本可能小版本不同，可能会出问题
+
+* 装多个包时，若一个包出错了，会把这个出错的日志和其他成功安装的日志混在一起，就很难看出是哪里出错了
+
+yarn就是为了解决npm的这些缺点：
+
+* 下载速度快，yum采用并行安装（npm的单线程）和离线模式（从缓存中读取之前的包）
+
+* yarn的版本号同意了，有一个lock文件，每次装包都会更新lock文件，使得每次拉取下来的项目第三方库的版本号就能统一
+
+* 命令行输出日志简化，命令简化
+
+* 一个包不管被多少包依赖了多少次，安装这个包时，只会从npm来源或yum来源安装
+
+yarn安装和命令：
+
+```
+//安装
+npm install -g yarn
+//查看是否安装成功
+yarn
+
+//命令
+npm install xxx --save      --->  yarn add xxx
+npm install xxx --save-dev  --->  yarn add xxx --dev
+npm uninstall xxx --save    --->  yarn remove xxx
+npm update --save           --->  yarn upgrade
+npm install                 --->  yarn
 ```
 
 # 二、webpack

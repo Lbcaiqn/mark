@@ -53,8 +53,6 @@ if(typeof a === typeof === b){
 }
 ```
 
-
-
 ## 2 基本类型
 
 js对应的类型是大写开头，而ts对应的类型是小写开头
@@ -703,11 +701,17 @@ console.log(type) //报错，类型不是值，不能输出
 ### 4.2 获取类型：
 
 ```
-//通过索引获取type，接口的某个属性的类型
+//通过索引获对象类型的某个属性的类型
 type myType = {
   a: number
 }
 type a = myType['a]
+
+//获取数组类型每个元素的类型
+type arr = Array<number>
+type fun1 = arr[number]
+type fun2<T> = T extends Array<any> ? T[number] : never
+type fun3<T> = T extends arr ? number : never
 
 //typeof获取变量的类型
 let obj = {
@@ -721,8 +725,6 @@ console.log(typeof obj)
 //获取函数返回值类型
 const fun = () => 123
 type funType = ReturnType<typeof fun>
-
-
 ```
 
 ### 4.3 keyof
@@ -736,8 +738,6 @@ type myType = {
 }
 // 'name' | 'age'
 type p1 = keyof myType
-
-
 ```
 
 对象属性的键的类型只能是number,string,symbol或字面量，所以keyof any获得的联合类型是 number | string | symbol
@@ -761,13 +761,13 @@ for(let i in obj){
 }
 ```
 
-
-
 ### 4.4 索引签名
 
 一个对象一旦指定了类型，或未指定由类型推论退出，它的类型就已经定好，若不做一定的处理就无法添加和删除属性
 
-当不知道一个对象未来会有多少属性时，可以使用索引签名，解决添加属性的问题
+当不知道一个对象未来会有多少属性时，可以使用可选属性索引签名，解决添加属性的问题
+
+删除属性只能删除可选属性或索引签名的恶属性，若想删除必选属性，只能根据该对象的类型新创建一个删除属性后的类型，用这个新类型创建新对象并赋对应的值
 
 索引签名无法用?修饰，可以用readonly修饰
 
@@ -814,8 +814,6 @@ let arr: arrType = {
 console.log(arr[0])
 ```
 
-
-
 ### 4.5 映射类型
 
 类型内使用in可用于映射遍历联合类型
@@ -837,7 +835,57 @@ type myType = {
 */
 ```
 
+### 4.6 infer
 
+用于泛型约束后面，充当一个占位符，相当于别名,infer不是泛型
+
+若得到了never，说明传入的类型不对，报错
+
+获取数组是什么类型的数组
+
+```
+type arr = number[]
+//使用infer前
+type getArrType1<T> = T extends Array<any> ? T[number] : never
+type get1 = getArrType1<arr>
+//使用infer后
+type getArrType2<T> = T extends Array<infer U> ? U : never
+type get2 = getArrType2<arr>
+
+//用于元组，会反悔联合类型 number | string
+type tup = [number,string]
+type get3 = getArrType2<tup>
+```
+
+类型提取与剔除
+
+```
+type tup = [number,string,boolean]
+
+//提取类型，使用infer后...的剩余参数可以不放到最后面
+type getFirst<T> = T extends [infer xxx, ...any[]] ? xxx : never
+type getSecond<T> = T extends [infer xxx, infer yyy, ...any[]] ? yyy : never
+type getLast<T> = T extends [...infer rest, infer xxx] ? xxx : never
+
+type first = getFirst<tup>
+type second = getSecond<tup>
+type last = getLast<tup>
+
+//类型剔除
+type popTup<T> = T extends [...infer rest, infer last] ? rest : never
+type shiftTup<T> = T extends [infer first, ...infer rest] ? rest : never
+
+type pop = popTup<tup>
+type shift = shiftTup<tup>
+```
+
+递归infer，以翻转元组里的类型为例
+
+```
+type tup = [number,string,boolean]
+type reverse<T> = T extends [infer xxx, ...infer rest] ? [...reverse<rest>,xxx] : []
+type res = reverse<tup>
+```
 
 ## 5 Utility Types
 
@@ -853,16 +901,18 @@ console.log(b)
 
 复杂的类型转换就可以使用Utility Types
 
-Partial，Readonly，，Pick，Record
-
 ```
+//测试代码
 type Person = {
   name; string,
   age: number,
   sex: boolean
 }
+```
 
-//Partial，将所有属性变成可选属性
+Partial<T>，将所有属性变成可选属性
+
+```
 type p1 = Partial<Person>
 /*
 {
@@ -876,8 +926,29 @@ type Partial<T> = {
   [P in keyof T]?: T[P]
 }
 */
+```
 
-//Readonly，将所有属性变成readonly
+Required<T>，将所有属性变成必选
+
+```
+type p1 = Partial<Person>
+/*
+{
+  name: string,
+  age: number,
+  sex: boolean
+}
+*/
+/*ts原码
+type Partial<T> = {
+  [P in keyof T]-?: T[P]
+}
+*/
+```
+
+Readonly<T>，将所有属性变成readonly
+
+```
 type p2 = Readonly<Person>
 /*
 {
@@ -891,8 +962,11 @@ type Readonly<T> = {
   readonly [P in keyof T]: T[P]
 }
 */
+```
 
-//Pck，根据传入的泛型取出对应的属性
+Pck<T,K>，根据传入的泛型取出对应的属性
+
+```
 type p3 = Pick<Person,'name' | 'age'>
 /*
 {
@@ -905,8 +979,11 @@ type Pick<T,K extends keyof T> = {
   [P in K]: T[P]
 }
 */
+```
 
-//Record，生成的是每个属性的类型都是Person
+Record<K,T>，构造一个类型，该类型具有一组属性K，每个属性的类型为T。可用于将一个类型的属性映射为另一个类型
+
+```
 type p4 = Record<'a' | 'b',Person>
 /*
 {
@@ -921,11 +998,109 @@ type Record<K extends keyof any,T> = {
 */
 ```
 
+Exclude<T,U>，从T中排除可分配给U的属性，剩余的属性构成新的类型
+
+```
+type T0 = Exclude<'a' | 'b' | 'c', 'a'>;  // "b" | "c"
+type T2 = Exclude<string | number | (() => void), Function>;  // string | number
+/*ts原码
+type Exclude<T, U> = T extends U ? never : T
+*/
+```
+
+Extract<T,U>，从T中抽出可分配给U的属性构成新的类型。与Exclude相反
+
+```
+type T0 = Extract<'a' | 'b' | 'c', 'a'>;  // "a"
+/*ts原码
+type Extract<T, U> = T extends U ? T : never
+*/
+```
+
+Omit<T,K>，从T中取出除去K的其他所有属性。与Pick相对
+
+```
+type P = Omit<MYtYPE, 'sex'>
+/*
+{
+  name: string,
+  age: number
+}
+*/
+/*
+//结合Exclude和Pick实现
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+*/
+```
+
+NonNullable<T>，去除T中的 null 和 undefined 类型
+
+```
+type T0 = NonNullable<number | string | undefined> // number | string
+type T1 = NonNullable<number | null | undefined> // number
+/*ts原码
+type NonNullable<T> = T extends null | undefined ? never : T
+*/
+```
+
+Parameters，返回类型为T的函数的参数类型所组成的数组
+
+```
+declare function f1(arg: { a: number, b: string }): void
+type T0 = Parameters<() => string>;  // []
+type T1 = Parameters<(s: string) => void>;  // [string]
+type T2 = Parameters<(<T>(arg: T) => T)>;  // [unknown]
+type T4 = Parameters<typeof f1>;  // [{ a: number, b: string }]
+type T5 = Parameters<any>;  // unknown[]
+type T6 = Parameters<never>;  // never
+type T7 = Parameters<string>;  // Error: 类型“string”不满足约束“(...args: any) => any”
+type T8 = Parameters<Function>;  // Error: 类型“Function”不满足约束“(...args: any) => any”。类型“Function”提供的内容与签名“(...args: any): any”不匹配
+
+/*ts原码
+type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never
+*/
+```
+
+ReturnType<T>，function T的返回类型
+
+```
+declare function f1(): { a: number, b: string }
+type T0 = ReturnType<() => string>;  // string
+type T1 = ReturnType<(s: string) => void>;  // void
+type T2 = ReturnType<(<T>() => T)>;  // {}
+type T3 = ReturnType<(<T extends U, U extends number[]>() => T)>;  // number[]
+type T4 = ReturnType<typeof f1>;  // { a: number, b: string }
+type T5 = ReturnType<any>;  // any
+type T6 = ReturnType<never>;  // any
+type T7 = ReturnType<string>;  // Error: 类型“string”不满足约束“(...args: any) => any”
+type T8 = ReturnType<Function>;  // Error:类型“Function”不满足约束“(...args: any) => any”。类型“Function”提供的内容与签名“(...args: any): any”不匹配
+
+/*ts原码
+type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any
+*/
+```
+
+InstanceType<T>，返回构造函数类型T的实例类型
+
+```
+class C {
+  x = 0;
+  y = 0;
+}
+type T0 = InstanceType<typeof C>;  // C
+type T1 = InstanceType<any>;  // any
+type T2 = InstanceType<never>;  // any
+type T3 = InstanceType<string>;  // error:类型“string”不满足约束“new (...args: any) => any”
+type T4 = InstanceType<Function>; // error:类型“Function”不满足约束“new (...args: any) => any”。类型“Function”提供的内容与签名“new (...args: any): any”不匹配
+
+/*ts原码
+type InstanceType<T extends new (...args: any) => any> = T extends new (...args: any) => infer R ? R : any
+*/
+```
+
 ## 6 声明文件：
 
-在使用第三方库时，需要从第三方库的声明文件中引入它里面要用的一些类型
-
-如nodejs需要@types/node    express需要@types/express
+在使用第三方库时，需要从第三方库的声明文件中引入它里面要用的一些类型，一般格式为 @types/xxx，如nodejs需要@types/node    express需要@types/express
 
 ```
 npm install --save @types/node
@@ -1251,8 +1426,6 @@ let o:i<number> = {a:123}
 
 //同时传入多个泛型
 function aaa<xxx,yyy>(a:xxx,b:yyy){}
-
-
 ```
 
 泛型约束
@@ -1288,8 +1461,6 @@ function get<T,K extends keyof T>(obj:T,key:K){
 // console.log(get(o1,'age'))  报错，达到需求
 ```
 
-
-
 泛型应用举例：
 
 MySQL和MongoDB的操作可能不同，可以统一一下操作，以对用户的增改查删为例
@@ -1314,8 +1485,6 @@ class MongoDB<T> implements DB<T> {
   delete(id:number):boolean{return true}
 }
 ```
-
-
 
 # 六、模块
 
@@ -1376,3 +1545,11 @@ console.log(a)  //a是aaa.ts里面的变量，可以直接使用
 # 七、ts配置文件
 
 tsconfig.json
+
+为了兼容性，将js编译的版本设置为ES5
+
+为了达到更严格的类型检查
+
+* compilerOptions.noImplicitAny: true，开启后，不再允许隐式any，除非手动设置类型为any变为显式any
+
+* compilerOptions.strictNullChecks: true，开启后，不再允许所有类型都可以赋值为undefined和null，若想赋这两个值，必须是联合类型，如 number | undefined，或者使用类型断言，如 as number

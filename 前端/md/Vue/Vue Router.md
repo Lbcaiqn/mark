@@ -242,6 +242,8 @@ onsole.log(this.$router.hasRoute('aaa')
 console.log(this.$router.getRouters())
 ```
 
+也可以设置动态默认路由，addRouter添加默认路由或getRoutes[0].redirect = '/xxx'，若修改默认路由时默认路由不在首位则需要找出来
+
 ## 6 NotFound路由
 
 ruo访问了没有配置的路由，则<router-view />不显示任何内容，<router-view>外面的正常显示，此时可以路由到自己的404页面

@@ -319,3 +319,7 @@ store.$subscrib((args,state) => {
 //4 $onAcition 每当action的方法被调用就回调
 store.$onAction((args) => {})
 ```
+
+# 数据持久化存储
+
+pinia-plugin-persistedstate

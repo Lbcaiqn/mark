@@ -1,6 +1,10 @@
-# 一、基本介绍
+# 一、Vue2
 
-安装旧版脚手架2
+## 1 基本
+
+### 1.1 基本命令
+
+安装旧版脚手架2（现在基本不用脚手架2）
 
 ```
 npm install -g vue-cli
@@ -25,50 +29,68 @@ npm install -g @vue/cli@4.5
 vue -v
 ```
 
+### 1.2 浏览器Vue调试工具
+
 浏览器vue调试插件：vue devtools
 
-Vue代码最好不加分号
-MVX模式（MVC和MVVM）:
-MVC模式：模型+视图+控制器，angular框架使用
-MVVM模式：把MVC的控制器改成ViewModel，View的变化会自动更新ViewModel，ViewModel的变化也会同步在View上显示。Vue框架
+### 1.3 MVVM模式
 
-使用。
+MVX模式（MVC和MVVM）:
+MVC模式：模型+视图+控制器，Angular框架使用。
+MVVM模式：把MVC的控制器改成ViewModel，View的变化会自动更新ViewModel，ViewModel的变化也会同步在View上显示。Vue等框架使用。
+
 MVVM：
-Model：是vue里面的data
-View：是模板
-View Model：就是vue对象，包含 data bindings 和 DOM listeners
-引入方式：
+Model：是vue里面的data、methods、生命周期等等里面的数据访问（ajax），数据操作、业务逻辑等。
+View：是<template>的内容。
+View Model：就是vue对象，包含 data bindings 和 DOM listeners，根据model的数据来来控制view页面的展示。
+
+### 1.4 Vue使用方式
+
+分为两种，一是script引入使用，二是脚手架构建使用（组件化那部分笔记）
 
 ```
 <script src="vue.js"></script>   本地引入
 <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script> 网络
 ```
 
-# 二、基本使用
+## 2 基本语法
+
+data:{},{}可以声明成变量，在vue对象外定义，如var data={}; vue中data:data
+方法和计算属性内部使用Vue内部的属性时，一定要加上this.
+
+引号使用规范：
+
+虽然无论是HTML的标签还是js代码单引号和双引号效果都一样，但是为了规范，HTML的属性使用双引号，js代码使用单引号，嵌套引号时需要注意间隔使用单双引号
 
 ```
-//data:{},{}可以声明成变量，在vue对象外定义，如var data={}; vue中data:data
-//方法和计算属性内部使用Vue内部的属性时，一定要加上this.
-//Vue首选单引号
-var或const v=new Vue({
-  el: "#xxx 或 .xxx",            //控制器，绑定id
-)}
-vue对象.$mount('...') 等价于 el:'...',都是挂载
+<div xxx="..."></div>
+<div :xxx="'...'"></div>
 
-Vue.config.productionTio = false  //阻止vue启动时的生产提示
+let a = '123'
+```
 
 箭头函数的this指向与vue：
-*vue管理的函数里要使用this时，必须使用普通函数，this才能指向vue实例
-*不是vue管理的函数（如定时器回调，promise回调，事件总线回调等），可以使用箭头函数更加简便，this指向window
+
+* vue自带的api里的回调函数要使用this时，必须使用普通函数，this才能指向vue实
+
+* 不是vue的api函数（如定时器回调，promise回调，事件总线回调等），可以使
+  用箭头函数更加简便，this指向window
+
+```
+const v = new Vue({
+  //控制器，绑定id，等价于vue对象.$mount('...')，两种挂载方式选一种就行
+  el: "#xxx 或 .xxx",  
+)}
+
+//阻止vue启动时的生产提示
+Vue.config.productionTio = false  
 ```
 
-1 指令和插值语法
+### 2.1 插值指令和插值语法
 
 指令：指令  v-xxxx 类似标签的属性的写法
-Vue中不带引号解析成变量，带引号解析成字符串。
 
-{{}}为Mustache语法  <标签>{{}}</标签>
-{{}}里面只能放一个变量/方法/表达式。
+{{}}为Mustache语法，内容为JS表达式
 
 ```
 //插值操作，
@@ -88,9 +110,9 @@ Vue中不带引号解析成变量，带引号解析成字符串。
 | v-html="xxx" | 在该标签内插入整个html标签，但最好不要使用v-html，非常不安全，容易被窃取cookie中的登录信息                            |
 | v-clock      | 还要添加 [v-cloak] {display: none;}的样式，作用是在js未解析出来前隐藏该标签                             |
 
-2 数据绑定
+### 2.2 数据绑定
 
-2.1 v-bind
+#### 2.2.1 v-bind
 
 v-bind:属性  可以简写为 :属性    用来动态绑定属性
 
@@ -98,56 +120,61 @@ v-bind:属性  可以简写为 :属性    用来动态绑定属性
 
 只能绑定网络URL，本地URL需要另外处理
 
-（2）绑定class
+（2）绑定绑定class、style控制样式
 
 ```
-//1.可以分写css类和变量存储的css类名
-class="css类名" :class="变量名"
-//2.数组写法，注意引号
-:class='["css类名",变量名]'
-//3.对象写法，true生效flase失效，一般定义一个布尔变量控制；还可以用三目运算符 布尔变量?”类1”:”类2”     
-:class=’{"css类名":true,变量名:布尔变量}'
-//4.Vue中方法内：return 数组或对象   当数组或对象太复杂时可使用
-:class=’方法() '
-//5.变量的值作为样式的属性，若此时不用变量则加上引号，若Vue中变量存的是像素且不带px，则使用时加上+‘px’
-:style='{样式属性:变量名}'
-//6.数组写法，不常用。
-:style='[对象1,对象2…]'>
+<!-- 1.可以分写css类和变量存储的css类名 -->
+<div class="css类名" :class="变量名"></div>
+
+<!-- 2.数组写法，注意引号 -->
+<div :class="['css类名',变量名]"></div>
+
+<!-- 3.对象写法，true生效flase失效 -->
+<div :class="{'css类名':true,变量名:boolean变量}"></div>
+
+<!-- 4.Vue中方法内：return 数组或对象,当数组或对象太复杂时可使用 -->
+<div :class=’方法() '></div>
+
+<!-- 5.变量的值作为样式的属性，若此时不用变量则加上引号，若Vue中变量存的是像素且不带px，则使用时加上+‘px’ -->
+<div :style="{样式属性:变量名}"></div>
+
+<!-- 6.数组写法，不常用 -->
+<div :style="[对象1,对象2…]">></div>
 ```
 
 （3）绑定的属性名和值一样时
 
 true生效，如button属性disabled=”disabled”，等同于v-bind:disabled=”true”
 
-2.2 v-model
+#### 2.2.2 v-model
 
 双向绑定表单（input表单，textarea表单）
 
-（1）基本使用
+（1）input
+
+表单的value值（表单显示的文本）是v-model的变量值，当修改变量值时会同时修改value，当修改value时，也会同时修改变量的值，这就是双向绑定
+
+获取过来不管类型都默认为字符串。
+
+textarea表单，password等类型的input表单用法都和这个一样。
 
 ```
 <input type="text" v-model="变量">
 <!--
-表单的value值（表单显示的文本）是该变量值，当修改变量值时会同时修改value，当修改value
-时，也会同时修改变量的值（获取过来不管类型都默认为字符串），这就是双双向绑定。
-textarea表单，password等类型的input表单用法都和这个差不多
--->
-<!--
 双向绑定原理，v-model等同于：
-<input type="text" v-bind:value="name" v-on:input="name=$event.target.value">
+<input type="text" :value="name" @input="name=$event.target.value">
 -->
 ```
 
 （2）与radio类型input结合使用：
 
-```
-<input type="radio" value="radioName" v-model="变量">
-<!--
-需要value属性，变量是字符串类型。
+需要value属性，变量是string类型而不是boolean
 若变量的值为radioName，则该radio会被选上；若不同或为空则不选。
 当选择该radio时，其value会赋值给变量。
 一组radio的v-model里的变量一样时，不用给它们相同的name属性，就能实现单选。
--->
+
+```
+<input type="radio" value="radioName" v-model="变量">
 ```
 
 （3）与checkbox类型input结合使用：
@@ -196,9 +223,19 @@ v-model的变量：
 | 类型表单连用）        |                                     |
 | v-model.trim   | 删除字符串首尾空格                           |
 
-3 自定义指令
+#### 2.2.3 自定义指令
 
 封装DOM操作成一个指令
+
+xxx为指令名，用v-xxx调用，当xxx为多个单词组成时，-隔开，且xxx不能再简写为不带引号，应为’xxx’
+
+element为指令绑定的真实DOM元素，可以使用所有DOM操作的属性方法，binding为对象，其中一个键 value为 v-xxx=”n” v-xxx:…=”n” 的n
+
+简写形式，在元素与指令绑定完成时候执行一次（此时元素还不在真实DOM上），任何数据更新造成的模板重新解析再执行一次，一些DOM操作必须在真实DOM中有该元素时才能操作，需要完整写法才能完成
+
+完整写法有3个钩子，都有element和binding，可以解决简写形式中需要元素在真实DOM后才能进行的操作（inserted()），因为bind只执行一次，所以update中要复制一份bind代码
+
+无论简写还是完整写法，函数里面的this都指向window
 
 ```
 //局部指令，Vue的配置项：
@@ -212,27 +249,19 @@ directives:{
     update(element,binding){}    //模板重新解析时回调
   }
 }
-/*
-1.xxx为指令名，用v-xxx调用，当xxx为多个单词组成时，-隔开，且xxx不能再简写为不带引号，应为’xxx’
-2.element为指令绑定的真实DOM元素，可以使用所有DOM操作的属性方法，binding为对象，其中
-一个键 value为 v-xxx=”n” v-xxx:…=”n” 的n
-3.写形式，在元素与指令绑定完成时候执行一次（此时元素还不在真实DOM上），任何数据更新
-造成的模板重新解析再执行一次，一些DOM操作必须在真实DOM中有该元素时才能操作，需要完整
-写法才能完成
-4.完整写法有3个钩子，都有element和binding，可以解决简写形式中需要元素在真实DOM后才能
-进行的操作（inserted()），因为bind只执行一次，所以update中要复制一份bind代码
-5.无论简写还是完整写法，函数里面的this都指向window
-*/
 
 //全局指令：
 Vue.directive(‘xxx’,{//完整写法}) Vue.directive(‘xxx’,()=>{//简写})
 ```
 
-# 三、计算属性与过滤器，数据监视
+## 3 计算属性与过滤器，数据监视
 
-1 计算属性
+### 3.1 计算属性
+
 1通过属性之间的计算得到的属性，具有缓存功能。与methods最大的区别就是缓存，computed多次调用只计算结果一次并保存，而methods多次调用就多次计算结果，所以compted比methods好很多。
+
 Vue会根据计算属性内的值有无变化判断是否重新计算，若值不变，则不改缓存，若值变了，则会重新执行计算属性给新缓存。
+
 优势：比直接写{{ 复杂表达式 }}代码可读性高，比methods性能好。
 
 计算属性的值只有当它依赖的数据变化时才更新并调用一次，所以计算属性不能return一个函数而在函数里面做一些操作，因为函数本身是不会变的，这样计算属性的值就不会更新
@@ -257,7 +286,7 @@ Vue的配置项computed
 }
 ```
 
-2 过滤器
+### 3.2 过滤器
 
 ```
 //1.局部过滤器
@@ -276,7 +305,7 @@ v-bind:属性=”xxx | filtersName”
 Vue.filter()
 ```
 
-3 数据监视
+### 3.3 数据监视
 
 ```
 /*
@@ -315,7 +344,7 @@ $watch('xxx',(newValue,oldValue)=>{})
 
 * 计算属性不能进行异步操作，watch可以
 
-# 四、生命周期
+## 4 生命周期
 
 在vue的创建到销毁的过错中，有一些生命周期函数（也叫钩子），在相应的节点就会回调这些函数，由此可以在vue的相应节点编写代码
 生命周期函数与data，methods等同级，函数里面调用data等时也用this
@@ -328,7 +357,7 @@ created(){
 }
 ```
 
-1 el挂载之前
+（1）el挂载之前
 
 若无el挂载，会在created后停止
 
@@ -336,14 +365,15 @@ created(){
 | ------------ | -------------------------------- |
 | created      | 数据监测，数据代理创建之后，组件已创建，此时可网络请求数据    |
 
-2 el挂载之后
+（2）el挂载之后
 
-| beforeMount | vue解析完模板，生成虚拟DOM在内存中，但是还未转成真实DOM，所以页面未解析vue语法来渲染，此时若操作DOM，只在这个瞬间有效，                 由于下一流程的影
-响，此时操作的DOM最终都无效。该钩子将虚拟DOM转真实DOM，并保存一份到 $el 里 |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| mounted     | DOM渲染完成，展示模板，此时才能操作DOM                                                                                                                    |
+| beforeMount | vue解析完模板，生成虚拟DOM在内存中，但是还未转成真实DOM，所以页面未解析vue语法来渲染，此时若操作DOM，只在这个瞬间有效，                 由于下一流程的影响，此时操作的DOM最终都无效。该钩子将虚拟DOM转真实DOM，并保存一份到 $el 里 
 
-3 数据更新
+| beforeMount | DOM还未渲染完成              |
+| ----------- | ---------------------- |
+| mounted     | DOM渲染完成，展示模板，此时才能操作DOM |
+
+（3）数据更新
 
 一旦有数据更新就回调
 
@@ -351,7 +381,7 @@ created(){
 | ------------ | --------------------------------------------------------------------- |
 | updated      | 数据更新完，页面也刷新完，model和view同步                                             |
 
-4 组件销毁
+（4）组件销毁
 
 调用$destroy()或路由离开就会销毁组件，
 
@@ -364,22 +394,24 @@ $destroy()会完全销毁实例，并清除与其他实例的链接
 | ------------ | ---------------------------------------------------------------- |
 | destroyed    | 销毁之后，一般很少用这个钩子                                                   |
 
-5 路由钩子
+（5）路由钩子
+
+只有该组件配置成路由时才会触发
 
 | activated                | 在跳转到该路由后回调（激活）     |
 | ------------------------ | ------------------ |
 | deactivated              | 在离开该路由后回调（失活）      |
 | this.$nextTick(() => {}) | 在数据更新后，元素在真实DOM后回调 |
 
-# 五、Vue响应式原理
+## 5 Vue响应式原理
 
-1响应式
+（1）响应式
 
 若没有响应式，则数据修改时，只有在script中改了，模板并没有改，只有响应式才会重新解析模板，修改模板的数据
 
 vue在每次有值修改时，都会再解析一次vue模板，所以{{方法()}}会再调用
 
-2 原理
+（2）原理
 
 通过Object.defineProperty()以数据代理的形式实现
 
@@ -408,7 +440,7 @@ Object.defineProperty()的方式给每个key添加set，get，在set中进行修
 * 数组和对象自己本身没有get，set，所有对数组，对象自己本身赋值，监测不到
   *因为添加set，get是在vue实例化的时候进行的，所以在代码运行过程中，若想给对象和数组添加key，是监测不到的，此时需要使用 Vue.set()方法，添加key，注意此时数组中新增的非对象元素也没有get，set，但是数组里新增的对象里的属性有
 
-# 六、事件绑定
+## 6 事件绑定
 
 完整 v-on:click="fun"   
 缩写 @click="fun"
@@ -447,7 +479,7 @@ v-on:keydown=’’    键盘按下
 v-on:keyup=’’        键盘弹起
 v-on:input=’’        input，textarea一旦有输入（包括退格，不包括空格）就触发。
 
-# 七、渲染
+## 7 列表、条件渲染
 
 1 条件渲染
 
@@ -520,7 +552,7 @@ key工作原理：
 
 若此时使用index作为key
 
-* *新的数据在最后面增删，不影响原本数据顺序，无影响
+* 新的数据在最后面增删，不影响原本数据顺序，无影响
 
 * 在其他地方增删 就会改变原有数据顺序，例子：在原有数据最前面插入一个新数据，数据分别为索引key，唯一标识，内容，输入框
   
@@ -553,9 +585,9 @@ str.indexOf(s):
 
 sort( (a,b) => {}) 改变源数据 return a-b升序  return b-a 降序
 
-# 八、动画
+## 8 动画
 
-1 <transition>
+（1）<transition>
 
 vue动画对css3动画进行了一些封装，写CSS3动画代码，只是类名是固定的。
 vue动画显示隐藏元素是立刻执行的，动画只是播放而已，如元素消失了，但是动画在播放
@@ -569,7 +601,7 @@ vue动画显示隐藏元素是立刻执行的，动画只是播放而已，如�
 </transition>、
 ```
 
-2 动画类名
+（2）动画类名
 
 | .v-enter        | 来之前  |
 | --------------- | ---- |
@@ -602,7 +634,7 @@ vue动画显示隐藏元素是立刻执行的，动画只是播放而已，如�
 }
 ```
 
-3修改类名和动画库animate.css
+（3）修改动画类名
 
 ```
 <transition enter-to-class="xxx">
@@ -610,47 +642,24 @@ vue动画显示隐藏元素是立刻执行的，动画只是播放而已，如�
 </transition>
 ```
 
-动画库animate.css
-
-npm install --save animate.css
-
-<script>中引入：import 'animate.css'
-
-使用：只需要修改enter-active和leave-active类名即可，如动画fadeIn，fadeOut
-
-```
-<transition 
-  enter-active-class="animate__animated animate__fadeIn"
-  leave-active-class="animate__animated animate__fadeOut"
->
-</transition>
-```
-
-若是animate3，则不需要加animate__animated
-
-animate4以上版本需要加上animate__animated
-
-其他动画类名详见官网
-
-4 <transition>生命周期和动画库
+（4）<transition>生命周期
 
 当需要更加高级复杂的动画时，可以使用生命周期
 
-| before-enter | 相当于 .v-enter        |
-| ------------ | ------------------- |
-| after-enter  | 相当于 .v-enter-to     |
-| enter        | 相当于 .v-enter-active |
-| enter-cancel | 来的动画被取消时回调          |
-| before-leave | 相当于 .v-leave        |
-| after-leave  | 相当于 .v-leave-to     |
-| leave        | 相当于 .v-leave-active |
-| leave-cancel | 去的动画被取消时回调          |
+| before-enter | 相当于.v-enter        |
+| ------------ | ------------------ |
+| after-enter  | 相当于.v-enter-to     |
+| enter        | 相当于.v-enter-active |
+| enter-cancel | 来的动画取消时回调          |
+| before-leave | 相当于.v-leave        |
+| after-leave  | 相当于.v-leave-to     |
+| leave        | 相当于.v-leave-active |
+| leave-cancel | 去的动画取消时回调          |
 
 使用：
 
 ```
 <transition @before-enter="enterFrom" @enter="enterActive">
-
 </transition>
 <script>
 export default {
@@ -667,67 +676,46 @@ export default {
   }
 }
 </script>
-
-```
-动画库gsap
-
-Vue官方推荐的动画库
-
-npm install --save gsap
-
-<script>中引入：import gsap from 'gsap'
-
-使用：
 ```
 
-//@before-enter="enterFrom"
-enterFrom(el){
-  gsap.set(el,{
-    width: 0,
-    height: 0
-  })
-},
-//@enter="enterActive"
-enterActive(el,done){
-  gsap.to(el,{
-    width: 100,
-    height: 100,
-    onComplete: done
-  })
-}
+（5）多个元素的过渡：
+只能包裹一个元素，要实现多个元素或者列表渲染的过渡，可以：
+
+- n个元素n个，用不同的name区分，但明显列表渲染的元素不适用
+
+- 用div包裹里的多个元素，但是无法这种实现互斥（布尔值不同）动画效果，极不推荐
+
+- 使用包裹多个元素，必须给每个元素增加独立的key，其他使用与一样
 
 ```
-5 多个元素的过渡：
-<transition>只能包裹一个元素，要实现多个元素或者列表渲染的过渡，可以：
-
-* n个元素n个<transition>，用不同的name区分，但明显列表渲染的元素不适用
-
-* 用div包裹<transition>里的多个元素，但是无法这种实现互斥（布尔值不同）动画效果，极不推荐
-
-* 使用<transition-group>包裹多个元素，必须给每个元素增加独立的key，其他使用与<transition>一样
+<template>
+  <div>
+    <transition-group>
+      <div v-for="i in arr" :key="i" v-show="flag" class="box"></div>
+    </transition-group>
+</div>
+</template>
 ```
 
-<transition-group>
-    <div v-for="i in arr" :key="i" v-show="flag" class="box"></div>
-  </transition-group>
-```
-
-# 九、组件
+## 9 组件与组件化开发
 
 Vue本身也是一个组件
 
-组件没有el，所有组件组成组件树放到Vue中，由Vue的el挂载
+组件没有配置项el，所有组件组成组件树放到Vue中，由Vue的el挂载
 
 Vue和组件的template必须要有根标签div
 组件继承于Vue，基本一样，但是data(){return {}}必须这样写
 
 组件无法使用原生事件，这是因为自定义组件的事件默认都会认为是自定义事件，需要事件修饰符.native让组件认为是原生事件，才能使用
 
-1 基本使用
+### 9.1 基本使用
+
+分为非单文件组件和单文件组件，非单文件组件了解即可，开发中都是用单文件组件
+
+（1）非单文件组件
 
 ```
 //非单文件组件
-
 //创建组件构造函数，必须在Vue对象外创建
 const cpnConstructor = Vue.extend({
     template: `
@@ -783,14 +771,18 @@ cpn: {
 </script>
 ```
 
+（2）单文件组件
+
+创建一个单独的.vue文件编写代码，组件文件命名规范：
+
+* 大驼峰或 aaa-bbb 避免与原生标签名冲突
+
+* 为了寻找方便，views组件名一般命名为 ViewsnameXXX，如HomeMain
+
+* 注册子组件时，子组件名不要和子组件内的组件名冲突
+
 ```
 //单文件组件
-/*命名
-大驼峰或 aaa-bbb 避免与原生标签名冲突
-为了寻找方便，views组件名一般命名为 ViewsnameXXX，如HomeMain
-注册子组件时，子组件名不要和子组件内的组件名冲突
-*/
-
 //.vue文件  <v回车快速创建结构
 <template>
   <div></div>
@@ -809,13 +801,19 @@ cpn: {
 </style>
 ```
 
-2 父子组件通信
+
+
+### 9.2 父子组件通信
 
 2.1 props,emit
 
-```
-//父传子 
+（1）props接收父组件参数实现父传子
 
+子组件中的props的变量就能显data()的变量一样使用
+
+//props和data的变量是放在内存不同地方的，但使用方法相同
+
+```
 //1.Vue的配置项props，子组件中配置子组件接收的变量
 //方式一
 props: ['xxx','yyy']
@@ -844,16 +842,18 @@ default(){
 <!--
 若传入的是字符串'aaa'，则 xxx="aaa"
 若传入的是非字符串或变量，则 :xxx="5" :xxx="str" :xxx="'aaa'"
- -->
+-->
 
-//3.子组件中的props的变量就能显data()的变量一样使用
 
-//props和data的变量是放在内存不同地方的，但使用方法相同
+```
 
-//4.当父组件传给子组件的数据很复杂时，如
-父组件中：
+当父组件传给子组件的数据很复杂时，如：
+
+```
+//父组件中：
 <子组件 :xxx="{a: {aa: {aaa: 123}"></子组件>
-子组件接收
+
+//子组件接收
 props: {
   xxx: {
     type: Object,
@@ -862,14 +862,16 @@ props: {
     }
   }
 }
-子组件的模板中使用：
-{{xxx.a.aa.aaa}}
 
-会出问题，不能从undefine中读取undefine，这是因为有一个时间节点，子组件还未获取到
-践传过来的数据，此时xxx为空对象，在模板中展示就是从undefine的属性中.undefind
+//子组件的模板中使用：
+{{xxx.a.aa.aaa}}
+```
+
+会出问题，不能从undefine中读取undefine，这是因为有一个时间节点，子组件还未获取到践传过来的数据，此时xxx为空对象，在模板中展示就是从undefine的属性中.undefind
 解决：
-方式一(不推荐)：
-子组件接收
+
+```
+//方式一,props先定义好复杂的数据(不推荐)：
 props: {
   xxx: {
     type: Object,
@@ -880,10 +882,10 @@ props: {
     }
   }
 }
-子组件的模板中使用：
+//子组件的模板中使用：
 {{xxx.a.aa.aaa}}
-方式二，使用可选链操作符(推荐)：
-子组件接收
+
+//方式二，使用可选链操作符(推荐)：
 props: {
   xxx: {
     type: Object,
@@ -892,16 +894,22 @@ props: {
     }
   }
 }
-子组件的模板中使用：
+//子组件的模板中使用：
 {{xxx?.a?.aa?.aaa}}
-方式三：方式二 + v-if，更加安全
+
+//方式三：方式二 + v-if，更加安全
+/*
 有些时候用了方式二还是会报错，这可能是子组件内部拿到undefined的原因，可以直接用v-if，
 如果数据为undefined就直接不创建DOM了，一劳永逸（v-show不行，因为show是隐藏但不删除
 ，if是不符合直接删除）
-
-//5.如4，使用数组时{{xxx[0]}}，若xxx还未传入也会报错，可以在父元素中v-if解决
-//4和5在网络请求数据等情况也会出现，解决方法一样
+*/
 ```
+
+同理，数组也会出现undefined的情况，使用数组时{{xxx[0]}}，若xxx还未传入也会报错，可以在父元素中v-if解决。
+
+在网络请求数据等情况也会出现，解决方法一样
+
+（2）emit发射给父组件自定义事件实现子传父
 
 ```
 //子传父
@@ -928,7 +936,7 @@ fun2(i){
 this.$off('xxx')
 ```
 
-2.2 自定义组件上使用v-model
+### 9.3 自定义组件上使用v-model
 
 v-model也可以用在自定义组件上，是结合props和emit的语法糖
 
@@ -975,7 +983,7 @@ export default {
 </script>
 ```
 
-3 非父子组件通信
+### 9.4 非父子组件通信
 
 （1）事件总线
 
@@ -1003,7 +1011,7 @@ beforeDestroy(){
 
 （2）Vuex，和订阅者观察者模式的第三方库也是非父子组件通信
 
-4 获取组件实例对象
+### 9.5 获取组件实例对象
 
 组件在mounted后才完全渲染完，所以获取组件实例对象必须在mounted()中或之后
 
@@ -1021,7 +1029,9 @@ this.$parent //返回父组件对象
 this.$root   //返回根组件对象
 ```
 
-4 混入
+### 9.6 混入mixin
+
+
 
 Vue配置项 mixins
 两个组件中有完全相同的代码，将其抽离成一个js文件，组件中所有的配置项包括生命周期函数都可以抽离
@@ -1051,7 +1061,7 @@ mixins: [mixinA]
   
   2. 钩子：  不管原来有没有，都在原来的基础上直接混入
 
-5 插槽
+### 9.6 组件插槽
 
 使组件具有扩展性，用<slot>定义，<slot>没有id，class属性，所以要给插槽样式可以给包含插槽的div样式
 
@@ -1119,7 +1129,7 @@ mixins: [mixinA]
 //高版本的vue这里template也可以用div
 ```
 
-6 全局变量/函数和插件
+### 9.7 全局变量/函数和插件
 
 6.1 全局变量/函数
 
@@ -1155,7 +1165,7 @@ Vue.use(...)
 this.$toast.方法()
 ```
 
-7 其他
+## 10 其他
 
 7.1 Vue.use()
 
@@ -1182,4 +1192,10 @@ Vue.prototype指向vue原型对象，vue原型对象._proto_指向Object原型�
 $xxx一直找到vue原型对象
 ```
 
-# 
+# 二、Vue模块化
+
+# 三、vue-router
+
+# 四、vuex
+
+# 五、Vue3

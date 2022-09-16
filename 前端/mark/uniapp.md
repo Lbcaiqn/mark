@@ -1,12 +1,12 @@
-# 一、介绍
+# 一、原生微信小程序
 
-1 技术
+## 1 基本
 
 微信小程序由于是运行在微信中而不是浏览器，所以无法使用DOM和BOM，但是可以调用微信环境的api（扫码，支付，定位等），也可以使用js的api
 
 页面布局使用wxml，wxss，javascript
 
-2 开发工具
+（1）开发环境：
 
 申请小程序开发账号   https://mp.weixin.qq.com/    注册小程序
 
@@ -20,21 +20,23 @@
 
 代理  设置-代理-不适用代理    防止vpn冲突
 
-3 编译运行
+（2）编译运行
 
 修改代码时，模拟器会相应变化，但有时不会且数据有时也需要重置，此时就可以进行编译。模拟器有些效果出不来，预览可以在手机上看效果，但前提是得编译通过。
 
 有些效果只有在预览才能看见，预览必须配置appid才能用，每次重新修改都要重新编译并重新点击预览生成新的二维码。手机扫码后，右上角三点的设置里开启开发调试模式，否则网络请求失效。
 
-4 配置文件：
+## 2 配置文件
 
 小程序整体由顶部导航条，背景区和tabBar组成（注意背景是页面底下的，不是页面本身）
 
-4.1 app.json全局配置文件
+### 2.1 app.json
 
-4.1.1 page配置项放要展示的页面，第一个为首页
+全局配置文件
 
-4.1.2 window配置项用来配置窗口的样式（顶部导航条，背景区）
+（1）page配置项放要展示的页面，第一个为首页
+
+（2）window配置项用来配置窗口的样式（顶部导航条，背景区）
 
 | navigationBarTitleText                       | string      |
 | -------------------------------------------- | ----------- |
@@ -45,7 +47,7 @@
 | enablePullDownRefresh (是否开启下拉刷新，默认关)         | boolean     |
 | onReachBottomDistance (上拉距底部多少距离触发对应事件，单位px) | number      |
 
-4.1.3 tabBar配置项配置tabbar的样式：
+（3）tabBar配置项配置tabbar的样式：
 
 可以放顶部和底部，2<=item数<=5，顶部只显示文本，底部显示icon和text
 
@@ -82,9 +84,9 @@ xss，js，json
 3.wxml，wxss布局，js通过与 wx.switchTab()跳转tabBar
 ```
 
-，4.1.4 style配置项配置杨样式版本，目前最新版本v2
+（4）style配置项配置杨样式版本，目前最新版本v2
 
-4.1.5 跟随微信设置的暗色模式
+（5）跟随微信设置的暗色模式
 
 页面的暗色模式、在全局设置样式
 
@@ -131,7 +133,7 @@ page {
 }
 ```
 
-4.2 页面各自的json配置文件
+### 2.2 页面各自的json配置文件
 
 用于配置各页面特有的窗口样式，会覆盖全局的窗口配置，配置项与app.json不太一样，如：
 
@@ -143,20 +145,20 @@ page {
 }
 ```
 
-# 二、wxml的标签（组件）
+## 3 wxml的标签（组件）
 
 有自己的标签和属性，属性若为布尔值，true时可以省略值
 
 app.json中的pages编写路径就会这届在page下生成页面文件
 
-1 视图容器
+### 3.1 视图容器
 
-1.1 <view>和<block>
+（1）<view>和<block>
 <view>类似于<div>
 
 <block>相当于vue的<template>，只作包裹代码作用，不渲染不占内存，适合于if控制多个组件显示时使用
 
-1.2 <scroll-view>
+（2）<scroll-view>
 
 实现滚动，属性scroll-y或scroll-x控制垂直/水平滚动，对应的必须设置高度/宽度
 
@@ -194,7 +196,7 @@ methods: {
 </view>
 ```
 
-1.3 <swiper>和<swiper-items>
+（3）<swiper>和<swiper-items>
 
 轮播图
 
@@ -209,13 +211,13 @@ swiper属性
 | 切换间隔   | interval               | ms      | 5000           |
 | 是否衔接滚动 | circular               | boolean | false          |
 
-2 基础内容
+### 3.2 基础内容
 
-2.1 <text>
+（1） <text>
 
 类似于<span>，属性selectable实现长按复制（注意模拟器无效，真机才有效爱哦）
 
-2.2 <rich-text>
+（2）<rich-text>
 
 通过nodes属性将html的标签渲染为wxml结构
 
@@ -223,7 +225,7 @@ swiper属性
 <rich-text nodes="<h1 style='color:red'>123</h1>"></rich-text>
 ```
 
-2.3 <button>
+（3） <button>
 
 ```
 <!-- 基本使用，其他属性和值详见文档 -->
@@ -240,7 +242,7 @@ swiper属性
 <button size="mini" plain>123</button>
 ```
 
-2.4 <image>
+（4） <image>
 
 类似于img标签，但他是双标签
 
@@ -257,7 +259,7 @@ swiper属性
 | widthFix        | 宽度不变，高度自保持比例适应                      |
 | heightFix       | 高度不变，宽度保持比例自适应                      |
 
-3 表单组件
+### 3.3 表单组件
 
 <input />，与H5差不多，新增了一些东西
 
@@ -265,7 +267,7 @@ swiper属性
 
 <radio checked="true" color="red">  选中√，颜色为红色的radio
 
-4 导航组件
+### 3.4 导航组件
 
 分为声明式导航和编程式导航：
 
@@ -318,17 +320,13 @@ onLoad(options){
 }
 ```
 
-()6 map地图组件
+### 3.5 其他
 
-7 canvas画布组件
+map地图组件，canvas画布组件，开放能力，无障碍访问
 
-8 开放能力
+## 4 wxss
 
-9 无障碍访问
-
-# 三、wxss
-
-1 基本区别
+（1）基本区别
 
 大部分的css的功能都能使用，只有小部分不能用，如id选择器，通配符选择器无法使用，可以用 page {}  代替 * {}
 
@@ -338,13 +336,13 @@ rpx是适配单位，将宽度分为750rpx，会根据不同屏幕来自动转�
 
 @import '/xxx.wxss';    //导入miniprogram目录下的xxx.wxss
 
-2 全局样式与局部样式
+（2）全局样式与局部样式
 
 全局样式在app.wxss中定义，使得所有页面都有效果
 
 局部样式在各自页面的wxss文件，若局部样式权重大会覆盖全局样式
 
-# 四、模板语法
+## 5 模板语法
 
 在相应的js或ts文件中定义数据，wxml就可以使用了，可用与vue一样的mustache语法
 
@@ -369,7 +367,7 @@ this.setData({
 })
 ```
 
-1 数据绑定
+### 5.1 数据绑定
 
 与vue不同
 
@@ -383,7 +381,7 @@ data:{
 <button class="{{className}}"></button>
 ```
 
-2 事件绑定
+### 5.2 事件绑定
 
 ```
 <!--另一种形式是 bind:tap="..." ..>
@@ -461,7 +459,7 @@ onReachBottom(){
 onShareAppMessage() {}
 ```
 
-3 条件渲染
+### 5.3 条件渲染
 
 wx:if和hidden的区别与vue的v-if和v-show一样，唯一的区别就是v-show是“显示”，hidden是“隐藏”
 
@@ -475,7 +473,7 @@ wx:if和hidden的区别与vue的v-if和v-show一样，唯一的区别就是v-sho
 <text hidden="{{false}}">123</text>
 ```
 
-4 列表渲染
+### 5.4 列表渲染
 
 ```
 <view wx:for="{{arr}}">索引是{{index}}，值是{{item}}</view>
@@ -490,7 +488,7 @@ wx:if和hidden的区别与vue的v-if和v-show一样，唯一的区别就是v-sho
 </view>
 ```
 
-5 生命周期钩子
+### 5.5 生命周期钩子
 
 分为应用生命周期和页面生命周期，应用包含页面
 
@@ -510,7 +508,7 @@ wx:if和hidden的区别与vue的v-if和v-show一样，唯一的区别就是v-sho
 | onHide   | 页面隐藏时触发                                       |
 | onUnload | 页面卸载时触发，只触发一次，相当于vue2的destroyed，vue3的unloaded |
 
-# 五、wxs
+## 6 wxs
 
 weixin script，类似于js，区别：
 
@@ -559,11 +557,11 @@ module.exports = {
 <wxs module="m1" src="..//../utils/filters.wxs"></wxs>
 ```
 
-# 六 组件
+## 7 组件
 
-1 自定义组件
+### 7.1 自定义组件
 
-1.1 创建、引入与使用
+创建、引入与使用
 
 在根目录中建立components文件夹存放组件，里面新建a文件夹再右键新建component就能自动生成json，wxml，wxss，js
 
@@ -585,7 +583,7 @@ module.exports = {
 
 3. 页面的事件函数与data同级，组件的事件函数写在与data同级的methods中
 
-2 组件样式
+### 7.2 组件样式
 
 组件与页面的样式是互相隔离的（包括全局样式），但是仅限于类选择器
 
@@ -610,9 +608,9 @@ shared       页面，组件样式能互相影响，该组件也能影响其它a
 */
 ```
 
-3 父子组件通信
+### 7.3 父子组件通信
 
-3.1 父传子
+（1）父传子
 
 ```
 //组件js中
@@ -637,7 +635,7 @@ Component({
 
 2. 小程序的data和properties是一个对象，都是可读可写
 
-3.2 子传父
+（2）子传父
 
 ```
 //子的事件函数中
@@ -648,13 +646,15 @@ this.trigerEvent('xxx',{aaa:...})
 e.detail.aaa 获取参数
 ```
 
-3.3 let cpn = this.selectComponent('类/id选择器')
+（3）获取组件实例
+
+et cpn = this.selectComponent('类/id选择器')
 
 相当于vue的refs，得到的cpn是子组件实例对象，cpn.方法  cpn.data.属性  cpn.setData()
 
 3.4 
 
-4 数据监听器
+### 7.4 数据监听器
 
 ```
 Component({
@@ -666,7 +666,7 @@ Component({
 })
 ```
 
-5 纯数据字段
+### 7.5 纯数据字段
 
 指的是只在js内部使用，不需要到wxml渲染的数据
 
@@ -682,11 +682,11 @@ Component({
 
 由此，官方推荐在组件js内部使用的属性、方法的名字以_开头
 
-1.6 组件生命周期
+### 7.6 组件生命周期
 
 分为组件生命周期和组件所在页面的生命周期
 
-5.1 组件生命周期
+（1）组件生命周期
 
 与data同级
 
@@ -698,7 +698,7 @@ Component({
 | detached | 组件销毁                        |
 | error    | 组件内的函数异常时回调                 |
 
-5.2 组件所在页面的生命周期
+（2）组件所在页面的生命周期
 
 写在与data同级的pageLifetime中
 
@@ -707,13 +707,13 @@ Component({
 | hide         | 页面隐藏    |
 | resize(size) | 页面大小有变化 |
 
-6 插槽
+### 7.7 插槽
 
 有默认插槽和具名插槽，使用多个<slot>时如具名插槽，需要在组件的options中添加：
 
 multipleSlot: true
 
-7 behaviors
+### 7.8 behaviors
 
 相当于vue的混入
 
@@ -729,9 +729,9 @@ Component({
 })
 ```
 
-# 七、分包
+## 8 分包
 
-1 介绍
+### 8.1 介绍
 
 未分包时，所有的页面和资源在打开小程序时会同时加载，速度会很慢。
 
@@ -743,7 +743,7 @@ Component({
 
 分包限制：主包和分包总大小不大于16M，主包和分包单个大小不超过2M
 
-2 使用
+### 8.2 使用
 
 目录结构：pages文件夹放主包的页面，在pages的同级建立xxx分包文件夹作为一个分包，xxx下建立pages文件夹放页面，分包不能嵌套分包
 
@@ -769,7 +769,7 @@ Component({
 
 查看主包分包大小：详情-基本信息-本地代码
 
-3 独立分包
+### 8.3 独立分包
 
 独立分包是分包的一种，可以有多个
 
@@ -779,7 +779,7 @@ Component({
 
 只需要在app.json的分包配置项中添加 "independent": true 即是独立分包。碎
 
-4 分包预下载
+### 8.4 分包预下载
 
 在进入某个页面时，可能会有需求提前预下载需要的分包，使得节省访问该分包时的下载事件，甚至不用再下载。
 
@@ -798,7 +798,7 @@ app.json中
 
 注意，同一个分包中，分包大小+预下载大小不能超过2M
 
-# 七、网络请求
+## 9 网络请求
 
 官方为了安全，对网络请求做了限制：
 
@@ -806,11 +806,11 @@ app.json中
 
 2. 必须将接口的域名添加到信任列表（查：工具右上角-详情-项目配置-request合法域名）
 
-1 添加域名到信任列表
+（1）添加域名到信任列表
 
 登录微信小程序管理后台-开发-开发管理-开发设置-服务器域名，注意无法添加ip地址和localhost，且该域名需要后端做icp备案，且修改域名一个月做多修改5次
 
-2 发送请求
+（2）发送请求
 
 ```
 wx.request({
@@ -823,7 +823,7 @@ wx.request({
 })
 ```
 
-3 关闭域名验证
+（3）关闭域名验证
 
 在开发时，为了方便可以关闭域名验证，此时就不需要https协议和添加信任列表
 
@@ -831,15 +831,15 @@ wx.request({
 
 但是项目上线时就一定要开启域名验证
 
-4 跨域和ajax
+（4）跨域和ajax
 
 只有浏览器环境才存在跨域问题，小程序没有跨域问题
 
 ajax是基于浏览器的xhr对象，小程序是没有的，所以小程序不能使用ajax，小程序用的是自己封装的网络数据请求
 
-# 七、API
+## 10 API
 
-1 官方API
+### 10.1 官方API
 
 分为事件监听API，同步API，异步API
 
@@ -931,9 +931,9 @@ wx.xxx({
 //若参数不包含sucess/fail/complete，则返回一个promise，否则不返回promise
 ```
 
-2 npm安装第三方包
+### 10.2 npm安装第三方包
 
-2.1 限制：
+（1）限制：
 
 1. 不支持依赖于nodeJS模块（如fs，path）的包
 
@@ -941,7 +941,7 @@ wx.xxx({
 
 3. 不支持依赖C++的包（如一些加密的包）
 
-2.2 npm使用：
+（2）npm使用：
 
 在项目的miniprogram目录下安装npm包，先npm init再装包
 
@@ -949,15 +949,15 @@ wx.xxx({
 
 若构建npm时，若miniprogram_npm文件夹已存在，建议先删除再构建，防止不必要的错误。
 
-2.3 常用npm包
+（3）常用npm包
 
-2.3.1 组件库vant
+组件库vant
 
 为了防止样式冲突，建议将 app.json 的 "style":"v2" 删除
 
 使用vant的组件时，需要在json的usingComponents引入
 
-2.3.2 小程序异步API转Promise
+小程序异步API转Promise
 
 ```
 import {promisifyAll} from 'miniprogram-api-promise'
@@ -967,7 +967,7 @@ promisifyAll(wx,wxp)  //wxp得到了转化为promise的wx异步api，通过wxp.x
 //如 await resData = wxp.request(...)
 ```
 
-2.3.3 状态管理工具
+状态管理工具
 
 相当于vuex，需要安装mobx-miniprogram和mobx-miniprogram-bindings，作用分别是创建store和在各页面中绑定store
 
@@ -1048,8 +1048,361 @@ Component({
 <view>{{data3}}</view>
 ```
 
-# 八、协同工作与发布
+## 11 协同工作与发布
 
-# 九、公众号
+## 12 公众号
 
 需要另外注册一个公众号的账号，公众号分为订阅号和服务号，服务号需要企业才能申请，功能比订阅号多一些，个人只能申请订阅号。
+
+# 二、uniapp
+
+## 1 基本
+
+uniapp用vue的语法开发小程序、安卓、ios等
+
+开发工具-HBuilder：
+
+切换快捷键方案：工具-预设快捷键方案切换-VS Code
+
+主题切换：工具-主题
+
+字体等设置：工具-设置-就能打开settings.json
+
+项目创建和运行：
+
+HBuilder中新建项目，而不是webpack或vite创建
+
+hbuilder保存后微信开发者工具会热更新（json不会），所以最好编译一下
+
+配置文件：
+
+HBuilder的json文件一些会变成图形界面（manifast.json settings.json，点开后可在左侧栏最下面点击源码视图），一些不会
+
+manifast.json是整个项目的配置文件，可配置项目名，Vue版本，小程序的appid，logo等
+
+pages.json类似于原生小程序，配置页面路由、窗口样式、导航栏、tabBar等。
+
+第三方库安装；
+
+部分npm安装
+
+部分在uniapp插件市场安装（如less，sass），若使用时未安装也会自动安装
+
+HBuilder的项目运行到微信开发者工具查看效果：
+
+1. HBuilder-manifaset.json-微信小程序配置-appid
+
+2. HBuilder-工具-设置-运行配置-小程序运行配置-微信开发者工具路径
+
+3. 微信开发者工具-设置-安全-服务端口
+
+4. HBuilder-运行-运行到小程序模拟器-微信开发者工具 就会编译成微信小程序的代码并打开微信开发者工具，HBuilder修改代码保存后微信开发者工具会热更新
+
+.gitignore需要忽略的文件：
+
+```
+/node_modules
+/unpackage/dist
+```
+
+unpackage为了防止没有文件而不提交的本地库，需要在里面新建.gitkeep文件占位
+
+appid：
+
+除了各个小程序的appid外，uniapp自己本身也有一个appid
+
+目录结构：
+
+可以像温馨小程序一样，新建页面、新建组件等快速创建文件
+
+- pages：存放tabbar页面的.vue文件
+
+- components：存放自定义组件，放在这里的自定义组件不需要引入注册就可以在任何页面上使用；其他文件夹下的组件要使用就需要引入注册
+
+- static：存放静态资源文件（图片等），注意static里面的文件不会被webpack编译，需要webpack编译的文件（如es6，ts，less等）不能放在里面
+
+- uni_modules：存放dcloud插件市场下载的第三方库（如uni-ui）
+
+- app.vue：编写应用声明周期，全局样式，不需要写template
+
+- uni.scss：系统会自动引入，配置全局样式（需要自行npm安scss）
+
+- manifast.json：H5，小程序，安卓，ios的配置文件
+
+- pages.json：相当于微信小程序的app.json
+
+- vue.config.json：webpack配置文件（需要自己创建）
+
+## 2 语法
+
+采用Vue语法+微信小程序配置文件的开发模式，规范如下：
+
+- uniapp的顶级对象是uni，有各个端的api，微信小程序的全部api都可以通过uni调用，可以通过 uni.xxx = yyy 来挂载到uni，保留了H5的定时器。
+
+- 每个页面对应一个.vue文件，可以使用所有的Vue语法，此外还可以使用微信小程序的组件、生命周期（应用生命周期都写在app.vue）
+
+- uniapp事件总线：
+  
+  uni.$emit()
+  
+  uni.$on()
+  
+  uni.$off()
+
+- 若使用了div，span，img，input，button，编译成微信小程序会变成view，text，image，input，button，为了兼容多端推荐使用微信小程序的标签
+
+- css为了兼容多端，推荐使用flex布局
+
+- 引入资源时，不推荐使用相对路径，推荐使用绝对路径， ‘@/xxx.png’ 是根目录下的xxx.png（但如果是路径保存为js的变量，就不能加@）；非引入资源时（如路由跳转），就根据各自的语法规范。
+
+Vue3使用：
+
+需要在manifast.json中配置：
+
+```
+...
+"vueVersion": "3",
+...
+```
+
+Vue3.2的使用：
+
+```
+//微信小程序的生命周期和上拉加载等等在Vue2 Vue3.0都可以写在配置项中，而Vue3.2的script setup用法如下：
+<script setup>
+import {onLoad} from '@dcloudio/uni-app'
+onLoad((options) => {
+    console.log(options)
+})
+</script>
+```
+
+全局样式：
+
+```
+//app.vue
+<style>
+page {
+
+}
+</style>
+```
+
+生产环境判断：
+
+```
+if(process.env.NODE_ENV == 'development')
+  console.log('开发环境')
+else console.log('生产环境')
+```
+
+配置文件：
+
+amnifast.json里的mp-weixin配置项就是微信小程序project.config.json的相关配置
+
+pages.json和微信小程序的app.json用法一样，可配置页面，导航栏，tabBar等，
+
+不同点：
+
+1. window配置项变成了globalStyle
+
+2. pages配置项不是数组，而是对象，每个对象可以放path，style，style里面就是微信小程序各个页面的json文件中的样式属性，会覆盖全局配置的样式
+
+分包的使用与微信小程序相同，但是pages配置项和主包一样可以设置style
+
+如在根目录下创建packageA文件夹作为分包，里面创建 GoodsDetail/GoodsDetail.vue
+
+```
+"subpackages": [
+  {
+    "root":"packageA",
+    "pages":[{
+      "path": "GoodsDetail/GoodsDetail",
+      "style": {}
+    }]
+  }
+],
+```
+
+自定义组件都放在 /components 目录下，可通过右键新建组件快速创建
+
+自定义组件不用像vue需要引入注册，也不需要像微信小程序需要配置json，而是直接使用
+
+uni-ui：
+
+跑版本会自动放在components中，新版本需要自己新建一个uni_modules文件夹，栽倒dcloud官网下载uni-ui
+
+uni-ui的组件都不需要引入就可以直接使用
+
+uni-ui可以直接修改源代码
+uni-ui直接给class无法修改样式
+uni-ui常用：
+
+## 3 网络请求
+
+微信小程序无法使用axios，原生小程序的网络请求API功能也不够用（如没有拦截器）
+
+```
+npm install --save @escook/request-miniprogram
+
+//main.js
+//挂载到uni，可以使用拦截器，里面调用微信小程序的api
+import {$http} from '@escook/request-miniprogram'
+$http.baseUrl = '...'
+//请求拦截器
+$http.beforeRequest = (opt) => {
+  uni.showLoading({
+    title: '加载中...'
+  })
+}
+//响应拦截器
+$http.afterRequest = (res) => {
+  uni.hideLoading()
+}
+uni.$http = $http
+
+//用到的地方中
+uni.$http.get('/api/public/v1/home/swiperdata').then(res => {
+    console.log(res.data)
+})
+```
+
+注意，由于项目最终运行到微信小程序端，所以网络请求的要求也和微信小程序一样，需要配置合法域名，或勾选不检验合法域名
+
+## 4 跨平台兼容
+
+### 4.1 平台判断
+
+大部分组件和API，uniapp已经做了跨平台的封装，可以直接使用；但是部分的组件和API由于平台特性而无法跨平台（组件和API在哪个平台可使用详见文档）
+
+在需要自己做跨平台，或不同平台需要不同的个性化，就需要自己进行平台判断。
+
+运行时判断：
+
+```
+switch(uni.getSystemInfoSync().platform){
+  case 'android':
+    console.log('安卓')
+    breeak
+  ...
+}
+```
+
+编译时判断：
+
+使用注释条件编译
+
+```
+<template>
+  <!-- #ifdef h5 -->
+  <text>h5</text>
+  <!-- #endif -->
+  <!-- #ifdef MP-WEIXIN -->
+  <text>weixin</text>
+  <!-- #endif -->
+</template>
+
+<script>
+export default {
+  onLoad(){
+    // #ifdef h5
+    console.log('h5')
+    // #endif
+    // #ifdef MP-WEIXIN
+    console.log('weixin')
+    // #endif
+  }  
+}
+</script>
+/* #ifdef h5 */
+...
+/* #endif */
+/* #ifdef MP-WEIXIN */
+...
+/* #endif */
+<style>
+
+</style>
+```
+
+| #ifdef  | 仅在当前平台 |
+| ------- | ------ |
+| #ifndef | 除了该平台  |
+
+具体的平台类型详见文档，此外还可以判断是在Vue2还是Vue3
+
+```
+// #ifdef VUE3
+...
+// #endif
+```
+
+还可以在pages.json中使用（只有pages.json这个json文件可以用）：
+
+由于JSON的严格性，最后一个属性不能加逗号，而条件编译若不成立则整个代码块都不变异，所以需要特别注意逗号。
+
+```
+{
+  ...
+  "xxx":{...}
+  // #ifdef h5
+  ,"yyy":{},
+  // #endif
+  ...
+}
+```
+
+若是globalStyle想实现跨平台，不推荐使用条件编译，推荐使用平台节点：
+
+节点里面的配置，建议参考各平台的说明，直接使用各平台的特有属性
+
+```
+{
+  "globalStyle":{
+    ...
+    "mp-weixin":{...}
+  }
+}
+```
+
+此外，static目录也可使用条件编译，在对应平台打包对应的文件夹爱，以此减少打包体积，具体详见文档。
+
+运行时判断和编译时判断的区别：
+
+- 编译时判断，若不符合条件直接不编译，而运行时编译则会全部编译，且运行时多了个判断平台的操作，所以性能上编译时判断占优
+
+- 编译时判断可以在模板、js、css、pages.json中使用，运行时判断只能在js，模板（v-if，v-show）使用，使用上编译时判断也占优
+
+- 编译时判断无法判断安卓，ios，此时只能用运行时编译
+
+### 4.2 各平台注意事项
+
+（1）安卓
+
+（2）ios
+
+- ios设备，即使是ios的小程序对.webp格式的图片支持都不太好
+
+- 地图的覆盖物，使用高清图时，文件名要以@2或@3结尾，如 [xxx@2.png](mailto:xxx@2.png)
+
+（3）微信小程序
+
+- 不支持id选择器和通配符选择器
+
+（4）支付宝小程序
+
+- 项目中不允许出现以@等特殊符号命名的文件
+
+（5）
+
+### 4.3 打包发布
+
+uniapp发布微信小程序：
+1.微信后台-开发-开发管理-开发设置-服务器域名-来设置合法域名
+2.dcloud开发者中心-创建项目-复制项目的appid到manifast.json中
+3.复制小程序appid到manifast.json】
+4。HBuilder-发行-小程序微信-输入小程序名和小程序appid点击发行
+5.弹出的微信开发者工具-上传-输入版本号上传
+6.微信后台-管理-版本管理-提交审核
+
+end

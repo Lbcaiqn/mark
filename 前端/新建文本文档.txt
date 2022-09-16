@@ -1,4 +1,8 @@
-
+v-if解决显示undefined得到问题
+props父组件传入 xxx.yyy undefined
+use在mount之前
+若3.2需要组件name，则另外搞一个script就行
+修改vue端口
 
 五、项目
 代码缩进：2
@@ -6,113 +10,6 @@
 标签中小写和-，标签使用语义标签
 css要初始化，css顺序：display=定位-盒子-文本-文字-背景-C3 0.5可写.5
 js：变量/函数小驼峰，对象/类大驼峰，组件大驼峰
-js代码优化：
-*可维护性：js/css/html分离，行为/结构分离，数据/代码分离
-*可扩展性：模块化开发
-*可调试性：consolo.log aleft try...catch
-*DOM优化：减少DOM操作，减少script标签或给script标签异步属性             
-defer(按script顺序执行)或async(不按script顺序
-
-前端资源优化：
-*精灵图：整合了小图标，较少服务器请求次数
-*代码压缩（打包）：将代码丑化，去除空格和换行
-*预加载：所有资源提前加载到本地，提高页面的加载速度img标签和js的Image对象都是预加载
-*懒加载：路由和图片，需要的时候在加载，原理是监听滚动事件预加载是提前加载，懒加载是延迟加载
-
-
-1、准备工作：
-（1）创建项目，运行测试一下，没有问题后将helloworld相关代码删除
-（2）src目录结构
-assets
-  img
-  css
-common	    本项目公用的js文件
-components  公共组件
-  common    可以在别的项目用的组件
-  content   只能在本项目用的组件
-views       各个页面独立的组件
-router
-store
-network
-App.vue
-main.js
-（3）基本配置：
-①拿到.editorconfig文件，配置代码风格
-②创建vue.config.js，配置路径别名，当成绝对路径用
-module.export = {
-  configurewebpack:{
-    resolve:{
-      extension:[], //配置后倒入路径可不加后缀，默认已配载就hi，可不写。
-      alias:{
-        '@':'src',  //默认已配置，可不写
-        'assets':'@/assets',
-        'components':'@/components',
-        'common':'@/common',
-        'network':'@/network',
-        'views':'@/views'
-      }
-    }
-  }
-}
-（4）基本css：
-①Github下载normalize.css，统一不同浏览器的html标签模样
-②创建base.css，@import “assets/css/normalize”; 并初始化css
-然后在App.vue中的script，@import “assets/css/base.css”;
-
-（5）
-0、设置缩放的最大最小宽度px
-1、css中无法引入css
-2、路径别名，引入css可以，其他不行
-3、git push失败
-
-
-
-5、变量保存网络请求的数据，在请求到数据前报错
-原因是通过props把数据传给子组件时，使用.调用，但是我定义的是空对象，没有可以调用的键，所以报错
-解决：props传入时，就只传入一个对象名
-有时候，数据是很杂乱的，一个组件需要的数据可能在请求数据的不同对象中，子组件需要配多个props才能得到数据，非常不好
-只要记住一个原则，子组件只接收一个对象处理
-所以最终的解决方案：
-在封装的网络请求js文件中，导出一个类，类的构造器通过传入各个对象来，将多个对象的属性封装成一个单独的类，使用时只需要导入这个类，new传入相应的对象，赋值给一个对象变量obj，在将obj传入子组件处理。
-
-
-8、商品列表图片高度不同的情况
-
-7、手机和电脑连一个wifi，手机进入电脑ip:端口
-
-
-
-17、网络请求最后一页，以及tabcontrol跳转回来是不是要第一页
-
-
-19、使用better-scroll后里面tabcontrol实现吸顶
-思路：获得tabcontrol距离顶部的距离，与滚动的position比较来决定是否吸顶
-this.$refs.refname.$el.offsetTop返回refname组件距离顶部的距离，但是如果在网络请求得到图片并显示前执行，得到的是没有图片撑开的高度，所以需要在图片加载完成后在执行，一般tabcontrol前面的组件中，轮播图的营销比较大，其他比较小，所以一般可以只处理轮播图
-
-轮播图的img绑定 @load 并发射自定义事件，home接收比哦并执行 this.变量=this.$refs.refname.$el.offsetTop 即可
-然后再有position参数的函数中，与position比较大小并执行一个解决法。
-解决方法：
-在better-scroll实现固定定位有一些bug，所以不能用，一个思路：
-复制tabControl组件标签粘贴到tabnav下面，并设置相对定位和定位等级，用v-show的布尔值控制它的显示隐藏，用顶部距离和position比较来改变这个布尔值
-
-最后，需要解决两个tabControl活跃样式不同步的问题，在yabControl点击时发射事件，home通过参数同时修改两个tabControl的活跃标志
-
-
-
-22、为了避免数据没有及时请求过来，而导致没有数据时就展示元素的报错，可以做类似下面的判断
-v-if="goodsInfo.image!=null
-有时候数据是缺失的，可以判断 v-if="'keyname' in objname"，也有经常判断值是否为空的
-所以要注意，看是否要判断对象，键，值是否为空
-扩
-23、时间戳格式化
-为了保证各种设备都能使用且有扩展性，网络请求得到的时间都是时间戳，自己需要将时间戳格式化为需要的时间格式，js没有内置的函数，需要自己写。
-最终使用过滤器展示
-
-
-
-
-
-30、数组.find(箭头函数) 遍历数组，返回的是箭头函数return为true（true后就不执行）的那个元素
 
 
 
@@ -121,35 +18,327 @@ v-if="goodsInfo.image!=null
 
 
 
-34、选中按钮可以自己用div定义，封装成组件，这样有更多的扩展，是否选中的状态一般在被选择的对象中的一个属性，由他来决定选中前后的逻辑
+
+wxbbe70225be9a76ea
+
+
+
+tabbaricon，img的:src本地图片，图片裁剪，tr，设计稿
+
+image  vhvw收口大小 滚动click100ms
+
+事件委派 xxx-yyy
+
+tabbar路由自动keepalive   uni对象再template使用  自定义组件原生事件 
+uni-ui  可在源代码修改样式
+
+
+
+uniapp没有闭包
+
+响应式对象直接修改里面的数据不要ref，reactive
+
+$http传参，exclude拦截器
+
+
+
+
+
+JSON.stringify()不能Set，可以转ref，ractive但是parse回来变成普通数据
+
+
+
+上拉加载最后一页的判断：
+服务器返回一般两种：
+1 状态码，根据状态码判断就行
+2 返回总数，此时可以用 页码*每页数量>=总数来判断，也可以当前总数>=总数来判断
+
+高阶函数map
+
+为了防止数据为请求完就显示undefined，v-if解决
+
+vuex持久化
+
+static的文件不会被编译（不能放css、js等），专门用来放静态资源（图片、音视频等）
+
+搜索功能：点击假的搜索盒子进入搜索页面
+
+
+
+web worker
+浏览器 跨域 webpack ant-design sass git
+
+引入css：
+@import url('...')
+
+在编程式导航后面的代码也会执行，但最好写在导航之前
+
+uni.reLoad()
+getCurrentPages()
+小程序分包预下载
+路由url可传递多个参数
+路由跳转url太长不行，需要encodeURL和decodeURL处理参数后在传递
+
+image懒加载
+image :src 绑定本地路径正常
+
+click tap区别
+uniapp网络请求
+swiper滑动页面，上拉加载切换动态高度，切换高度变为各自的高度
+瀑布布局
+navbar隐藏
+手机验证码登录
+
+uniapp各平台样式相同
+
+eslint
+
+yarn构想项目报错
+
+yarn和npm切换；找到.vuerc文件用vscode打开，修改节点 "packageManager": "npm"
+
+
+vue  @/  代表根目录
+html，css，文件名都可以有-命名，而js不行
+
+
+vue使用ts有时会检查类型，有时不会
+defineComponent
+
+less导入less：@import '...'
+
+vue导入样式：在<script>里   import '...'
+
+组件库修改样式
+
+echarts 封装成组件
+
+
+keyof，后四节
+对象索引访问，增删属性
+
+
+没有版心的缩放适配
+
+
+
+
+父传子，子v-model，父也变
+
+web3 牛客网
+
+公众号
+
+浏览器兼容
+
+web性能 seo
+
+vue.config.js  修改后必须重新哪npm run才能生效
+
+cookie
+token在vuex和本地都要存储
+
+
+可以全局前置守卫判断是否需要登录，是否登录
+可以在请求拦截器上加上token和请求体
+
+@/ 保存给变量或拼接字符串时无效
+
+
+非tabbar页面若不想显示nav和tabbar可以v-show隐藏，404不想显示其他也可以v-show隐藏
+
+removeRoute() 和 hsaRoute() vue2不可用
 
 
 
 
 
 
-38、弹窗
-自己定义一个Toast组件作为弹窗，能根据需要进行布局，显示的内容和显示隐藏通过外部传入参数，fixed定位到相应位置。
-但是组件定义后，使用时要导入，注册，定义变量等，十分麻烦，可以进一步封装成插件的方式封装Toast，就能this.$Toast直接调用
-通过组件内定义methods改变data内的变量
 
 
 
 
 
-图片懒加载：
-在图片需要在屏幕上显示时，才加载图片，优化性能。
-npm install vue-lazyload --save
-//main.js
-impoet VueLavyLoad from 'vue-lazyload'
-Vue.use(VueLazyLoad,{
-  //此对象可写可不写，用来设置加载时显示的图片，加载失败时的图片等
+
+
+
+
+
+
+document.querySelector('#app').__vue__.$router.addRoute({path:'/Manage',component:()=>import('/views/Manage.vue')})
+
+
+console.log(document.querySelector('#app').__vue__.$router.getRoutes())
+
+状态保持：cookie，session，jwt
+
+js文件使用vuex：import store from '...'
+
+将对象给实参、for的变量也，push是浅拷贝
+
+
+谷歌浏览器控制台输出bug；
+输出较为复杂的数据时，会先展示...  当点击三角才会显示完整数据
+这时候就会有个bug，
+let aaa = [{
+    value: 123
+}]
+
+/*正常来说，输出在修改之前，应该输出123，可是却输出456
+这是因为浏览器的bug，若点开三角的时候数据已经改了，name浏览器会展示最新的数据
+*/
+console.log(aaa)
+aaa[0].value = 456
+
+/*以下例子就能证明
+若在3秒内点开三角，就展示456
+若3秒后数据修改了再点开三角，就展示789
+*/
+console.log(aaa)
+setTimeout(() => aaa[0].value = 789, 3000)
+
+这只是展示的bug，并不是代码逻辑的bug，代码里该输出设么么还是输出什么，只是在调试代码的时候要特别注意
+
+后台管理系统：
+管理员拥有全部权限，用户不是注册来的而是管理员添加的，用户可修改密码
+管理员主要有对用户、角色、权限、菜单的管理，用户具备角色的权限+管理员单独给的权限=该用户权限列表
+数据库：
+用户表保存用户信息和具备的角色
+角色表保存角色的权限
+权限表保存角色之外的权限或删除角色之内的权限
+用户表查到具备的角色，在角色表中查到具备的权限，再根据用户id拿到权限表中特有的权限与角色权限总和得到权限列表
+
+json文件不能写注释ts
+但是tsconfig.json可以
+
+ts配置文件修改后要重新npm run才生效
+
+性能：
+组件库按需导入
+-dev
+
+代码格式化插件prettier
+
+
+不推荐vue+ts使用vue-cli，推荐vite，因为vue-cli编译慢，且一旦使用了script setup语法就会关闭类型检查，即使用回V，ue3.0语法也不行，需要重启run才行
+目前vite的版本使用的js语法，vin7最高支持的node版本13.14已经识别不出，如可选链操作符
+
+
+
+数据库结构：总库-分库-表-字段
+总库可以放在mongodb安装目录下的 bin/data，也可以放到自己喜欢的地方
+启动数据库：
+mongod --dbpath=总库路径
+localhost:27017 就是总库
+mongoose连接数据库
+mongoose.connect('mongodb://localhost:27017/分库名',{
+  useNewUrlParser: true
 })
-img标签的:src换成v-lazyload
+若分库未创建则会自动创建
+若没有指定分库名，只给了mongodb://localhost:27017，则会自动创建一个分库并连接它
+mongoose一旦连接就会一直连接，除非关闭项目或手动断开连接，所以可以在项目一开始就连接数据库
 
 
-px转vw
-npm install postcss-px-to-viewport
+后台管理系统一般初始不需要默认路由，初始只需要配置登录页面的路由，其他路由和默认路由都根据权限动态添加
+
+
+mongoose的curd操作都是返回promise
+
+引用数据类型循环引用
+
+数组/对象的扩展运算符不能互相用
+https://blog.csdn.net/qq_45272642/article/details/124840331
+
+typeof数组对象都是object，函数是function
+数组对象 instanceof Object，函数都是true
+ts 的typeof只有赋值给type才是ts类型，其余都是js类型
+
+
+数组可以给超出长度的位置赋值，数组会自动扩容，中间的元素为undfined
+let arr = [1]
+arr[3] = 3
+// [1,undefined,3]
+ts没变
+
+
+name即使嵌套路由也是唯一的
+router.push()可以path或name，嵌套路由path可以name不行
+由于name唯一 router.push({name: xxx})可以直接跳转嵌套路由
+
+JSON.parse()只能接受字符串且不能是''
+
+
+v-if刚开始不加载，true才创建，v-show开始就加载
+频繁切换使用v-show，防止频繁创建删除dom
+切换少用v-if，防止初始加载过大
+
+v-for优先级高于v-if，两者不能同时使用，因为无论-for都会执行
+vue3中 v-if优先级高于v-for
+
+data return 是为了防止不同组件的data数据之间的冲突，return出去后每个data都是独立的了
+
+mutations只是为了devtools能追踪到修改，actions放异步和复杂的mutations，但最终还是需要通过mutations来修改数据
+
+动态组件常用于通过父传子的配置项来显示form表单，异步组件是为了防止子组件过大而影响父组件的显示
+
+js、ts为了避免不必要的错误都使用分号
+
+非空断言
+
+ts添加请求头，
+1 config.headers = {...config.headers,xxx:'xxx'}
+2 config.headers!.xxx = 'xxx'
+
+
+
+<template>不渲染，很适合组件库中使用
+
+箭头函数 函数体 {a:1,b:2} 不能简写
+
+//允许跨域的请求类型，get，post，options不用设置也允许
+res.header("Access-Control-Allow-Methods", "*");
+
+
+ref的value和reactive的元素复制ref或reactive会发生什么，是否深拷贝，
+
+toRaw是否深拷贝
+
+实例化的pinia需要return才能在template使用
+
+
+字面量类型也可以用来限制只能赋某个值
+
+
+npm run serve 是根据package.json的entry运行index.html
+
+css权重修改优先级
+
+css3盒子模型宽度=width+margin吗
+
+vue3的ref获取DOM，名字必须一样，比如：
+const myDom = ref(null)
+<div ref="myDom"></div>  不能写成my-dom
+
+ref和id名字可以一眼
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

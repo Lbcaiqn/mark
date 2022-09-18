@@ -1,33 +1,10 @@
-v-if解决显示undefined得到问题
-props父组件传入 xxx.yyy undefined
-use在mount之前
-若3.2需要组件name，则另外搞一个script就行
 修改vue端口
-
-五、项目
-代码缩进：2
-命名：
-标签中小写和-，标签使用语义标签
-css要初始化，css顺序：display=定位-盒子-文本-文字-背景-C3 0.5可写.5
-js：变量/函数小驼峰，对象/类大驼峰，组件大驼峰
-
-
-
-
-
-
-
-
-
-wxbbe70225be9a76ea
-
-
 
 tabbaricon，img的:src本地图片，图片裁剪，tr，设计稿
 
 image  vhvw收口大小 滚动click100ms
 
-事件委派 xxx-yyy
+事件委派
 
 tabbar路由自动keepalive   uni对象再template使用  自定义组件原生事件 
 uni-ui  可在源代码修改样式
@@ -40,30 +17,13 @@ uniapp没有闭包
 
 $http传参，exclude拦截器
 
-
-
-
-
 JSON.stringify()不能Set，可以转ref，ractive但是parse回来变成普通数据
 
-
-
-上拉加载最后一页的判断：
-服务器返回一般两种：
-1 状态码，根据状态码判断就行
-2 返回总数，此时可以用 页码*每页数量>=总数来判断，也可以当前总数>=总数来判断
-
 高阶函数map
-
-为了防止数据为请求完就显示undefined，v-if解决
 
 vuex持久化
 
 static的文件不会被编译（不能放css、js等），专门用来放静态资源（图片、音视频等）
-
-搜索功能：点击假的搜索盒子进入搜索页面
-
-
 
 web worker
 浏览器 跨域 webpack ant-design sass git
@@ -84,26 +44,13 @@ image :src 绑定本地路径正常
 
 click tap区别
 uniapp网络请求
-swiper滑动页面，上拉加载切换动态高度，切换高度变为各自的高度
-瀑布布局
+
 navbar隐藏
+
 手机验证码登录
 
 uniapp各平台样式相同
 
-eslint
-
-yarn构想项目报错
-
-yarn和npm切换；找到.vuerc文件用vscode打开，修改节点 "packageManager": "npm"
-
-
-vue  @/  代表根目录
-html，css，文件名都可以有-命名，而js不行
-
-
-vue使用ts有时会检查类型，有时不会
-defineComponent
 
 less导入less：@import '...'
 
@@ -111,29 +58,9 @@ vue导入样式：在<script>里   import '...'
 
 组件库修改样式
 
-echarts 封装成组件
-
-
-keyof，后四节
-对象索引访问，增删属性
-
-
-没有版心的缩放适配
-
-
-
-
-父传子，子v-model，父也变
-
-web3 牛客网
-
-公众号
-
-浏览器兼容
+echarts 封装成组件，web3 牛客网，公众号，浏览器兼容
 
 web性能 seo
-
-vue.config.js  修改后必须重新哪npm run才能生效
 
 cookie
 token在vuex和本地都要存储
@@ -142,62 +69,8 @@ token在vuex和本地都要存储
 可以全局前置守卫判断是否需要登录，是否登录
 可以在请求拦截器上加上token和请求体
 
-@/ 保存给变量或拼接字符串时无效
-
-
-非tabbar页面若不想显示nav和tabbar可以v-show隐藏，404不想显示其他也可以v-show隐藏
-
-removeRoute() 和 hsaRoute() vue2不可用
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-document.querySelector('#app').__vue__.$router.addRoute({path:'/Manage',component:()=>import('/views/Manage.vue')})
-
-
-console.log(document.querySelector('#app').__vue__.$router.getRoutes())
 
 状态保持：cookie，session，jwt
-
-js文件使用vuex：import store from '...'
-
-将对象给实参、for的变量也，push是浅拷贝
-
-
-谷歌浏览器控制台输出bug；
-输出较为复杂的数据时，会先展示...  当点击三角才会显示完整数据
-这时候就会有个bug，
-let aaa = [{
-    value: 123
-}]
-
-/*正常来说，输出在修改之前，应该输出123，可是却输出456
-这是因为浏览器的bug，若点开三角的时候数据已经改了，name浏览器会展示最新的数据
-*/
-console.log(aaa)
-aaa[0].value = 456
-
-/*以下例子就能证明
-若在3秒内点开三角，就展示456
-若3秒后数据修改了再点开三角，就展示789
-*/
-console.log(aaa)
-setTimeout(() => aaa[0].value = 789, 3000)
-
-这只是展示的bug，并不是代码逻辑的bug，代码里该输出设么么还是输出什么，只是在调试代码的时候要特别注意
 
 后台管理系统：
 管理员拥有全部权限，用户不是注册来的而是管理员添加的，用户可修改密码
@@ -207,23 +80,6 @@ setTimeout(() => aaa[0].value = 789, 3000)
 角色表保存角色的权限
 权限表保存角色之外的权限或删除角色之内的权限
 用户表查到具备的角色，在角色表中查到具备的权限，再根据用户id拿到权限表中特有的权限与角色权限总和得到权限列表
-
-json文件不能写注释ts
-但是tsconfig.json可以
-
-ts配置文件修改后要重新npm run才生效
-
-性能：
-组件库按需导入
--dev
-
-代码格式化插件prettier
-
-
-不推荐vue+ts使用vue-cli，推荐vite，因为vue-cli编译慢，且一旦使用了script setup语法就会关闭类型检查，即使用回V，ue3.0语法也不行，需要重启run才行
-目前vite的版本使用的js语法，vin7最高支持的node版本13.14已经识别不出，如可选链操作符
-
-
 
 数据库结构：总库-分库-表-字段
 总库可以放在mongodb安装目录下的 bin/data，也可以放到自己喜欢的地方
@@ -246,42 +102,7 @@ mongoose的curd操作都是返回promise
 
 引用数据类型循环引用
 
-数组/对象的扩展运算符不能互相用
-https://blog.csdn.net/qq_45272642/article/details/124840331
-
-typeof数组对象都是object，函数是function
-数组对象 instanceof Object，函数都是true
-ts 的typeof只有赋值给type才是ts类型，其余都是js类型
-
-
-数组可以给超出长度的位置赋值，数组会自动扩容，中间的元素为undfined
-let arr = [1]
-arr[3] = 3
-// [1,undefined,3]
-ts没变
-
-
-name即使嵌套路由也是唯一的
-router.push()可以path或name，嵌套路由path可以name不行
-由于name唯一 router.push({name: xxx})可以直接跳转嵌套路由
-
-JSON.parse()只能接受字符串且不能是''
-
-
-v-if刚开始不加载，true才创建，v-show开始就加载
-频繁切换使用v-show，防止频繁创建删除dom
-切换少用v-if，防止初始加载过大
-
-v-for优先级高于v-if，两者不能同时使用，因为无论-for都会执行
-vue3中 v-if优先级高于v-for
-
-data return 是为了防止不同组件的data数据之间的冲突，return出去后每个data都是独立的了
-
-mutations只是为了devtools能追踪到修改，actions放异步和复杂的mutations，但最终还是需要通过mutations来修改数据
-
-动态组件常用于通过父传子的配置项来显示form表单，异步组件是为了防止子组件过大而影响父组件的显示
-
-js、ts为了避免不必要的错误都使用分号
+深拷贝：https://blog.csdn.net/qq_45272642/article/details/124840331
 
 非空断言
 
@@ -290,9 +111,6 @@ ts添加请求头，
 2 config.headers!.xxx = 'xxx'
 
 
-
-<template>不渲染，很适合组件库中使用
-
 箭头函数 函数体 {a:1,b:2} 不能简写
 
 //允许跨域的请求类型，get，post，options不用设置也允许
@@ -300,46 +118,3 @@ res.header("Access-Control-Allow-Methods", "*");
 
 
 ref的value和reactive的元素复制ref或reactive会发生什么，是否深拷贝，
-
-toRaw是否深拷贝
-
-实例化的pinia需要return才能在template使用
-
-
-字面量类型也可以用来限制只能赋某个值
-
-
-npm run serve 是根据package.json的entry运行index.html
-
-css权重修改优先级
-
-css3盒子模型宽度=width+margin吗
-
-vue3的ref获取DOM，名字必须一样，比如：
-const myDom = ref(null)
-<div ref="myDom"></div>  不能写成my-dom
-
-ref和id名字可以一眼
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

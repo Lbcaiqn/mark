@@ -1,4 +1,4 @@
-# 一、基本介绍
+# 一、基本
 
 HTML，CSS首选双引号，JS代码首选单引号。外双内单，外单内双
 JavaScript是一种面向对象的脚本语言（解释语言是用解释器解释一行执行一行，编译语言是编译器全部代码编译完后再执行）
@@ -23,7 +23,33 @@ JS书写位置：
 
 # 二、ES5
 
-注释方法与c一样，每个语句也是以分号结尾(但是不加分号也不会报错)
+注释方法与c一样，每个语句也是以分号结尾，虽然不加分号也不会报错，但是最好加上。
+
+谷歌浏览器控制台输出bug；
+输出较为复杂的数据时，会先展示 [...]  当点击后才会显示完整数据，这时候就会有个bug：
+
+```
+ler aaa = [{
+  value: 123
+]]
+console.log(aaa)
+aaa[0].value = 456
+```
+
+正常来说，输出在修改之前，应该输出123，可是却输出456
+这是因为浏览器的bug，若点开三角的时候数据已经改了，name浏览器会展示最新的数据
+
+以下例子就能证明，若在3秒内点开三角，就展示123，若3秒后数据修改了再点开三角，就展示456
+
+```
+ler aaa = [{
+  value: 123
+]]
+console.log(aaa)
+setTimeout(() => aaa[0].value = 456, 3000)
+```
+
+这只是展示的bug，并不是代码逻辑的bug，代码里该输出什么还是输出什么，只是在调试代码的时候要特别注意。
 
 ## 1 输入输出
 
@@ -95,24 +121,35 @@ typeof 变量 检测变量的数据类型（注意prompt和任何表单获取的
 
 复杂数据类型（引用类型）：数组，对象
 
-1. 数组可以存放不同的数据类型
-   
-   ```
-   var arr = []; 或 var arr = new Array();
-   arr.length 返回数组元素个数 arrname.length = n 数组大小改为n，常用扩容
-   直接给数组名赋值会丢失整个数组的数据。
-   所有语言都是一样，即使只有值传递，数组作为形参也能修改数组本身
-   其他与c一样。
-   ```
+（1）数组
 
-2. 对象
-   
-   ```
-   var obj = {
-   
-   }
-   ar obj = new Object()
-   ```
+```
+var arr1 = [];
+var arr2 = new Array();
+arr.length  //返回数组元素个数 arrname.length = n 数组大小改为n，常用扩容
+
+```
+
+* 数组可以存放不同的数据类型
+
+* 数组没有限制长度，且js的数组可以给超出长度的位置赋值，数组会自动扩容，中间的元素为undfined
+
+* ```
+  var arr = [1]
+  arr[3] = 3
+  // [1,undefined,3]
+  ```
+
+* 数组变量存放在占内存中，本身存储的是整个数组在堆内存中的地址，所以哦直接给数组名赋值会丢失整个数组的数据，数组作为形参也能修改数组本身。
+
+（2）对象
+
+```
+var obj = {
+
+}
+ar obj = new Object()
+```
 
 ### 2.3 类型转换
 
@@ -150,10 +187,16 @@ typeof 变量 检测变量的数据类型（注意prompt和任何表单获取的
 
 1. typeof 变量        检测变量的数据类型
 
-2. instanceof xxx  判断是否为数组，对象，是返回true，否则false
+2. instanceof xxx  判断是否为Array/Object/构造函数等的实例，是返回true，否则false
    obj instanceof Object        arr instanceof Array
 
 3. Array.isArray(arr)    比instanceof优先级高，H5新增
+
+typeof和instanceof的区别：
+
+* typeof的结果为string，只能判断number，string，boolean，undefined，object，function。其他的如Array，null，symbol一律判断为object。
+
+* instanceof的结果为boolean，判断是基于xxx是否为yyy的实例，因为Array，Function等是Object的实例，所以返回true，以此类推。
 
 其他运算符与C一样
 
@@ -1685,6 +1728,17 @@ let b = {
 console.log(b)
 ```
 
+注意，数组和对象之间不能互相用扩展运算符，如：
+
+```
+let obj = {a: 1}
+let arr = [1]
+//let newObj = {...arr} //报错
+//let newArr = [...obj] //报错
+```
+
+数组/对象的扩展运算符可以实现单层的深拷贝。
+
 ### 4.2 正则扩展
 
 在ES5中就可以使用正则表达式了
@@ -2431,29 +2485,7 @@ function deepCopy(obj){
 }
 ```
 
-深拷贝对象的缺陷：
-
-- 值为undefined或函数的属性会被忽略
-
-- 值为NaN，Date类型，RegExp类型分贝变成了null，字符串类型和空对象
-
-- 若源对象给原型上绑定了自定义的属性和方法，也无法拷贝过来
-
-- 处理循环引用的对象时直接报错
-  
-  ```
-  let obj = {
-    a: 1,
-  }
-  obj.b = obj
-  
-  console.log(obj)
-  //console.log(JSON.stringify(obj)) //报错
-  ```
-
-- Vue3的
-
-深拷贝数组的缺陷和对象的区别在于，undfined和函数变为null，其他一样
+使用时会有JSON的api的限制，详见ajax笔记。
 
 方法二：
 

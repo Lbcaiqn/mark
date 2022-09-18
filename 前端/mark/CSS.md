@@ -179,13 +179,31 @@ SS属性冲突时，最后面的生效。
 
 权重的大小从左到右对比
 
-| 继承和*       | 0000                           |
-| ---------- | ------------------------------ |
-| 标签/伪元素     | 0001                           |
-| 类/:伪类/[]属性 | 0010                           |
-| id         | 0100                           |
-| 行内样式       | 1000                           |
-| important  | 无穷大（在CSS的属性之后分号之前加上!important） |
+| 继承和*       | 0000        |
+| ---------- | ----------- |
+| 标签/伪元素     | 0001        |
+| 类/:伪类/[]属性 | 0010        |
+| id         | 0100        |
+| 行内样式       | 1000        |
+| !important | 10000或者说无穷大 |
+
+!important修改权重：
+
+用于修改某选择器某属性的权重，CSS的属性之后分号之前加上!important
+
+```
+.box {
+  color: red !important;
+}
+```
+
+!important的几个注意点：
+
+* 应当尽量避免使用它，特别是自定义的css插件，要用也尽量用在全局样式
+
+* 若有有多个地方同个样式使用了它，则权重大的生效
+
+* 子元素不受影响
 
 复合选择器的权重叠加计算：
 
@@ -207,7 +225,7 @@ SS属性冲突时，最后面的生效。
 
 margin  padding  width  height  border
 
-盒子大小 = width/height+padding+border
+盒子大小 = width/height+2*padding+2*border
 
 ### 1.1 margin padding
 
@@ -764,9 +782,21 @@ before,after都是作为E的孩子，它们必须要有content属性，值可以
 ```
 //默认的盒子大小计算方式，加不加都一样，padding，border会撑大盒子，大小=w/h+padding+border
 box-sizing: content-box;
-//CSS3的盒子模型，盒子大小始终是width，padding，border不会撑大盒子，大小=width，但是注意当padding+border>w/h，就会撑大盒子。
+//CSS3的盒子模型，盒子大小始终是width，padding，border不会撑大盒子，大小=width，但是注意当padding+border > w/h，就会撑大盒子。
 box-sizing: border-box;  
 ```
+
+盒子宽度总结（高度以此类推）：
+
+宽度都不计算margin
+
+offsetWidth为整个盒子宽度，clientWidth为可视内容宽度，scrollWidth为实际内容宽度
+
+|             | content-box              | border-box               |
+| ----------- | ------------------------ | ------------------------ |
+| offsetWidth | width+2倍padding+2倍border | width                    |
+| clientWidth | width+2倍padding          | width-2倍border           |
+| scrollWidth | width                    | width-2倍border-2倍padding |
 
 ## 4 动画
 

@@ -29,7 +29,13 @@ ajax特点：
 
 早期的ajax使用的是xml格式，服务器返回的也是xml格式的字符串，不过现在的ajax使用的都是json格式，json格式更简洁，且json有自带的数据转换api，数据转换更方便。数据格式基本与js数据类型一样，JSON.xxx()可以将js的数据类型转换成JSON格式，如JSON.stringify()可以将js数据转换成JSON字符串
 
-JSON的格式：
+### 2.1 JSON的格式
+
+JSON的表现形式有JSON文件和JSON字符串。
+
+xxx.json文件内容为JSON对象，通常作为配置文件使用，注意无法写注释
+
+JSON字符串常用于数据传输，内容可以不仅仅是对象，还可以是数组，基本数据类型。但函数不行。
 
 JSON格式是JavaScript对象的表示形式，但是在格式上严格一些
 
@@ -39,20 +45,89 @@ JSON格式是JavaScript对象的表示形式，但是在格式上严格一些
 
 - 最后一个属性结束不能加逗号
 
-JSON在代码中的使用：
+由于JSON字符串里面内容还可以是数组/基本数据类型，所以也有严格的规定：
 
-1. 服务端中：
-   若响应体只是字符串，直接传就可以
-   若想返回给客服端对象等数据类型，则需要将其转成JSON字符串：
-   JSON.stringify()
+* 数组最后一个元素后不能有逗号
 
-2. 客户端接收：
-   若服务端返回的只是字符串，直接用就可以
-   若服务器返回的是转换后的JSON字符串，则组要转化，有两种方式：
-   
-   * 主动转换：JSON.parse()
-   
-   * 自动转换：onreadysttatechange事件函数外：xhr.responseType=’jspn’，数据就可以直接用了。
+* 数组的字符串元素，基本数据类型的字符串必须是双引号
+
+### 2.2 JSON的api
+
+js自带，用于将对象序列化为字符串，和字符串恢复为对象。JSON的api需要的对象不一定是JSON对象，普通js对象也可以。此外。
+
+也可以将数组或基本数据类型序列化为字符串，但也只有数组序列化常用些。
+
+序列化对象时，会变成严格的JSON格式
+
+序列化数组时，字符串元素单引号变双引号，数组最后一个元素后的逗号去掉。
+
+序列化基本数据类型的字符串，单引号变双引号
+
+```
+JSON.stringify(obj)  //将对象序列化为字符串
+JSON.parse(string)   //将字符串还原为对象
+```
+
+JSON.stringify()序列化对象的限制：
+
+- 值为undefined或函数的属性会被忽略
+
+- 值为NaN，Date类型，RegExp类型分贝变成了null，字符串类型和空对象
+
+- 若源对象给原型上绑定了自定义的属性和方法，也无法拷贝过来
+
+- 处理循环引用的对象时直接报错
+  
+  ```
+  let obj = {
+    a: 1,
+  }
+  obj.b = obj
+  
+  console.log(obj)
+  //console.log(JSON.stringify(obj)) //报错
+  ```
+
+JSON.stringify()序列化数组的限制：
+
+和序列化对象差不多，区别在于，undefined和函数变为null，其他一样。
+
+JSON.stringify()序列化基本数据类型/函数的限制：
+
+NaN变null，函数变undfined，其他正常
+
+JSON.parse()的要求：
+
+* 无法处理 ''  'undefined'  'NaN'
+
+* 字符串还原对象时，必须是严格的JSON格式，如JSON.parse('{"a":123}')
+
+* 字符串还原数组时，字符串元素必须是双引号，最后一个元素后不能有逗号，如JSON.parse('[123,"abc"]')
+
+* 字符串还原成字符串时，必须是双引号，如JSON.parse('"str"')
+
+### 2.3 JSON的前后端传输
+
+后端：
+若响应体只是字符串，直接传就可以
+若想返回给客服端对象等数据类型，则需要将其转成JSON字符串：
+JSON.stringify()
+
+若使用express，则不需要手动转化，它自己会转化
+
+```
+res.send({a: 1})
+```
+
+前端：
+若服务端返回的只是字符串，直接用就可以
+若服务器返回的是转换后的JSON字符串，则组要转化，有两种方式：
+
+* 主动转换：JSON.parse()
+
+* 自动转换：onreadysttatechange事件函数外：xhr.responseType=’jspn’，数据就可以直接用了。
+
+* axios默认是自动转换
 
 ## 3 原生ajax
 
@@ -420,20 +495,14 @@ let s=document.createElement(‘script’)
 s.src=’url’
 document.body.append(s)
 通过script标签发送请求，服务端返回一个函数的调用，从而执行func() 
-
 ```
-
-
 
 jquery实现：
 
 ```
 $.getJSON(‘url?callback=?’,function(data){})
 callback的值?其实是该回调函数，服务端获取该参数后，将其作为函数调用返回，然后在这个回调函数中对数据进行处理。
-
 ```
-
-
 
 （2）proxy代理
 

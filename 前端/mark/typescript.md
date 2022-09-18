@@ -122,9 +122,12 @@ let mmm: number = xxx
 ```
 let a: 5
 let b: 'aaa'
+let c: '123' | '456' = 123  //456也行
 a = 5
 b = 'aaa'
 ```
+
+用途：限制该变量只能传这个值，可用作函数形参。
 
 ### 2.4 any,unknown
 
@@ -211,6 +214,16 @@ obj2 = {name: 'lgx',a:'5',b:55}
 ## 4 数组、元组、枚举
 
 ts的数组里面都是相同的类型(所以不建议使用any)，有两种声明方式
+
+ts的数组和js一样也没有给初始长度，且也和js一样可以在长度之外赋值：
+
+```
+let arr: number = [0]
+arr[3] = [3]
+console.log(arr)  //[0,undefined,undefined,3]
+```
+
+使用：
 
 ```
 let arrStr: string[]
@@ -719,7 +732,8 @@ let obj = {
 }
 //获取正确的ts类型
 type objType = typeof obj
-//console只会输出object，不会输出具体的ts类型
+//typeof只有在类型操作的时候返回的才是ts类型，在输出时是用返回js的类型
+//如console只会输出object，不会输出具体的ts类型
 console.log(typeof obj)
 
 //获取函数返回值类型
@@ -1544,7 +1558,7 @@ console.log(a)  //a是aaa.ts里面的变量，可以直接使用
 
 # 七、ts配置文件
 
-tsconfig.json
+tsconfig.json，虽然JSON文件不能写注释，但是tsconfig.json可以写注释
 
 为了兼容性，将js编译的版本设置为ES5
 

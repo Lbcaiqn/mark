@@ -495,17 +495,28 @@ v-on:input=’’        input，textarea一旦有输入（包括退格，不包
 
 ## 7 列表、条件渲染
 
-1 条件渲染
+### 7.1 条件渲染
 
 （1）v-if="xxx" v-else-if="xxx"    v-else
 用来控制该元素以及它的孩子的显示与隐藏（隐藏是直接删除，原位置就空出）
 else必须与if连在一起用
 （2）v-show
-用法与v-if一样，区别在于：v-show不删除元素，不保留位置（等同于display:none;），v-if
 
-直接删除元素（当然也是不保留位置），所以v-show性能高。当切换频率很高时优先使用v-show
+v-show="boolean"
 
-（3）Vue中表单的复用：
+原理是根据布尔值来动态修改样式 display: none | block;
+
+（3）v-if，v-show区别
+
+* v-show初始时就创建，根据条件显示隐藏，隐藏时不删除元素，不保留位置（等同于display:none;），<template>无法使用
+
+* v-if初始时不创建，只有true时才创建，false时删除，是直接删除元素（当然也是不保留位置），<template>可以使用
+
+* 需要频繁切换显示隐藏的场景，v-show性能高于v-if，有效防止频繁创建删除；
+  
+  在不需要频繁切换的场景，由于v-show初始时就会创建，而v-if是俺需创建，所以此时v-if性能高于v-show，有效防止初始时加载过大。
+
+（4）Vue中表单的复用：
 在控制input显示隐藏时，若表单已经输入了值，则else切换的另一个表单会保留值，这是因为Vue使用虚拟DOM将元素放到内存中，在渲染时，出于性能考虑，Vue会做一些复用，比如input的复用：
 当切换表单时，Vue会发现隐藏表单后，显示另一个表单，所以Vue直接使用原来的表单并保留值，但是会把id，type，class属性等替换成新的。虽然控制台看到的id不同，实际上是同一个表单。
 若不想保留值：
@@ -513,7 +524,7 @@ else必须与if连在一起用
 
 不能复用，并创建新表单，值自然就不会保留。
 
-2 列表渲染
+### 7.2 列表渲染
 
 （1）基本使用：
 
@@ -521,7 +532,6 @@ else必须与if连在一起用
 可以循环生成元素及它的孩子，非常好用，如给tr标签v-for，就能迅速生成表格和数
 据，且代码量大大减少。也可父子都给v-for形成双重循环
 注意这里的for in和JS中的for in的i有区别
-使用v-for时不能同时使用v-if，因为v-if隐藏时会删除v-for，所以使用v-show
 
 ```
 <!-- 遍历数组 -->
@@ -598,6 +608,51 @@ str.indexOf(s):
 *若s没有在str出现过，返回-1
 
 sort( (a,b) => {}) 改变源数据 return a-b升序  return b-a 降序
+
+### 7.3 v-if，v-show，v-for之间结合使用
+
+（2）v-if，v-for集合使用
+
+使用v-for时应该避免同时使用v-if。
+
+v-for的优先级高于v-if，这样就会想v-for创建每个item，然后再根据v-if删除item，非常浪费性能。
+
+Vue3中，v-if的优先级就高于v-fow了，就会想判断再创建。可以放心使用。
+
+要想实现相同的功能，可以：
+
+* v-fpr外层包裹一个div或template
+  
+  ```
+  <template v-if="xxx">
+    <div v-for="..." :key="..."></div>
+  </template>
+  ```
+
+* v-show代替v-if
+  
+  ```
+  <div v-show="xxx" v-for="..." :key="..."></div>
+  ```
+
+* 用计算属性根据条件过滤列表再v-for展示，详见v-for笔记（3）
+
+（2）v-if，v-show同时使用
+
+若v-if为false，那DOM不创建，v-show无意义，只有v-if为true时，v-show才有意义，即v-if优先级高于v-show，这和v-if，v-show的顺序无关。
+
+极不推荐这样做，但还是要了解下
+
+```
+<div v-if="false" v-show="false">DOM不创建</div>
+<div v-if="false" v-show="true">DOM不创建</div>
+<div v-if="true" v-show="false">DOM创建，display:none;</div>
+<div v-if="true" v-show="true">DOM创建，display:block;</div>
+```
+
+（3）其他
+
+v-show和v-for已经说过，至于v-if，v-show，v-for没有意义。
 
 ## 8 动画
 
@@ -815,6 +870,24 @@ cpn: {
 </style>
 ```
 
+export default 的对象里面的一个个属性，叫做配置项，也叫做OptionsAPI，有data，methods等，即前面笔记的内容。
+
+除了根组件App.vue的data不用return {}外，其他所有组件都需要return {}
+
+```
+export default {
+  data(){
+    return {
+      //数据
+    }  
+  }
+}
+```
+
+data(){return {}} 是为了防止不同组件的data数据之间的冲
+
+突，return出去后每个data都是独立的了。
+
 ### 9.2 父子组件通信
 
 2.1 props,emit
@@ -918,6 +991,14 @@ props: {
 同理，数组也会出现undefined的情况，使用数组时{{xxx[0]}}，若xxx还未传入也会报错，可以在父元素中v-if解决。
 
 在网络请求数据等情况也会出现，解决方法一样
+
+同理，若展示简单的数据但是未及时传过来时，页面会显示undefined，也可以v-if解决
+
+父组件传值时，若传的是对象里面的属性，为了避免出现上述情况，也是用可选链操作符
+
+```
+<cpn :xxx="obj?.a" />
+```
 
 （2）emit发射给父组件自定义事件实现子传父
 
@@ -1025,19 +1106,45 @@ beforeDestroy(){
 
 组件在mounted后才完全渲染完，所以获取组件实例对象必须在mounted()中或之后
 
+普通方法：
+
 ```
-//父访问子,返回对象数组
-this.$children 
-//返回对象数组，是带有ref属性的子组件，以对象的属性形式存放，ref=”key”，key有重名也只返回一个。
-this.$refs  
-//返回 ref="refname" 子组件实例对象，refname即使是不同组件中也不能重名
-this.$refs.refname
+//父组件获得子组件实例,返回对象数组
+this.$children
 
-
-//子访问父：
+//子组件获得父组件实例：
 this.$parent //返回父组件对象
 this.$root   //返回根组件对象
 ```
+
+ref
+
+```
+...
+<div ref="xxx"></div>
+...
+//返回带有ref属性的子组件的对象数组，ref=”key”，key有重名也只返回一个。
+this.$refs  
+//返回 ref="xxx" 子组件实例对象
+this.$refs.xxx
+```
+
+注意点：
+
+* ref和id相同名字，不冲突。
+
+* 父组件使用子组件时，即使在不同的组件，子组件里面的ref也不要重名。
+
+* 标签里面的ref值和this.$refs.的值必须完全一样，如：
+  
+  ```
+  ...
+  <div ref="xxxYyy"></div>
+  <div ref="aaa-bbb"></div>
+  ...
+  console.log(this.$refs.xxxYyy)    //正确
+  //console.log(this.$refs.aaaBbb)  //报错
+  ```
 
 ### 9.6 混入mixin
 
@@ -1177,7 +1284,7 @@ this.$toast.方法()
 
 7.1 Vue.use()
 
-使用需要use的库时，在任何地方use一次就行
+使用需要use的库时，在任何地方use一次就行，以后在哪里都可以用，但是必须要在app挂载之前use
 
 不需要use的库，则在每一个需要的组件都要import
 
@@ -1261,6 +1368,10 @@ npm update --save           --->  yarn upgrade
 npm install                 --->  yarn
 ```
 
+yarn和npm切换；C盘搜索找到.vuerc文件，打开，修改
+
+节点 "packageManager": "npm"
+
 ## 2 webpack
 
 ```
@@ -1295,7 +1406,7 @@ package.json可以对项目进行各项配置，保存包的信息
 分贝是脚手架爱2和脚手架爱3/4的webpack配置文件，内容差不多，webpack.config.js创建项目自带，vue.config.js需要自己创建
 
 ```
-module.exports={
+module.exports = {
   //入口，//默认为 ./src/index.js
   entry:'./src/js/main.js',
   //输出  //默认为 ./dist/main.js
@@ -1321,21 +1432,63 @@ module.exports={
 }
 ```
 
+npm run serve 是根据package.json的entry运行
+
+配置绝对路径：
+
+绝对路径的别名，若保存给变量或拼接字符串时无效
+
+配置忽略后缀：
+
+index.html
+
 loader：
 
 是webpack解析css，less，图片，es6，ts，vue等的工具
 
+（3）配置文件的注意点
+
+配置文件有.js，.ts，.json等格式，都放在项目目录下。
+
+只要是配置文件，一旦修改必须重启项目才会生效
+
 ## 3 vue-cli
+
+（1）功能
 
 脚手架自动创建目录，自动安装依赖，自动配置webpack
 
 脚手架配置了HTML驼峰标识
 
+（2）es-lint
+
 es-lint是强制的代码规范，不规范会报错
+
+（3）runtime
 runtime-compiler runtime-only区别在于template的渲染上
 runtime-compiler template-ast-render-vdom-UI
 runtime-only render-vdom-UI 效率高些且代码更少，使用这种的更多
 虽然only无法解析template，但是vue-loader会把所有template编译成render函数，就能使用。
+
+（4）配置文件相关
+
+脚手架2的配置文件：webpack.config.js
+
+脚手架3及以上的配置文件：
+
+被隐藏了不可见，可以在项目目录输入命令，会在项目目录创建xxx.js文件，查看webpack默认配置
+
+```
+vue inspect > xxx.js
+```
+
+默认配置比较重要的有：
+
+* 绝对路径 @/
+
+* 
+
+若想要自定义webpack配置，要在项目目录下创建vue.config.js文件，编写webpack配置，若默认配置也有对应的配置，则vue.config.js会覆盖默认配置
 
 ## 4 Vite
 
@@ -1466,6 +1619,12 @@ import router from '...'
 <router-view></router-view>
 ```
 
+若想在js文件中使用：
+
+```
+import router from '...'
+```
+
 路由跳转默认是hash模式（url带#），可以在router配置项中修改为history模式（不带#）
 
 ```
@@ -1511,9 +1670,13 @@ replace     使用replace修改url
 
 ```
 //编程式导航，如点击事件的事件函数
-fun(0}{、
+fun(0}{
   if(this.$route.path != xxx)        //只有当前路由与跳转路由不同是才跳转，否则会报错
     this.$router.push('/xxx')   //也可以是replace
+    /*简写形式下
+    普通路由，push()可以是path也可以是name，底层会自动区分
+    嵌套路由，push()只能是path，因为name无法区分
+    */
 }
 ```
 
@@ -1568,21 +1731,27 @@ this.$query.a
 
 props传递路由参数：
 
-```
- //路由配置项 props
- 1.路由中 props:{key:’val’}  组件中 props:[‘key’] 获得写死的参数
- 2.路由中 props:true  组件中 props:[‘xxx’] 获得所有的params参数（无法获得query参数）
- 3.路由中 props(){}
-  3.1 props(){key:’val’}  组件中 props:[‘key’] 获得写死的参数
-  3.2 props($router){ xxx:$router.params或query.xxx } 组件中 props:[‘xxx’]
-  获得params或query参数，形参$router可以解构赋值
-```
+路由配置项 props
+
+1. 路由中 props:{key:’val’} 组件中 props:[‘key’] 获得写死的参数
+
+2. 路由中 props:true 组件中 props:[‘xxx’] 获得所有的params参数（无法获得query参数）
+
+3. 路由中 props(){}
+   
+   * props(){key:’val’} 组件中 props:[‘key’] 获得写死的参数
+   
+   * props(router){ xxx:router.params或query.xxx } 组件中 props:[‘xxx’]
+   
+   * 获得params或query参数，形参$router可以解构赋值
 
 ## 4 嵌套路由
 
 使用嵌套路由时，嵌套的路由组件也要再用，如：
 
 cpn组件中，使用路由a，a嵌套路由b，则在cpn中用一次，a路由组件中也要用一次，b不用
+
+注意，嵌套路由的name也是全局唯一的，不能和任何路由的name相同。name可以和普通路由一样用作跳转等。
 
 ```
 //路由js中
@@ -1748,7 +1917,7 @@ npm install vuex -save
 
 store有五个配置项：state，mutations，actions，getters，modules
 
-## 2 state
+## 2 注册使用和state
 
 state单一状态树：
 只创建使用一个store对象，方便管理，就是单一状态树
@@ -1778,9 +1947,17 @@ import store from '...'
 this.$store.state.xxx
 ```
 
+若想在js文件中使用：
+
+```
+import store from '...'
+```
+
 ## 3 mutations
 
 官方推荐不应该直接对state进行修改，而是应该通过mutations提交进行修改，这样在Vue开发者工具才能看到数据的变化。
+
+mutations只是为了devtools能追踪到修改
 
 mutations里面的函数都是同步函数
 
@@ -1821,6 +1998,10 @@ import {xxx} from ‘...’
 里面额的都是异步操作，如果在mutations中定义异步操作，vuedevtools是无法跟踪的，所以需要在actions定义，就可以跟踪。
 
 过于复杂的mutations操作也是放在actions中更好
+
+即actions放异步和复杂的mutations，但最终还是需要
+
+通过mutations来修改数据。
 
 使用与mutations类似，但是参数是context (相当于store对象)
 组件中通过 this.$store.dispatch(‘…’)提交。
@@ -2154,7 +2335,32 @@ export default {
 
 - 响应式数据不要整个重新赋值
 
-（3）Proxy响应式
+- 由于JSON的api本身的限制，若用JSON.stringify()序列化整个ref创建的ref对象或整个reactive创建的proxy对象，会丢失一些成员，所以用JSON.parse()恢复时不再是ref对象或proxy对象
+
+（3）深拷贝浅拷贝
+
+如果ref和reactive的参数不是字面量而是变量，就需要考虑浅拷贝的问题了。
+
+```
+//reactive和ref形参为引用数据类型，是浅拷贝
+let a1 = {a: 1}
+let b1 = reactive(a1)
+let c1 = ref(a1)
+
+//ref的参数是基本数据类型，是深拷贝
+let a2 = 5
+let b2 = ref(a2)
+
+b1.a = 3
+b2.value = 8
+console.log(a1)
+console.log(b1)
+console.log(c1.value)
+console.log(a2)
+console.log(b2)
+```
+
+（4）Proxy响应式
 
 Object.defineProperty()实现响应式最大的问题就是数组索引修改和对象增加删除属性不能实现响应式，是因为它的set监听不到这些修改，而能实现响应式的push，pop，Vue.set()，Vue.delete()等都是vue2二次封装或自己的API
 
@@ -2242,7 +2448,7 @@ let p = new Proxy(person,{
 
 引用数据类型无论是用ref()还是reactive()封装，最终都是用reactive()封装成Proxy对象，所以，数组索引修改，对象增加删除属性都是响应式的了
 
-（4）判断是否为响应式数据
+（5）判断是否为响应式数据
 
 ```
 import {isRef,isReactive,isReadonly,isProxy}
@@ -2253,6 +2459,10 @@ isProxy还是有意义的
 ```
 
 #### 1.2.3 toRef()与toRefs()
+
+toRef()以某proxy对象里的某个属性作为值创建一个ref对象，toRefs()将某proxy对象的所有属性都做一次toRef()并返回一个普通对象
+
+toRef和toRefs都是浅拷贝
 
 先来看一个需求：
 
@@ -2534,7 +2744,31 @@ export default {
 </script>
 ```
 
-（5）插槽
+（5）表单的v-model可以跨组件
+
+这个要和组件v-model区分开
+
+Vue3中，父组件传递一个响应式数据给子组件，子组件的表单v-model双向绑定，表单修改时，父组件的变量也会改变。实现的必须的条件就是父传子响应式数据
+
+```
+...子组件
+<input type="text" v-model="aaa" />
+...
+props: ['aaa']
+...
+
+...父组件
+<xxx :aaa="data" />
+...
+let data = ref(0)
+...
+```
+
+（6）响应式数据可以跨组件修改值
+
+和表单v-model一样
+
+（7）插槽
 
 默认插槽写不写template都行，但是具名插槽必须这样写，无法再用Vue2的 <子组件 slot="asd">...<子组件>
 
@@ -3043,12 +3277,18 @@ hook库如vueuse
 
 （1）shallowReactive()和shallowRef()
 
+深浅拷贝和ref、reactive一样
+
 ```
 shallowReactive() //只处理数组/对象第一层成员的响应式
 shallowRef() //处理基本数据类型与ref()，处理数组/对象时不再做响应式（但由于数组/对象本身是ref对象，所以修改本身是响应式的）
 ```
 
 （2）readonly()和shallowReadonly()
+
+参数必须是ref对象或proxy对象。
+
+都是浅拷贝
 
 ```
 //不管是ref对象还是Prosy对象，使用了readonly()或shallowReadonly()最终都会变成Proxy对象
@@ -3058,20 +3298,32 @@ shallowRef() //处理基本数据类型与ref()，处理数组/对象时不再�
 readonly是Vue监测到了，但是Vue让它不能修改，数据页面都没改；此外，常用于hook函数
 导出不允许修改的数据时使用
 */
-readonly 
+readonly()
 
 //接收reactive对象，使得数组/对象第一层是只读；接收ref对象与readonly一样
-shallowReadonly 
+shallowReadonly()
+```
+
+readonly后无法修改，但是源响应式数据可以修改，且由于是浅拷贝，readonly的数据也会变
+
+```
+let a = reactive({a:1})
+let b = readonly(a)
+//b.a = 5  //报错
+a.a = 5    //成功
 ```
 
 （3）tioRaw()和markRaw()
+
+toRaw和markRaw都是浅拷贝
 
 ```
 //将reactive()对象还原成非响应式的源对象（不能还原ref对象）
 toRaw()
 
 /*
-标记一个对象，使其以后不能变成响应式数据.
+标记一个普通对象，使其以后不能变成响应式数据.若对标记后的
+的数据使用了ref或reactive，不会报错，知识不再进行响应式操作。
 用途一，给一个响应式数组/对象添加一个成员时，若这个成员深度很深且也不需要做相遇ing是，
 则可以使用markRaw这个新成员，提高效率；
 用途二，某数组/对象有一个成员是第三方库（如PromiseAll封装多个axios），若将此数组/对象
@@ -3079,6 +3331,29 @@ toRaw()
 义，对这个成员使用markRaw()就能解决
 */
 markRaw()
+```
+
+toRaw和markRaw虽然都是浅拷贝，但是结果不同
+
+toRaw后，由于浅拷贝，修饰数据会同步，但是原来的proxy对象还是proxy对象，toRaw后的是普通对象
+
+```
+let a = reactive({a: 1})
+let b = toRaw(a)
+b.a = 5
+console.log(a)
+console.log(b)
+```
+
+markRaw标记后，数据修改也会同步，但是b和a都会多一个标记属性，都无法变成响应式数据
+
+```
+let a = {a: 1}
+let b = markRaw(a)
+b.a = 5
+b.a = 5
+console.log(a)
+console.log(b)
 ```
 
 （4）customRef()
@@ -3335,6 +3610,12 @@ export default {
 
 可以实现多个组件的互相切换，功能类似于tabBar
 
+用途：
+
+* 动态改变组件标签名来改变组件
+
+* 通过父传子的配置项来动态显示对应的form表单。
+
 需要用到Vue3内置组件
 
 ```
@@ -3365,6 +3646,8 @@ export default {
 ```
 
 （5）异步组件和分包：
+
+异步组件是为了防止子组件过大而影响父组件的显示，普通引入子组件时，只有子组件渲染完才会开始渲染父组件；而使用异步组件后，即使子组件未渲染完，父组件也会开始渲染。
 
 setup()被async修饰，该组件就会变成异步组件
 
@@ -3488,15 +3771,17 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 3. data配置项应始终声明为 data(){return{}}
 
-4. 删除了过滤器
+4. v-if的邮寄变得高于v-for了，两者可以同时使用，底层先v-if判断再v-for渲染，不再会浪费性能
 
-5. 过渡类名变更：v-enter v-leave 变为 v-enter-from v-leave-from
+5. 删除了过滤器
 
-6. 删除了按键编码作为事件修饰符，因为兼容性差。删除了案件编码，只能用DOM的addEventListen拿到事件对象中的按键码来监听了
+6. 过渡类名变更：v-enter v-leave 变为 v-enter-from v-leave-from
 
-7. 删除了事件修饰符.native，Vue2中自定义组件会将绑定的事件都认为是自定义事件，所以才需要.native告诉他是原生事件；Vue3的自定义组件绑定的事件都认为是原生事件，自定义事件需要在子组件的配置项emits中声明
+7. 删除了按键编码作为事件修饰符，因为兼容性差。删除了案件编码，只能用DOM的addEventListen拿到事件对象中的按键码来监听了
 
-8. 其他变化详见官方文档
+8. 删除了事件修饰符.native，Vue2中自定义组件会将绑定的事件都认为是自定义事件，所以才需要.native告诉他是原生事件；Vue3的自定义组件绑定的事件都认为是原生事件，自定义事件需要在子组件的配置项emits中声明
+
+9. 其他变化详见官方文档
 
 ### 1.7 Vue3↑ 新特性
 
@@ -3521,6 +3806,22 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 import xxx from '...'
 import {ref} from 'vue'
 let a = ref(123)
+</script>
+```
+
+如果还想使用组件name，beforeRouterEnter，可以多弄一个script标签，但是注意lang要一样
+
+```
+<script setup lang="ts">
+</script>
+
+<script lang="ts">
+export default {
+  name: 'xxx',
+  beforeRouterEnter(to,from,next){
+
+  }
+}
 </script>
 ```
 
@@ -3958,48 +4259,60 @@ const store = mainStore()
 
 steate变量的调用与修改，getters：
 
+Vue3.0中实例化的pinia需要return才能在template使用，Vue3.2的script setup会自动return就不要管。
+
 ```
+<script>
 import {mainStore} from './store'
-//store是一个Proxy响应式对象
-const store = mainStore()
+export default {
+  setup(){
+    //store是一个Proxy响应式对象
+    const store = mainStore()
 
-//1.使用state的变量
-//1.1 直接使用
-console.log(store.aaa)
-//1.2 解构使用
-/*
-注意，如果再从store结构出来state变量，取出来的不是响应式数据
-let {aaa} = store
-console.log(aaa)
-解决方法,类似于toRef()
-import {storeToRefs} from 'pinia'
-let {aaa} = storeToRefs(store)
-console.log(aaa.value)
-*/
+    //1.使用state的变量
+    //1.1 直接使用
+    console.log(store.aaa)
+    //1.2 解构使用
+    /*
+    注意，如果再从store结构出来state变量，取出来的不是响应式数据
+    let {aaa} = store
+    console.log(aaa)
+    解决方法,类似于toRef()
+    import {storeToRefs} from 'pinia'
+    let {aaa} = storeToRefs(store)
+    console.log(aaa.value)
+    */
 
-//2.修改state的变量
-//2.1 修改单个，可以这样修改，因为Vue.js devtools可以检测到
-store.aaa++
-//2.2 修改多个，同时修改多个时用这种方式，性能会高些
-store.$patch({
-  aaa: store.aaa + 1
-})
-//2.3 $patch修改多个的另一种方式，由于是函数，可以写一些业务逻辑
-store.$patch((state) => {
-  if(state.aaa > 0) state.aaa++
-})
-//2.4 当球盖的业务逻辑很复杂时，使用actions修改
-store.xxx()
-//2.5 修改整个state，不常用
-store.$state = {
-  //全部属性都要改，否则报错
-  aaa: 666,
-  ...
+    //2.修改state的变量
+    //2.1 修改单个，可以这样修改，因为Vue.js devtools可以检测到
+    store.aaa++
+    //2.2 修改多个，同时修改多个时用这种方式，性能会高些
+    store.$patch({
+      aaa: store.aaa + 1
+    })
+    //2.3 $patch修改多个的另一种方式，由于是函数，可以写一些业务逻辑
+    store.$patch((state) => {
+      if(state.aaa > 0) state.aaa++
+    })
+    //2.4 当球盖的业务逻辑很复杂时，使用actions修改
+    store.xxx()
+    //2.5 修改整个state，不常用
+    store.$state = {
+      //全部属性都要改，否则报错
+      aaa: 666,
+      ...
+    }
+
+    //3 getters
+    console.log(state.phoneNumber)
+    console.log(state.phoneNumberHide)  
+
+    return {
+      store
+    } 
+  }
 }
-
-//3 getters
-console.log(state.phoneNumber)
-console.log(state.phoneNumberHide)
+</script>
 ```
 
 store之间的调用：
@@ -4041,17 +4354,37 @@ store.$subscrib((args,state) => {
 store.$onAction((args) => {})
 ```
 
-
-
 pinia-plugin-persistedstate 
 
-## 4 Vue使用ts
+# 三、Vue使用ts
+
+## 1 用前须知：
+
+不推荐vue+ts使用vue-cli构建项目，推荐vite，因为vue-cli编译ts反应非常慢，且一旦使用了script setup语法就会关闭类型检查，即使用回V，ue3.0语法也不行，需要重启run才行。
+目前vite的版本使用的js语法，如可选链操作符，vin7最高支持的node版本13.14已经识别不出，必须要更高的系统
+
+## 2 Vue2使用ts
 
 Vue2以及Vue3中使用OptionsAPI，要用ts需要借助vue-class-component或vue-class-decoretor
 
 vue-class-compoennt是vue官方出的
 
 vue-class-decorator是社区出的，具有vue-class-compoennt的全部功能，在此之上又增加了一些新功能
+
+## 3 Vue3使用ts
+
+defineComponent定义组件：
+
+Vue3.0中，使用defineComponents定义组件可以有更好的类型提示，Vue3.2的script setup语法糖则不需要
+
+```
+<script lang="ts">
+import {defineComponent} from 'vue'
+export default defineComponent({
+  ...
+})
+</script>
+```
 
 Vue3中ts直接用就行，写在setup里面或者export default{}外面都行
 

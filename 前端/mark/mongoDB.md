@@ -1,25 +1,40 @@
 # 一、基本
 
+（1）介绍
+
 关系型数据库：MySQL，oracle等
 非关系型数据库（nosql）mongodb
 mongodb是文档型数据库
 
-一般在bin目录下创建 data/projectdb 作为数据库
-启动数据库服务器：默认端口27017 可用 –port=端口号 指定端口
-mongod --dbpath=数据库路径如…../bin/data/projectdb
-启动客户端：
-mongo  
-可设置开机自启
+（2）mongodb数据库结构
 
-## 2 数据库结构
+存储结构：bjon（二进制的jison）存储数据。
 
-结构：bjon（二进制的jison）存储数据。
+mongodb以：总库-库-集合-文档/域 存储，对应mysql的：总库-库-表-行/字段
 
-mongodb以库-集合-文档/域 存储，对应mysql的 库-表-行/字段
+总库可以放在mongodb安装目录下的 bin/data，也可以放到自己喜欢的地方
 
 文档对应json文件注意：数据库和集合不用手动创建，若没有而使用，会自动创建，反之，若文档/集合为空，则自动删除集合/数据库。
 
-### 3 文档之间的关系
+（3）启动数据库
+
+启动数据库服务器：默认端口27017 可用 –port=端口号 指定端口
+
+```
+mongod --dbpath=总库路径
+```
+
+localhost:27017 就是总库
+
+启动客户端，对数据库进行增查改删：
+
+```
+mongo
+```
+
+可设置开机自启
+
+### 2 文档之间的关系
 
 一对一：{a:对象啊ing}
 一对多：{a:对象数组}
@@ -83,8 +98,6 @@ db.集合名.find({
   name: 'lgx',
   age: 23
 },{name: 1, _id; 0})
- 
-
 ```
 
 查询操作符
@@ -95,8 +108,6 @@ db.集合名.find({
   age: {$gt > 18}
 })
 ```
-
-
 
 findOne()，与find()的区别在于findOne只返回第一个查询的结果，也可以传入参数
 
@@ -121,8 +132,6 @@ db.集合名.find().sort({age:1,name:-1})
 # limit和skip和sort先后顺序无所谓，会自动调整
 db.集合名.find().limit(n).skip(m)   
 find().skip(m).limit(n)  
-
-
 ```
 
 ## 3 改
@@ -144,10 +153,7 @@ db.集合名.update(xxx,yyy,{multi: true})
 
 ```
 $unset    # 删除对应的属性，值可以随意
-
 ```
-
-
 
 ## 4 删
 
@@ -163,7 +169,6 @@ db.集合名.deleteMany(查询)
 # 只删除查询出的第一条内容
 db.集合名.remove(查询,true)
 db.集合名.deleteOne(查询)
-
 ```
 
 删除集合
@@ -176,8 +181,6 @@ db.集合名.drop()
 db.remove(0)
 ```
 
-
-
 删除数据库
 
 ```
@@ -187,6 +190,8 @@ db.dropDatabase()
 
 # 三、mongoose
 
+## 1 连接数据库
+
 node操作mongodb的一个第三方库
 
 ```
@@ -195,17 +200,27 @@ npm install --save mongoose
 
 连接与断开数据库
 
+localhost:27017是之前mongod命令连接的总库路径
+
+若分库未创建则会自动创建
+
+若没有指定分库名，只给了mongodb://localhost:27017，则会自动创建一个分库并连接它
+
+mongoose一旦连接就会一直连接，除非关闭项目或手动断开连接，所以可以在项目一开始就连接数据库
+
 ```
 const mongoose = require(‘mongoose’)
-mongoose.conect(‘mongodb://localhost:27017/数据库名’,{useMongoClient: true})//连接数据库
+mongoose.conect(‘mongodb://localhost:27017/分库名’,{useMongoClient: true})//连接数据库
 
 //数据库一旦连接，除非终止程序则不会断开，也可以手动断开
 mongoose.disconect() //断开数据库
 
 //
 mongoose.conection.once(‘open’,() => {})  
-
-
 ```
 
+## 2 创建实例
 
+## 3 CRUD
+
+mongoose的crud操作都是异步的，返回Promise

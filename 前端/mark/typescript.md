@@ -651,6 +651,10 @@ obj = {name: 'lgx',age: 23}
 
 ## 2 类型推论，类型断言
 
+普通类型断言：
+
+用来告诉ts编译器一定是某个类型
+
 ```
 //类型推论，会根据值来自动推断类型
 let a = 5  //相当于 let a: numebr = 5
@@ -681,6 +685,43 @@ function b(num: any): boolean{
 b(true)
 // b(123) 报错
 ```
+
+非空断言：
+
+用到非空断言操作符!，放在需要断言的东西后面
+
+告诉ts编译器这个东西一定不为空
+
+```
+//例1
+let s: string | undefined = ' aaa '
+//可能会报错说s可能是undefined
+//console.log(s.trim())
+//非空断言，断言s一定不为空
+console.log(s!.trim())
+
+
+//例2
+type t = {
+  a?: number
+}
+let obj: t = {a: 123}
+//报错，obj可能没有属性a
+//console.log(obj.a)
+//非空断言，断言属性a一定存在
+console.log(obj.a!)
+
+
+//例3
+xios请求拦截器(config){
+  //添加请求头会报错，headers可能为undefined
+  //config.headers.xxx = 'xxx'
+  //非空断言
+  config.headers!.xxx = 'xxx'
+}
+```
+
+
 
 ## 3 类型别名
 

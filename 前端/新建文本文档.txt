@@ -1,120 +1,30 @@
-修改vue端口
+JS：
+??
+es12 https://blog.csdn.net/wang13679201813/article/details/124787648es13 https://zhuanlan.zhihu.com/p/553605920
 
-tabbaricon，img的:src本地图片，图片裁剪，tr，设计稿
+ajax：
+web socket
 
-image  vhvw收口大小 滚动click100ms
-
-事件委派
-
-tabbar路由自动keepalive   uni对象再template使用  自定义组件原生事件 
-uni-ui  可在源代码修改样式
-
-
-
-uniapp没有闭包
-
-响应式对象直接修改里面的数据不要ref，reactive
-
-$http传参，exclude拦截器
-
-JSON.stringify()不能Set，可以转ref，ractive但是parse回来变成普通数据
-
-高阶函数map
-
-vuex持久化
-
-static的文件不会被编译（不能放css、js等），专门用来放静态资源（图片、音视频等）
-
-web worker
-浏览器 跨域 webpack ant-design sass git
-
-引入css：
-@import url('...')
-
-在编程式导航后面的代码也会执行，但最好写在导航之前
-
+uniapp：
 uni.reLoad()
 getCurrentPages()
 小程序分包预下载
 路由url可传递多个参数
 路由跳转url太长不行，需要encodeURL和decodeURL处理参数后在传递
-
 image懒加载
 image :src 绑定本地路径正常
-
 click tap区别
 uniapp网络请求
-
 navbar隐藏
-
-手机验证码登录
-
 uniapp各平台样式相同
+设计稿
+微信和uniapp的vhvw视口大小 滚动click100ms
+tabbar路由自动keepalive   
+uni对象怎么在template使用
+uni-ui  可在源代码修改样式
+uniapp没有闭包
+$http传参，exclude拦截器
+static的文件不会被编译（不能放css、js等），专门用来放静态资源（图片、音视频等）
 
-
-less导入less：@import '...'
-
-vue导入样式：在<script>里   import '...'
-
-组件库修改样式
-
-echarts 封装成组件，web3 牛客网，公众号，浏览器兼容
-
-web性能 seo
-
-cookie
-token在vuex和本地都要存储
-
-
-可以全局前置守卫判断是否需要登录，是否登录
-可以在请求拦截器上加上token和请求体
-
-
-状态保持：cookie，session，jwt
-
-后台管理系统：
-管理员拥有全部权限，用户不是注册来的而是管理员添加的，用户可修改密码
-管理员主要有对用户、角色、权限、菜单的管理，用户具备角色的权限+管理员单独给的权限=该用户权限列表
-数据库：
-用户表保存用户信息和具备的角色
-角色表保存角色的权限
-权限表保存角色之外的权限或删除角色之内的权限
-用户表查到具备的角色，在角色表中查到具备的权限，再根据用户id拿到权限表中特有的权限与角色权限总和得到权限列表
-
-数据库结构：总库-分库-表-字段
-总库可以放在mongodb安装目录下的 bin/data，也可以放到自己喜欢的地方
-启动数据库：
-mongod --dbpath=总库路径
-localhost:27017 就是总库
-mongoose连接数据库
-mongoose.connect('mongodb://localhost:27017/分库名',{
-  useNewUrlParser: true
-})
-若分库未创建则会自动创建
-若没有指定分库名，只给了mongodb://localhost:27017，则会自动创建一个分库并连接它
-mongoose一旦连接就会一直连接，除非关闭项目或手动断开连接，所以可以在项目一开始就连接数据库
-
-
-后台管理系统一般初始不需要默认路由，初始只需要配置登录页面的路由，其他路由和默认路由都根据权限动态添加
-
-
-mongoose的curd操作都是返回promise
-
-引用数据类型循环引用
-
-深拷贝：https://blog.csdn.net/qq_45272642/article/details/124840331
-
-非空断言
-
-ts添加请求头，
-1 config.headers = {...config.headers,xxx:'xxx'}
-2 config.headers!.xxx = 'xxx'
-
-
-箭头函数 函数体 {a:1,b:2} 不能简写
-
-//允许跨域的请求类型，get，post，options不用设置也允许
-res.header("Access-Control-Allow-Methods", "*");
-
-
-ref的value和reactive的元素复制ref或reactive会发生什么，是否深拷贝，
+其他：
+牛客网，公众号，浏览器兼容

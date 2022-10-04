@@ -132,7 +132,48 @@ v-bind:属性  可以简写为 :属性    用来动态绑定属性
 
 （1）绑定img的src
 
-只能绑定网络URL，本地URL需要另外处理
+只能绑定网络URL，若绑定本地URL无法解析
+
+```
+...template
+<img src="...网络">   正常
+<img src="...本地">   正常
+<img :src="netURL">  正常
+<img :src="devURL">  无法解析
+...
+...script
+data(){
+  return {
+    netURL: '...',
+    devURL: '...'  
+  }
+}
+...
+```
+
+动态绑定本地图片URL无法解析的两种解决办法：
+
+* 将图片放到 /src/static 下就行
+
+* 图片放哪里都行，代码里url放require()里面
+  
+  ```
+  devURL: require('...')
+  ```
+
+此外，Vue为了安全，静态的src的url也必须是相对路径或webpack配置的路径，无法使用绝对路径
+
+```
+<img src="相对路径如../" />         正常
+<img src="文本pack配置的路径如@/" />  正常
+<img src="绝对路径如e://" />        无法解析
+```
+
+解决方法也是有的，就是动态绑定本地路径，但是由于动态绑定本地URL无法解析，还需要配合require()
+
+```
+<img :src="require('e:/...')" />
+```
 
 （2）绑定绑定class、style控制样式
 
@@ -865,28 +906,184 @@ cpn: {
   }
 </script>
 <style scoped lang="less">
-//scoped 使组件的样式不受外面营销，也不会影响外面
-//lang 指定使用less语法
+/*lang 指定使用less语法,若不指定默认为css*/
 </style>
 ```
 
 export default 的对象里面的一个个属性，叫做配置项，也叫做OptionsAPI，有data，methods等，即前面笔记的内容。
 
-除了根组件App.vue的data不用return {}外，其他所有组件都需要return {}
+单文件组件的几个注意点：
 
-```
-export default {
-  data(){
-    return {
-      //数据
-    }  
+* template不会被渲染成真实DOM，只作代码包裹作用，也可以在HTML里使用，可以使用v-if，v-else-if和v-for，无法使用v-show。由于其不会被渲染的特性，在使用组件库的一些特殊情况也可以使用。
+
+* 除了根组件App.vue的data不用return {}外，其他所有组件都需要return {}
+  
+  ```
+  export default {
+    data(){
+      return {
+        //数据
+      }  
+    }
   }
-}
-```
+  ```
+  
+  data(){return {}} 是为了防止不同组件的data数据之间的冲突，return出去后每个data都是独立的了。
 
-data(){return {}} 是为了防止不同组件的data数据之间的冲
+* style 的 scoped
+  
+  scoped 使组件的样式不受外面营销，也不会影响外面
+  
+  原理：选择器最后面加上属性选择器[data-v-xxx]，且该组件的每个DOM元素都增加一个相同的属性data-v-xx，xxx为随机哈希值，每个组件的哈希值是唯一的。
+  
+  注意，若有子组件，则子组件的根会加上父的哈希值，而子组件内部的DOM不加父组件的哈希值。
+  
+  也就是说，父子同时加了scoped，则父用父的哈希值，子用子的哈希值，子组件的根同时有父子的哈希值
+  
+  未加scoped的情况：
+  
+  ```
+  <template>
+    <div>
+      <div class="box"></div>
+    </div>
+  </template>
+  
+  <style>
+  .box {}
+  </style>
+  
+  <!-- 页面正常渲染 -->
+  ```
+  
+  
+  
+  加了scoped的情况：
+  
+  ```
+  <template>
+    <div id="home">
+      <div class="box"></div>
+    </div>
+  </template>
+  
+  <style>
+  .box {}
+  </style>
+  
+  <!-- DOM如下 -->
+  <head>
+    <style>
+      .box[data-v-xxx] {}
+    </style>
+  </head>
+  <body>
+    <div id="home" data-v-xxx>
+      <div class="box" data-v-xxx></div>  
+    </div>
+  </body>
+  ```
+  
+  每个组件的style都会单独渲染为一个单独的style标签
+  
+  scoped的影响总结，以下a代表某组件，b代表a的所有后代组件：
+  
+  * a，b都没有scoped，样式按照正常的层叠性覆盖，一般都是b比较靠后，所以b福噶a。
+  
+  * a无scoped，并有，a的样式会影响b，b不影响a，也就是全局样式也会影响有scoped的组件，原因：
+    
+    ```
+    <!-- F12查看 -->
+    <!--
+    a的样式影响b是因为a的样式没有属性选择器的限制
+    b不影响a是因为，a没有属性data-v-b
+    -->
+    
+    <style>
+    /*a*/
+    .box {}
+    </style>
+    <style>
+    /*b*/
+    .box[data-v-b] {}
+    </style>
+    ```
+    
+    
+  
+  * a有scoped，b无，a不会影响b，b会影响a
+    
+    a，b都有scoped，a和b互不影响。
+  
+  综上，一般开发中，App.vue不加scoped作为全局样式，其他组件一律加scoped。
+  
+  组件库修改样式：
+  
+  以下a是App.vue，b是App.vue子组件，c是b子组件。
+  
+  a不加scoped，b、c加。
+  
+  在b中使用组件库，有两种方式：
+  
+  * App.vue写对应的全局样式，缺点是全局的组件库都修改了。
+  
+  * 样式穿透 /deep/，在保证不影响其他组件库组件的情况下修改样式
+    
+    ```
+    <template>
+      <div>
+        <el-input />
+      </div>
+    </template>
+    <!--F12查看HTML
+    <div data-v-xxx>
+      <div data-v-xxx ...>
+        <input class="el-input-inner" ... />
+      </div>
+    </div>
+    -->
+    
+    <!-- 
+    未使用样式穿透前，无法修改样式
+    因为scoped使选择器变成 .el-input__inner[data-v-xxx]
+    但<el-input>内部没有这个data-v-xxx
+    -->
+    <style scoped>
+    .el-input__inner {}
+    </style>
+    
+    <!--
+    使用样式穿透后，选择器变成[data-v-xxx] .el-input__inner
+    也就是想找到[data-v-xxx]再找到.el-input__inner
+    -->
+    <style>
+    /deep/ .el-input__inner {}
+    </style>
+    ```
+    
+    
 
-突，return出去后每个data都是独立的了。
+* 样式引入；
+  
+  1. script标签内或main.js或被使用的js文件内引入，只要引入了就会作用到全局，引入less会自动解析
+     
+     ```
+     <script>
+     import '...'
+     </script>
+     ```
+2. style标签内引入，会受到scoped的影响。less可以引入less和css，css可以引入css和less但less只会解析没有less语法的部分
+   
+   ```
+   <style>
+   @import '...';
+   </style>
+   ```
+* 自定义组件绑定事件都会认为是子组件发射的自定义事件，所以如果要绑定原生事件的话就需要加修饰符来表明它是原生事件
+  
+  ```
+  <子组件 @click.native="..."></子组件>
+  ```
 
 ### 9.2 父子组件通信
 
@@ -1472,7 +1669,7 @@ runtime-only render-vdom-UI 效率高些且代码更少，使用这种的更多
 
 （4）配置文件相关
 
-脚手架2的配置文件：webpack.config.js
+脚手架2的配置文件：webpack.config.js 与src同级目录
 
 脚手架3及以上的配置文件：
 
@@ -1489,6 +1686,12 @@ vue inspect > xxx.js
 * 
 
 若想要自定义webpack配置，要在项目目录下创建vue.config.js文件，编写webpack配置，若默认配置也有对应的配置，则vue.config.js会覆盖默认配置
+
+```
+module.exports = {
+  ...
+}
+```
 
 ## 4 Vite
 
@@ -1681,6 +1884,8 @@ fun(0}{
 ```
 
 router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:’…’}，只有path可简写成’/…’
+
+跳转之后，编程式导航后面的代码也会执行。
 
 ## 3 路由参数传递
 
@@ -2086,6 +2291,79 @@ moduls建立一个文件夹
 
 ## 9 vuex数据持久化
 
+Vuex的数据在页面刷新后就会全部丢失，想要持久化存储就需要将Vuex的数据保存到storage中。
+
+```
+//store/index.js
+...
+state: {
+  a: localStorage.getItem('a') ? JSON.parse(localStorage.getItem('a')) : null
+},
+mutations: {
+  updateA(state,payload){
+    state.a = payload.a;
+    localStorage.setItem('a',JSON.stringify(a));;  
+  }
+}
+...
+```
+
+可以看到，虽然实现了持久化，但是state里面都要获取storage的值，且每次修改数据都要在state和storage里修改一次，十分繁琐。
+
+推荐的做法就是使用Vuex插件来管理这些操作，有第三方的插件，也可以自己写插件。
+
+（1）第三方vuex插件：
+
+```
+npm install --save vuex-persistedstate
+```
+
+使用：
+
+```
+// /store/index.js
+...
+import createPersistedstate from 'vuex-persistedstate'
+...
+export default new Vuex.Store({
+  state: {
+    aaa: 0;
+  },
+  mutations: {
+    updateAaa(state,payload)[
+      state.aaa = payload.aaa;
+    ]
+  }
+  plugins: [
+    //默认情况下，使用localStorage持久化所有state数据
+    createPersistedstate(),
+    //使用指定的存储方式，指定存储什么数据
+    /*
+    createPersistedstate({
+      storage: window.sessionStorage,
+      reducer(state){
+        return {
+          aaa: state.aaa
+        }
+      }
+    })
+    */
+  ]
+  ...
+})
+...
+```
+
+注意点：
+
+* 这么配置后，vuex照旧操作就能实现持久化
+
+* 必须通过mutations修改数据，createPersistedstate才生效。
+
+* 数据保存在 localStorage.vuex 中
+
+（2）自定义vuex插件：
+
 # 五、Vue3
 
 ## 1 Vue3语法
@@ -2240,7 +2518,7 @@ ref()的响应式原理与Vue2的Object.defindProperty()一样，ref()将数据�
 
 - ref()封装基本数据类型使用Object.defindProperty()，封装引用数据类型时，底层使用了reactive()
 
-- ref对象再setup使用需要.value，在模板中不用，需要.value是因为Object.defindProperty的数据代理
+- ref对象在setup使用需要.value，在模板中不用，需要.value是因为Object.defindProperty的数据代理
 
 （2）reactive()
 
@@ -2253,6 +2531,8 @@ ref()的响应式原理与Vue2的Object.defindProperty()一样，ref()将数据�
 （3）常见的丢失响应式的情况
 
 情况一，取值再赋值给新变量，若取出基本数据类型则丢失响应式，取出引用数据类型则不会
+
+因为在一个响应式的数据里，基本类型就是基本类型，而引用类型始终是一个Proxy对象。
 
 ```
 <script>
@@ -2331,9 +2611,63 @@ export default {
 
 总结：
 
-- 情况一取出的值是响应式数据，赋值的变量才是响应式数据
+- 情况一取出的值是引用类型一定是Proxy对象，所以赋值的变量一定是响应式数据。
 
-- 响应式数据不要整个重新赋值
+- 响应式数据不要整个重新赋值，如果遇到类似的情况，可以采用下面的做法：
+  
+  ```
+  let a = ref({a:1});
+  let b = reactive({a:1});
+  let newData = {aaa: 123};
+  
+  //错误做法，这样就是整个ref，reactive重新赋值
+  //b = newData;
+  //b = reactive(newData);
+  //a = newData;
+  //a = ref(newData);
+  
+  //正确做法，这样就不是整个ref重新赋值
+  a.value = newData;
+  b.data = newData;
+  ```
+
+- 在给ref对象.value赋值为引用类型，和reactive对象增加属性时，都不需要给ref和reactive
+  
+  ```
+  let r1 = ref(null);
+  let r2 = reactive({a:1});
+  r1.value = 1;
+  console.log(r1.value);
+  r1.value = {a:1};
+  r1.value.b = 2;
+  r2.b = 2;
+  console.log(r1.value);
+  console.log(r2);
+  ```
+  
+  像下面这种，是既没有必要又浪费性能
+  
+  ```
+  let a = ref(1);
+  a.value = ref(2);
+  a.value = reactive({a:1});
+  console.log(a.value);
+  
+  let b = reactive({a:1});
+  b.xxx = ref(123);
+  b.yyy = reactive([1,2]);
+  console.log(b);
+  
+  //若果遇到类似的情况，解决办法也是有的
+  let oldData1 = ref(123);
+  let oldData2 = reactive({a:1});
+  let aaa = ref(null);
+  let bbb = reactive({));
+  aaa.value = oldData1.value;
+  aaa.value = 深拷贝(toRaw(oldData2));
+  bbb.b = oldData1.value;
+  bbb.b = 深拷贝(toRaw(oldData2));
+  ```
 
 - 由于JSON的api本身的限制，若用JSON.stringify()序列化整个ref创建的ref对象或整个reactive创建的proxy对象，会丢失一些成员，所以用JSON.parse()恢复时不再是ref对象或proxy对象
 
@@ -3779,7 +4113,9 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 7. 删除了按键编码作为事件修饰符，因为兼容性差。删除了案件编码，只能用DOM的addEventListen拿到事件对象中的按键码来监听了
 
-8. 删除了事件修饰符.native，Vue2中自定义组件会将绑定的事件都认为是自定义事件，所以才需要.native告诉他是原生事件；Vue3的自定义组件绑定的事件都认为是原生事件，自定义事件需要在子组件的配置项emits中声明
+8. 删除了事件修饰符.native，如果自定义组件想要绑定原生事件，只能在子组件对应的DOM发射自定义事件来模拟原生事件。
+   
+   此外，Vue3的自定义组件只会监听在子组件emits中声明过的自定义事件。
 
 9. 其他变化详见官方文档
 
@@ -3929,7 +4265,7 @@ let center = reactive({
 </style>
 ```
 
-新选择器
+新选择器，其中包括样式穿透的选择器
 
 ```
 <style>
@@ -4094,9 +4430,7 @@ path: '/Home:id?'
 
 （2）pathMatch(正则)，如
 
-path: '/:pathMatch(.*)
-
-### 
+path: '/:pathMatch(.*) 
 
 ### 2.4 导航守卫的一些小变化
 
@@ -4343,6 +4677,7 @@ store实例上的API
 除了$patch外，还有其他几个
 
 ```
+//0 $id store的
 //1 $patch
 //2 $reset  将state的数据还原成初始值
 store.$reset()
@@ -4354,7 +4689,90 @@ store.$subscrib((args,state) => {
 store.$onAction((args) => {})
 ```
 
-pinia-plugin-persistedstate 
+pinia持久化：
+
+（1）第三方插件
+
+```
+npm install --save pinia-plugin-persistedstate
+```
+
+ 使用：
+
+```
+// /store/index.js
+import {createPinia,defineStore} from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
+
+const XxxStore = defineStore('Xxx',{
+  state(){
+    return {}
+  },
+  //默认情况下，存储名为Xxx，存储方式为localStorage，存储所有state数据
+  persist: true,
+  //自定义存储名，存储方式
+  /*   
+  persist: {
+    key: 'longtimepinia',
+    storage: window.localStorage
+  }
+  */
+  ...
+})
+...
+```
+
+注意点：
+
+* 这样配置后，pinia照旧操作就能实现持久化
+
+* 可以单独defineStore一个store来专门存放持久化的数据
+
+* 数据存储在 localStorage.Xxx（默认） 或 localStore.longtimepinia（自定义）
+
+（2）自定义插件：
+
+以下是ts写法
+
+```
+// /store/index.js
+...
+const myPluginTest = (context: PiniaPluginContext) => {
+  //如果自定义的插件不需要传入自定义参数，就这样写
+  ...
+}
+
+type Options = {
+  key?: string
+}
+const myPlugin = (options:Options) => {
+  //如果需要自定义参数就这样写
+  //之所以这么写，是因为自定义插件这个函数是pinia调用的，我们无法控制它，所以需要传入自己的参数的时候就需要外包一个自己可以操作的函数
+  return (context: PiniaPluginContext) => {
+    const {store} = context;
+    store.$subscribe(() => {
+      console.log(‘每次数据被修改都会回调’);
+      localStorage.setItem(Options?.key ?? store.$id,JSON.stringify(toRaw(store.$state)));
+    });
+    const data = 
+JSON.getItem(Options?.key ?? store.$id) ? JSON.parse(localStorage.getItem(Options?.key ?? store.$id) as string) : {}
+    return {...data}
+  }
+}
+
+//无参数
+pinia.use(myPlugin);
+//有参数
+pinia.use(myPlugin({
+  key: 'xxx'
+}))
+...
+```
+
+根据需要可以再自定义一些功能，如自定义存储方式。
 
 # 三、Vue使用ts
 

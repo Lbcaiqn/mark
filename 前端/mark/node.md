@@ -201,8 +201,14 @@ app.use(bodyParser.urlencoded({ extended: false }))
 //注意，node的路由是从上至下看是否有要执行的路由，所以跨域的路由代码要放到最前面
 app.all("*", (req, res, next) => {
   //解决跨域
+  //允许跨域的ip
   res.header("Access-Control-Allow-Origin", "*");
+  //允许跨域的请求类型，get，post，options不用设置也允许
+  res.header("Access-Control-Allow-Methods", "*");
+  //允许token请求头的跨域
   res.setHeader("Access-Control-Allow-Headers","content-type,Authorization")
+
+
   //解决axios的post请求会先发送options请求的问题（post请求但不传数据或formdata则不会有这种问题）
   if (req.method == 'OPTIONS')  res.send(200);  
   else  next();
@@ -296,6 +302,14 @@ app.post('/logup',async (request,response,next) => {
 
 ## 2 登录
 
+有账号密码登录、手机验证码登录、微信登录等。
+
+状态保持：用某种方法保持登录状态，不需要重复登录。目前有cookie，session，jsonwebtoken三种，jsonwebtoken最常用。
+
+后端：
+
+（1）账号密码登录
+
 先判断账号是否存在，再匹配密码，匹配成功返回jwt（jsonwebtoken），用于鉴权
 
 ```
@@ -320,7 +334,54 @@ app.post('/login',async (request,response) => {
 })
 ```
 
-前端代码略，就是发送请求而已，拿到token后，保存到storage中，token作为登录凭证来保持持久登录，无需账号密码。为了方便，还可以同时保存到vuex中
+（2）手机验证码登录
+
+（3）微信登录
+
+前端：
+
+```
+//账号密码登录
+请求.then(res => {
+  console.log(res.data.token);
+})
+//微信登录
+wx.login();
+```
+
+拿到token后，将token存放到vuex和storag鄂中。
+
+token作为登录凭证来保持持久登录，无需账号密码。
+
+跳转页面，可以全局前置守卫判断是否需要登录和是否已登录：
+
+```
+// /router/index.js
+router.beforeEach((to,from,next) => {
+  if(!to.meta.token)  next();
+  else {
+    if(localStorage.getItem('token'))  next();
+    else next('/Login');  
+  }    
+})
+```
+
+后端的接口总体分为需要token鉴权和不需要token鉴权两种。一般后端需要token鉴权的接口会统一命名，如果是统一命名就适用下面的方法，如果不是就另找方法。
+
+```
+//可以在请求拦截器上根据url判断是否需要token，给请求头加上token
+//比如需要token的接口的url都包含一个'/v2/''
+请求拦截器(config => {
+  if(/\/v2\//.test(config.url)){
+    let token: string = JSON.parse(localStorage.getItem('mainStore') as string) ? JSON.parse(localStorage.getItem('mainStore') as string)?.token : '';
+    config.headers!.Authorization = token;
+
+    //如果是ts，headers可能为空而报错，需要非空断言
+    //config.headers!.Authorization = token;
+  }
+  return config;
+})
+```
 
 退出登录时，需要清空storage和vuex的token
 

@@ -1480,8 +1480,14 @@ lessc xxx.less xxx.css 在xxx.less文件目录下执行，将less编译成css
 
 ## 2 sass
 
-与less语法基本相同，但是变量用$定义
-less基于JavaScript，在客户端处理
-sass基于Ruby，在服务端处理
+与less语法基本相同。
 
-end   
+区别：
+
+* less用@定义变量，sass变量用$定义
+
+* less基于JavaScript，在客户端处理，sass基于Ruby，在服务端处理，
+
+* 在less中仅允许循环数值，而在sass中可以遍历任何类型的数据
+
+* less有Preboot，sass有Compass

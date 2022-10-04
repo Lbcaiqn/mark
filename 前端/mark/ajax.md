@@ -55,7 +55,7 @@ JSON格式是JavaScript对象的表示形式，但是在格式上严格一些
 
 js自带，用于将对象序列化为字符串，和字符串恢复为对象。JSON的api需要的对象不一定是JSON对象，普通js对象也可以。此外。
 
-也可以将数组或基本数据类型序列化为字符串，但也只有数组序列化常用些。
+可以将对象和非对象直接序列化为字符串，但也只有对象和数组序列化常用些。
 
 序列化对象时，会变成严格的JSON格式
 
@@ -68,35 +68,31 @@ JSON.stringify(obj)  //将对象序列化为字符串
 JSON.parse(string)   //将字符串还原为对象
 ```
 
-JSON.stringify()序列化对象的限制：
+（1）JSON.stringify()序列化对象的限制：
 
 - 值为undefined或函数的属性会被忽略
 
-- 值为NaN，Date类型，RegExp类型分贝变成了null，字符串类型和空对象
+- Symbole键的属性，Symbole值得属性都会被忽略
+
+- 值为NaN，Date类型，RegExp/Set/WeakSet/Map/WeakMap类型分别变成了null，字符串类型和空对象
 
 - 若源对象给原型上绑定了自定义的属性和方法，也无法拷贝过来
 
-- 处理循环引用的对象时直接报错
-  
-  ```
-  let obj = {
-    a: 1,
-  }
-  obj.b = obj
-  
-  console.log(obj)
-  //console.log(JSON.stringify(obj)) //报错
-  ```
+- 处理循环引用和BigInt直接报错
 
-JSON.stringify()序列化数组的限制：
+（2）JSON.stringify()序列化数组的限制：
 
-和序列化对象差不多，区别在于，undefined和函数变为null，其他一样。
+和序列化对象差不多，区别在于，undefined，Symbol和函数变为null，其他一样。
 
-JSON.stringify()序列化基本数据类型/函数的限制：
+（3）JSON.stringify()序列化其他类型的限制：
 
-NaN变null，函数变undfined，其他正常
+- 直接序列化Number，String，Boolean，null正常，NaN变null，undefined/Symbole/函数不处理直接忽略。BigInt报错
 
-JSON.parse()的要求：
+- Date变字符串，RegExp/Set/WeakSet/Map/WeakMap变空对象
+
+- Vue3的ref，reactive变为普通对象
+
+（4）JSON.parse()的要求：
 
 * 无法处理 ''  'undefined'  'NaN'
 
@@ -312,8 +308,10 @@ const instance1=axios.create(baseConfig)    //创建axios实例并配置默认�
 instance1(config)    //使用与axios()一样
 这样就可以创建多个实例来适配多个服务器
 
+一般会做两侧封装：
+
 ```
-//1.  /src/network/index.js
+//1.  /src/network/index.js  第一层封装
 import axios from 'axios'
 export function request1(config){
   //对该实例进行全局配置
@@ -342,17 +340,34 @@ export function request1(config){
   return instance1(config)
 }
 
-//2. 用到的组件中
-Import {request1} from ‘…’
-rsequest1({
-  config
-}).then().catch()
+//2. /network/home.js  第二层封装
+import instance from './index'
+
+export function HomeRequestMultidata(){
+  return instance({
+    url: '/Home/multidata'
+  })
+}
+
+export function HomeRequestGoods(type, page){
+  return instance({
+    url: '/Home/data',
+    params: {
+      type,
+      page
+    }
+  })
+}
+
+//3. 用到的组件中
+Import {HomeRequestMultidata} from '...'
+HomeRequestMultidata().then().catch()
 ```
 
 ts：
 
 ```
-// /src/network/index.ts
+//1. /src/network/index.ts  第一层封装
 import axios,{AxiosInstance,AxiosRequestConfig,AxiosResponse} from 'axios'
 
 let instance: AxiosInstance = axios.create({
@@ -367,7 +382,7 @@ instance.interceptors.response.use((res: AxiosResponse) => {
 })
 export default instance
 
-// /src/network/Home.ts
+//2. /src/network/Home.ts  第二层封装
 import {AxiosRequestConfig,AxiosResponse} from 'axios'
 import instance from './index'
 
@@ -386,7 +401,19 @@ export function HomeRequestGoods(type: string, page: number){
     }
   })
 }
+
+//3. 用到的组件中
+Import {HomeRequestMultidata} from '...'
+HomeRequestMultidata().then().catch()
 ```
+
+ts，请求拦截器中添加请求头需要注意：
+
+可能会报错说headers可能为undefined，解决方法：
+
+* config.headers = {...config.headers,xxx:'xxx'}
+
+* config.headers!.xxx = 'xxx'
 
 # 二、GET请求，POST请求
 
@@ -466,9 +493,73 @@ F12—network—All--Name中是项目的所有html/js等，点开能看到请求
 
 # 四、浏览器工作原理
 
+从输入url到页面展示的整个过程：
+
+（1）输入url
+
+url：统一资源定位符，用于定位互联网上的资源，又称网址。
+
+输入时，会根据历史记录和书签来只能提示。
+
+输入完成按下回车后，首先检查是否是合法的url：
+
+* 若合法，判断url是否完整，若不完整会自动补全前缀/后缀
+
+* 若不合法，将输入内容作为搜索条件适宜用户默认的搜索引擎进行搜索
+
+（2）DNS解析
+
+浏览器无法通过url直接找到ip地址，所以需要进行DNS解析。
+
+DNS解析过程：
+
+1. 操作系统检查缓存和本地的hosts文件，看该url是否有记录ip地址，有的话就完成解析；否则就继续下一步。
+
+2. 使用TCP/IP参数中设置的DNS服务器进行查询，如果查找的域名包含在本地配置区域资源中，则返回解析结果完成解析；否则继续下一步。
+
+3. 检查本地DNS服务器是否缓存该url记录，有就完成解析；否则继续下一步。
+
+4. 本地DNS服务器发送查询报文到根DNS服务器，根DNS服务器收到后，返回顶级根DNS服务器地址，随后本地DNS服务器发送查询报文到顶级根DNS服务器，顶级根DNS服务器返回权威DNS服务器的地址，随后本地DNS服务器再发送请求报文到权威DNS服务器，权威DNS服务器收到后就会返回最终的ip地址，完成解析。
+
+（3）建立TCP连接
+
+根据ip地址，浏览器会用一个随机的端口和服务器的80端口发起TCP连接请求。请求到达服务器后，通过三次握手建立TCP连接。
+
+（4）发送http请求或https请求
+
+发送一个初始的get请求，通常是请求html文件。
+
+如果使用的是https请求则会在TCP和http之间多添加一层协议作为加密以及认证的服务。https使用SSL和TLS协议保证信息的安全。
+
+SSL协议：认证客户端和服务器，确保数据发送到正确的客户端和服务器，加密数据并维护数据的完整性。
+
+TSL协议：用于在两个通信应用程序之间，提供保密性和数据完整性。TSL由TSL记录协议和TSL握手协议组成。
+
+（5）服务器响应请求
+
+服务器返回http响应报文，内容包含响应头和html正文。
+
+（6）浏览器解析、渲染页面
+
+不同的浏览器引擎渲染过程是不同的，以谷歌浏览器为例：
+
+1. 处理HTML标记构建DOM树
+
+2. 处理CSS标记构建CSS DOM树
+
+3. 将DOM树和CSS DOM树合并为一颗渲染树
+
+4. 根据渲染树来布局，以计算每个节点的几何信息
+
+5. 将各个节点渲染到页面上
+
+（7）请求结束，断开TCP连接
+
+现在的浏览器为了优化请求耗时，默认都会开启持久链接，只有在页面关闭时才会四次挥手断开TCP连接。
+
 # 五、跨域
 
-跨域问题只会出现PC端、移动端的浏览器，小程序/app则没有跨域问题
+跨域问题只会出现PC端、移动端的浏览器，小程序/app则没有跨域问题，服务器与服务器之间也没有跨域问题。
 
 ## 1 同源策略
 
@@ -504,7 +595,61 @@ $.getJSON(‘url?callback=?’,function(data){})
 callback的值?其实是该回调函数，服务端获取该参数后，将其作为函数调用返回，然后在这个回调函数中对数据进行处理。
 ```
 
-（2）proxy代理
+（2）proxy正向代理
+
+跨域问题只存在于浏览器，服务器与服务器之间不存在跨域问题，难么如果将浏览器请求转发到本地同源的代理服务器中，再让这个代理服务器请求后端就能解决跨域问题。
+
+如何使用：
+
+比如请求一个后端接口 https://1.2.3.4:5000/login
+
+```
+//没有解决跨域时，这样一定会报错
+axios.get('https://1.2.3.4:5000/login').then(res => {));
+```
+
+需要在vue.config.js或vite.config.js中配置：
+
+```
+//vue.config.js
+module.exports = {
+  devServer: {
+    proxy: {
+      '/xxx': {
+        terget: 'https://1.2.3.4:5000/',
+        changeOrigin: true,  //允许跨域
+        pathRewrite: {
+          '^/xxx': ''
+        }
+      }
+    }  
+  }
+}
+```
+
+配置完成后，发送请求变成了：
+
+```
+axios.get('xxx/login').then(res => {})
+```
+
+原理解释：
+
+当发送请求时，若遇到开头为xxx的url，请求就会转发到本地代理服务器，在url前面拼接target变成 'https;//1.2.3.4:5000/xxx/login'，在通过pathRewrite的配置将'/xxx'替换成''，最终本地代理服务器向后端请求的url变成了 'https://1.2.3.4:5000/login'
+
+需要注意的是，target最后面的'/'和pathRewrite的''：
+
+* target醉眠有'/'，pathRewrite替换为''，就是上面的情况，最终的url为'https://1.2.3.4:5000/login'
+
+* target醉眠有'/'，pathRewrite替换为'/'，最终的url为'https://1.2.3.4:5000//login'，这样也没错，vue后自动将'//'换成'/'
+
+* target醉眠有''，pathRewrite替换为''，最终的url为'https://1.2.3.4:5000login'，这样就不行了，因为处理后变成了错误的url
+
+* target醉眠有''，pathRewrite替换为'/'，最终的url为'https://1.2.3.4:5000/login'，这样也可以得到正确的url
+
+（3）nginx方向代理
+
+原理和peoxy代理类似
 
 vue
 

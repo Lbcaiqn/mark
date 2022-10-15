@@ -1,3 +1,5 @@
+Vue官网：https://cn.vuejs.org/
+
 # 一、Vue2
 
 ## 1 基本
@@ -115,9 +117,9 @@ Vue.config.productionTio = false
 {{ 方法() }}
 ```
 
-插值指令
+其他指令：
 
-| v-once       | 使{{}}里的变量不会改变                                                                    |
+| v-once       | 使得该元素仅渲染一次并缓存起来，在未来数据更新时看到缓存里有就直接跳过，比如使{{}}里的变量不会改变，适合用于数据不会变的场景，可以提高性能          |
 | ------------ | -------------------------------------------------------------------------------- |
 | v-pre        | 不解析插值语法，直接显示{{ 变量名 }}                                                            |
 | v-text=“xxx” | 用xxx的值覆盖标签内的文本变量，会替换掉使用该指令的元素里的所有文本内容 ，若变量为string且string里有html标签，不会解析成标签，只会当成字符串 |
@@ -203,7 +205,7 @@ true生效，如button属性disabled=”disabled”，等同于v-bind:disabled=�
 
 #### 2.2.2 v-model
 
-双向绑定表单（input表单，textarea表单）
+双向绑定表单（input表单，textarea表单），不同的表单由不同的效果，v-model绑定type="text"就是:value和@input的语法糖，其他类型的表单时怎样的语法糖详见vue源码。
 
 （1）input
 
@@ -298,7 +300,7 @@ directives:{
   //简写
   xxx(element,binding){}
   //完整写法
-  Xxx:{
+  yyy:{
     bind(element,binding){}      //指令与元素完成绑定时回调
     inserted(element,binding){}  //元素插入到真实DOM后回调
     update(element,binding){}    //模板重新解析时回调
@@ -309,37 +311,84 @@ directives:{
 Vue.directive(‘xxx’,{//完整写法}) Vue.directive(‘xxx’,()=>{//简写})
 ```
 
-## 3 计算属性与过滤器，数据监视
+常用的自定义指令有：赋值粘贴、长按、防抖/节流、图片懒加载、按钮权限、页面水印、拖拽。
+
+## 3 计算属性/过滤器/侦听器
 
 ### 3.1 计算属性
 
-1通过属性之间的计算得到的属性，具有缓存功能。与methods最大的区别就是缓存，computed多次调用只计算结果一次并保存，而methods多次调用就多次计算结果，所以compted比methods好很多。
+Vue的配置项computed，通过属性之间的计算得到的属性，具有缓存功能。
 
-Vue会根据计算属性内的值有无变化判断是否重新计算，若值不变，则不改缓存，若值变了，则会重新执行计算属性给新缓存。
+* 比直接在模板中写{{ 复杂表达式 }}代码可读性高
 
-优势：比直接写{{ 复杂表达式 }}代码可读性高，比methods性能好。
+* 与methods最大的区别就是缓存，computed多次调用只计算结果一次并保存，而methods多次调用就多次计算结果，所以compted比methods好很多。
 
-计算属性的值只有当它依赖的数据变化时才更新并调用一次，所以计算属性不能return一个函数而在函数里面做一些操作，因为函数本身是不会变的，这样计算属性的值就不会更新
 
-```
-/*
-Vue的配置项computed
+
 语法类似方法，但不是方法，不能带形参，使用时不加括号。其实本质就是个属性。
-*/
-//1.完整写法：
-计算属性名: {
-  //调用时回调get，修改时回调set(此时可修改计算属性的依赖属性)
-  set: function(){},
-  get: function(newVal){
-    //get不能带形参
-    return …;
- }
+
+```
+...template
+{{xxx1}}  {{xxx2}}
+...
+
+...script
+export default {
+  ...
+  computed: {
+    //简写，只有get
+    xxx1: function(){
+      return ...;
+    },
+    //完整写法，有get/set
+    xxx2: {
+      //调用时回调get，修改时回调set(此时可修改计算属性的依赖属性)
+      set: function(newVal){
+        //newVal是计算属性被修改后的值
+      },
+      get: function(){
+        //get不能带形参
+        return ...;
+      }
+    }
+  }
 }
-//2.set很少用到，可以简写：
-计算属性名: function(){
-  return …;
+
+...
+```
+
+计算属性何时回调：
+
+当计算属性中被调用的数据被修改时，就重新执行一次计算属性并更新缓存。
+
+* 这里说的调用值的是get而不是set，如下面的代码，abc都是get，所以abc被修改时就会重新执行计算属性，而d是set，即使d被修改了也不会重新执行计算属性
+
+* 这里说的被修改指的是，被修改后的值和原来的值不一样，如下面的代码，若a被修改为1，虽然是有修改的操作，但是a的值没有变，所以不会重新执行计算属性
+
+* 计算属性不能return一个函数用于在函数里面做一些操作，因为函数本身是不会变的，这样计算属性的值就不会更新
+
+```
+export default {
+  data(){
+    return {
+      a: 1,
+      b: 2,
+      c: 3,
+      d: 4
+    }
+  },
+  computed: {
+    //简写，只有get
+    xxx1: function(){
+      let x = this.c;
+      this.d = 123;
+      return this.a + this.b;
+    }
+  }
 }
 ```
+
+
 
 ### 3.2 过滤器
 
@@ -360,17 +409,21 @@ v-bind:属性=”xxx | filtersName”
 Vue.filter()
 ```
 
-### 3.3 数据监视
+### 3.3 侦听器
+
+vue的配置项，watch。
+
+当侦听的数据修改时回调。
 
 ```
 /*
-vue的配置项之一，watch，当数据发生变化时执行的操作
 1.xxx是data属性或计算属性，不加this，若xxx未定义，不报错但是newValue/oldValue都是undefine
 2.若xxx为对象obj里的一个属性，则key不能简写为不带引号，必须 'obj.xxx'
 3.若xxx为对象，则它里面的属性发生变化，watch默认不监测（想监测使用深度监测），只有它
 这个对象本身发生变化，才会监测（vue本身是可以对这种多层级的属性进行监测的，如各种数
 据发生变化都会响应式刷新页面，只能说vue给程序员提供的watch默认不能监测这种多层级）
 4.深度监测：想要监测对象xxx中的任意属性发生变化，deep;true
+5.和计算属性一样，若修改前后值不变，则不会回调
 */
 
 watch:{
@@ -391,17 +444,31 @@ watch: {xxx(newValue,oldValue){}}
 $watch('xxx',(newValue,oldValue)=>{})
 ```
 
-监视和计算属性的区别，计算属性能实现的，watch也能实现
+### 3.4 计算属性与侦听器的区别与选择
 
-* 计算属性一旦数据改变就执行一次，数据不改变不执行，且初始就执行一次
+相同点：
 
-* watch是数据一旦改变就执行，数据不改变不执行，需要immediate:true 初始才会执行一次
+计都是数据需改就会调用一次，数据不变不调用。
 
-* 计算属性不能进行异步操作，watch可以
+不同点：
+
+* 一个计算属性可以侦听多个属性的变化，而一个watch只侦听一个属性的变化。
+
+* 计算属性侧重于几个数据派生出一个新数据并在模板使用；watch侧重于监听数据的变化并处理。
+
+* 计算属性和watch都是懒处理，但是方式不同。计算属性初始时若未在模板使用则不执行，若在模板使用就执行一次；watch初始不执行，需要immediate:true 初始才会执行一次。
+
+* 计算属性只能进行同步操作，watch同步异步都可以
+
+选择：
+
+当需要几个数据通过复杂的表达式派生出一个数据并在模板中使用时，就使用计算属性。
+
+当需要关注数据的变化，并捕获这次变化做一些事情，就使用watch
 
 ## 4 生命周期
 
-在vue的创建到销毁的过错中，有一些生命周期函数（也叫钩子），在相应的节点就会回调这些函数，由此可以在vue的相应节点编写代码
+在vue的创建到销毁的过错中，有一些生命周期函数（也叫钩子），在相应的节点就会回调这些函数，由此可以在vue的相应节点编写代码，实现在特定的时间做特定的事。
 生命周期函数与data，methods等同级，函数里面调用data等时也用this
 
 使用示例：
@@ -412,31 +479,105 @@ created(){
 }
 ```
 
-（1）el挂载之前
+（1）组件初始化
 
-若无el挂载，会在created后停止
+① el挂载之前，会创建组件
 
-| beforeCreate | 数据监测，数据代理创建之前，此时无法调用data，methods |
-| ------------ | -------------------------------- |
-| created      | 数据监测，数据代理创建之后，组件已创建，此时可网络请求数据    |
+若无el挂载，会在created后停止。
 
-（2）el挂载之后
+OptionsAPI在beforeCreated后created前初始化
 
-| beforeMount | vue解析完模板，生成虚拟DOM在内存中，但是还未转成真实DOM，所以页面未解析vue语法来渲染，此时若操作DOM，只在这个瞬间有效，                 由于下一流程的影响，此时操作的DOM最终都无效。该钩子将虚拟DOM转真实DOM，并保存一份到 $el 里 
+| 生命周期         | 简介                               | 适合做的事              |
+| ------------ | -------------------------------- | ------------------ |
+| beforeCreate | 数据监测，数据代理创建之前，此时无法调用data，methods | 插件开发，如在app上注入一些东西。 |
+| created      | 数据监测，数据代理创建之后，数据已经全部初始化好，组件创建完毕。 | 网络请求数据、修改数据。       |
 
-| beforeMount | DOM还未渲染完成              |
-| ----------- | ---------------------- |
-| mounted     | DOM渲染完成，展示模板，此时才能操作DOM |
+② el挂载
 
-（3）数据更新
+beforeMount之前，检查是否有未编译的模板，有则继续无则在运行时实施编译模板得到render函数。
 
-一旦有数据更新就回调
+| 生命周期        | 简介                                                                         | 适合做的事        |
+| ----------- | -------------------------------------------------------------------------- | ------------ |
+| beforeMount | 此时Vue解析完模板，生成虚拟DOM放在内存中，但是还未转成真实DOM，页面也未解析vue语法来渲染。此时若操作DOM无效              | 无            |
+| mounted     | 虚拟DOM已经转为真实DOM，并保存一份到 $el 里。此时DOM渲染完成，展示模板，可以操作DOM。mounted之后，一个组件的初始化才真正结束 | 操作DOM、获取组件实例 |
 
-| beforeUpdate | 此时数据更新完，但是页面还未刷新，就是model和view不同步，根据新数据生成新虚拟DOM，新旧虚拟DOM比较看是否有复用，刷新成新页面 |
-| ------------ | --------------------------------------------------------------------- |
-| updated      | 数据更新完，页面也刷新完，model和view同步                                             |
+（2）数据更新
 
-（4）组件销毁
+此阶段会不断轮循，一旦有数据更新就回调
+
+| 生命周期         | 简介                                                                    | 适合做的事      |
+| ------------ | --------------------------------------------------------------------- | ---------- |
+| beforeUpdate | 此时数据更新完，但是页面还未刷新，就是model和view不同步，根据新数据生成新虚拟DOM，新旧虚拟DOM比较看是否有复用，刷新成新页面 | 获取更新前的各种状态 |
+| updated      | 数据更新完，页面也刷新完，model和view同步                                             | 获取新数据      |
+
+此外，数据更新有一个特殊的钩子
+
+| this.$nextTick(callback) | 在数据更新完，并且真实DOM更新完毕后回调 |
+| ------------------------ | --------------------- |
+
+要搞懂nextTick，需要了解数据更新的机制。
+
+Vue中，数据是异步更新的，在数据修改后，并不是立马重新渲染页面的，而是开启一个异步队列并且缓存同一轮事件循环中的**所有数据改变**。在缓冲时会**除去重复**的操作,等到下一轮事件循环时，才开始更新。
+
+来看一个例子就明白了：
+
+```
+<template>
+  <div>
+    <div ref="box">{{msg}}</div>
+    <button @click="changeMsg">修改数据</button>
+  </div>
+</template>
+
+<script>
+export default {
+  data(){
+    return {
+      msg: 0
+    }
+  },
+  methods(){
+    changeMsg(){
+      this.msg++;
+      console.log(this.msg);
+      //问你题就出在这，数据变了模板也变为1，维度这样从DOM取出来还是0
+      //原因是此时DOM还未更新
+      console.log(this.$refs.box.innerText);
+    }
+  }
+}
+</script>
+```
+
+为了能够正确取得值，需要使用nextTick，nextTick回调的时机在数据更新DOM更新完毕后。
+
+```
+//解决
+...
+methods(){
+  changeMsg(){
+    //为了this指向该组件实例，回调函数不能使用箭头函数
+    this.$nextTick(function(){
+      this.msg++;
+      console.log(this.msg);
+      console.log(this.$refs.box.innerText); //1
+    });
+  }
+}
+...
+```
+
+在nextTick内部，Vue会根据当前浏览器环境优先使用原生的`Promise.then`和`MutationObserver`（现已经换为`MessageChannel` ,是宏任务），如果都不支持，就会采用setTimeout代替。
+
+nextTick应用场景主要有两个：
+
+* 几乎所有更新数据后操作dom的操作，都需要用到nextTick
+
+* mounted之前的钩子DOM都是未挂载完的，如果非要在mounted之前操作DOM，可以使用nextTick
+
+（3）组件销毁
+
+此阶段适合清除定时器、订阅等，防止内存泄漏。
 
 调用$destroy()或路由离开就会销毁组件，
 
@@ -445,57 +586,79 @@ $destroy()会完全销毁实例，并清除与其他实例的链接
 清除所有指令和自定义事件（原生事件不清)
 大部分情况都不是自己主动调$destroy，而是自动调（如路由切换等）
 
-| beforeDstroy | 还未开始销毁，还可以调data，methods，但此时对数据的任何修改都无效,此时宜做收尾工作（清除定时器，事件总线上的监听等） |
-| ------------ | ---------------------------------------------------------------- |
-| destroyed    | 销毁之后，一般很少用这个钩子                                                   |
+| 生命周期         | 简介                                      | 适合做的事                        |
+| ------------ | --------------------------------------- | ---------------------------- |
+| beforeDstroy | 还未开始销毁，还可以调data，methods，但此时对数据的任何修改都无效, | 收尾工作（清除定时器，事件总线上的监听等），防止内存泄漏 |
+| destroyed    | 销毁之后，一般很少用这个钩子                          | 清除与其他实例的连接，解绑所有指令和事件监听       |
+
+（4）调试钩子
+
+| errorCaptured | 后代组件出现错误时回调 |
+| ------------- | ----------- |
 
 （5）路由钩子
 
 只有该组件配置成路由时才会触发
 
-| activated                | 在跳转到该路由后回调（激活）     |
-| ------------------------ | ------------------ |
-| deactivated              | 在离开该路由后回调（失活）      |
-| this.$nextTick(() => {}) | 在数据更新后，元素在真实DOM后回调 |
+| activated   | 在跳转到该路由后回调（激活） |
+| ----------- | -------------- |
+| deactivated | 在离开该路由后回调（失活）  |
 
-## 5 Vue响应式原理
+（6）父子组件生命周期的顺序
 
-（1）响应式
+所有组件形成一个组件树，而组件生命周期的顺序就有点像树的后序遍历：
 
-若没有响应式，则数据修改时，只有在script中改了，模板并没有改，只有响应式才会重新解析模板，修改模板的数据
+```
+function 创建挂载组件(cpn){
+  beforeCreate
+  created
+  beforeMount
+  if(有子组件){
+    创建挂载组件(子组件A);
+    创建挂载组件(子组件B);
+  }
+  mounted
+}
+创建挂载组件(根组件);
+```
 
-vue在每次有值修改时，都会再解析一次vue模板，所以{{方法()}}会再调用
+父beforeCreate->
 
-（2）原理
+父created->
 
-通过Object.defineProperty()以数据代理的形式实现
+父beforeMount->
 
-数据代理：通过一个对象代理对另一个对象的属性的操作（读写）
-vue实例化一个vm（把data改成了_data），在操作_data里的属性，都需
+子beforeCreate->
 
-要 _data.xxx 十分麻烦，而事实上我们可以直接 xxx 调用，是因为vue用了数据代理
-实例化vm时，给vm增加了data里的所有属性并且都是Object.defineProperty():
+子->created->
 
-* 当访问时，回调get，return _data.xxx
+子beforeMount->
 
-* 当修改时，回调set，_data.xxx = value
+子mounted->
 
-Object.defineProperty()的方式给每个key添加set，get，在set中进行修改数据，重新解析模板等操作，最终data转成_data，vm中增加_data里的key，通过数据代理管理_data
+父mounted->
 
-注意点：
+父beforeUpdate->
 
-* 添加set，get时，所有的，所有data下的根属性和对象中的属性都会添加到，若对象中又有对象，则会递归，直到最深处遍历到所有属性为止
+子beforeUpdate->
 
-* 数组中的非对象属性不会被添加get，set方法，也就是说，通过索引的方式操作数组，值是改了，但是vue无法监测到，也就没有响应式。
-   可以通过数组的7个函数（如push）来操作数组，此时vue能监测到，就是响应式，这7个函数是vue对Array原型中的函数重新封装（先调用原生Array函数，后就重新解析模板等操作）
-  push()    pop()    shift()    unshift()        splice()    reverse()    sort()
-  以及
-  Vue.set(this.数组名,下标,新值);     
+子updated->
 
-* 数组和对象自己本身没有get，set，所有对数组，对象自己本身赋值，监测不到
-  *因为添加set，get是在vue实例化的时候进行的，所以在代码运行过程中，若想给对象和数组添加key，是监测不到的，此时需要使用 Vue.set()方法，添加key，注意此时数组中新增的非对象元素也没有get，set，但是数组里新增的对象里的属性有
+父updated->
 
-## 6 事件绑定
+父beforeDestory->
+
+子beforeDestory->
+
+子destoryed->
+
+父destoryed->
+
+若父组件内有多个子组件，则按照子组件的向后顺序，如：
+
+...->A子beforeCreate->A子->created->A子beforeMount->A子mounted->BbeforeCreate->B子->created->B子beforeMount->B子mounted->...
+
+## 5 事件绑定
 
 完整 v-on:click="fun"   
 缩写 @click="fun"
@@ -534,9 +697,9 @@ v-on:keydown=’’    键盘按下
 v-on:keyup=’’        键盘弹起
 v-on:input=’’        input，textarea一旦有输入（包括退格，不包括空格）就触发。
 
-## 7 列表、条件渲染
+## 6 列表、条件渲染
 
-### 7.1 条件渲染
+### 6.1 条件渲染
 
 （1）v-if="xxx" v-else-if="xxx"    v-else
 用来控制该元素以及它的孩子的显示与隐藏（隐藏是直接删除，原位置就空出）
@@ -565,7 +728,7 @@ v-show="boolean"
 
 不能复用，并创建新表单，值自然就不会保留。
 
-### 7.2 列表渲染
+### 6.2 列表渲染
 
 （1）基本使用：
 
@@ -606,20 +769,24 @@ v-show="boolean"
 
 （2）:key
 
-官方推荐使用v-for时，最好给元素/组件绑定key属性，这是为了更好地复用以及不出错。所以只要用了v-for，就要给其指定 :key 作为唯一标识，key最好为数据里的唯一标识属性 （若没指定，默认 :key="索引"） ，这是为了显示结果不出错和效率（效率体现在复用，复用指元素不用删除再创建，用原来的就行）
+官方推荐使用v-for时，最好给元素/组件绑定key属性，这是为了更高效更新虚拟DOM以及diff算法通过key比对不出错。
 
-:key=”i”    必须是遍历的唯一标识，不能是下标
+所以只要用了v-for，就要给其指定 :key 作为唯一标识，key最好为数据里的唯一标识属性（如id），若没指定，默认 :key="索引" 。
 
-key工作原理：
-初始：数据-虚拟DOM-真实DOM
-更新：新数据-新虚拟DOM-新真实DOM
-更新数据时，新虚拟DOM与旧虚拟DOM会进行比较算法，根据key进行逐一比较，若有完全相同的元素，就直接复用原来的，增加效率，但是注意输入框的特例，输入框的相同不与文本内容相关，就是文本不同但其他一样，就会复用输入框
+key工作的原理：
 
-若此时使用index作为key
+diff算法中，通过key比对。
+挂载阶段：数据-虚拟DOM-真实DOM
+更新阶段：新数据-新虚拟DOM-新真实DOM
+更新数据时，新虚拟DOM与旧虚拟DOM会进行diff算法，根据key进行逐一比较，若有完全相同的元素，就直接复用原来的，增加效率，但是注意输入框的特例，输入框的相同不与文本内容相关，就是文本不同但其他一样，就会复用输入框
+
+若此时使用index作为key，时有一定风险的：
 
 * 新的数据在最后面增删，不影响原本数据顺序，无影响
 
-* 在其他地方增删 就会改变原有数据顺序，例子：在原有数据最前面插入一个新数据，数据分别为索引key，唯一标识，内容，输入框
+* 在其他地方增删 就会改变原有数据顺序，或通过排序改变顺序，就会出错
+  
+  例子：在原有数据最前面插入一个新数据，数据分别为索引key，唯一标识，内容，输入框
   
   ```
   旧              新               比较结果
@@ -634,35 +801,50 @@ key工作原理：
   若此时使用唯一标识作为key,效率大大提高，且不会出错
   ```
 
+在处理相同元素标签过得时有transition时，相同的元素标签也会使用key，这也是为了Vue能区分它们，否则Vue只会替换其内部属性而不会触发过渡效果。原因是此处不设置key则key都是undefined，通过比对为true，则认为是相同的东西，就会替换，不仅没有过渡，还带来了大量DOM操作。
+
 （3）列表的过滤与排序
 
-v-for常用的一个应用，一般用计算属性或watch实现，计算属性更好
-效果：输入若干字符形成字符层s，根据s对源数据的内容进行模糊匹配，最终排序显示相应的匹配结果
-用到的函数：filter() indexOf() sort()
-原理：以indexOf作为返回条件给filter过滤，再对过滤结果进行排序
+v-for常用的一个应用，一般用计算属性或watch实现，计算属性更好。
 
-filter() 不改变源数据
+应用一：列表数据过滤
 
-str.indexOf(s):
-*若s在str出现，返回s首元素在str的索引
-*若s为'',返回0
-*若s没有在str出现过，返回-1
+根据条件，用filter()过滤列表数据。
 
-sort( (a,b) => {}) 改变源数据 return a-b升序  return b-a 降序
+应用二：搜索内容模糊匹配
+效果：输入一个字符串，根据字符串对源数据的内容进行模糊匹配，最终排序显示相应的匹配结果
+用到的函数：数组的filter()和sort()，字符串的indexOf() 自定义的防抖函数
+原理：以indexOf作为返回条件给filter过滤，再对过滤结果进行排序。
 
-### 7.3 v-if，v-show，v-for之间结合使用
+### 6.3 v-if，v-show，v-for两两之间结合使用
 
-（2）v-if，v-for集合使用
+（1）v-if，v-for集合使用
 
-使用v-for时应该避免同时使用v-if。
+应该避免同时使用v-for和v-if。一般有两种情况你会想到同时用v-if和v-for：
 
-v-for的优先级高于v-if，这样就会想v-for创建每个item，然后再根据v-if删除item，非常浪费性能。
+```
+<!-- 情况一，不想渲染列表的某些子项 -->
+<div v-for="i in [1,2,3]" v-if="i > 1"></div>
 
-Vue3中，v-if的优先级就高于v-fow了，就会想判断再创建。可以放心使用。
+<!-- 情况二，通过布尔值来控制整个列表的显示隐藏 -->
+<div v-for="i in [1,2,3]" v-if="false"></div>
+```
 
-要想实现相同的功能，可以：
+情况一：
 
-* v-fpr外层包裹一个div或template
+Vue2中，v-for的优先级高于v-if，这样就会v-for创建每个item，然后再根据v-if删除item，非常浪费性能。不过这样并不会报错，只会有一个警告。
+
+Vue3中，v-if的优先级高于v-for了，底层会先v-if判断再v-for循环创建DOM。先执行v-if，此时i是未定义的，会直接报错。Vue3这样其实更好，直接规避v-if和v-for一起使用。
+
+如果想实现情况一，可以：
+
+* 最佳实现：用计算属性根据条件过滤列表再v-for展示，参考v-for笔记（3）
+
+情况二：
+
+虽然Vue2，Vue3都不会报错，但是也不要这样做，有两种更好的实现方式：
+
+* v-for外层包裹一个div或template，或者是li的ul等等
   
   ```
   <template v-if="xxx">
@@ -675,8 +857,6 @@ Vue3中，v-if的优先级就高于v-fow了，就会想判断再创建。可以�
   ```
   <div v-show="xxx" v-for="..." :key="..."></div>
   ```
-
-* 用计算属性根据条件过滤列表再v-for展示，详见v-for笔记（3）
 
 （2）v-if，v-show同时使用
 
@@ -695,7 +875,7 @@ Vue3中，v-if的优先级就高于v-fow了，就会想判断再创建。可以�
 
 v-show和v-for已经说过，至于v-if，v-show，v-for没有意义。
 
-## 8 动画
+## 7 动画
 
 （1）<transition>
 
@@ -807,7 +987,7 @@ export default {
 </template>
 ```
 
-## 9 组件与组件化开发
+## 8 组件与组件化开发
 
 Vue本身也是一个组件
 
@@ -818,7 +998,7 @@ Vue和组件的template必须要有根标签div
 
 组件无法使用原生事件，这是因为自定义组件的事件默认都会认为是自定义事件，需要事件修饰符.native让组件认为是原生事件，才能使用
 
-### 9.1 基本使用
+### 8.1 基本使用
 
 分为非单文件组件和单文件组件，非单文件组件了解即可，开发中都是用单文件组件
 
@@ -881,7 +1061,7 @@ cpn: {
 </script>
 ```
 
-（2）单文件组件
+（2）单文件组件（SFC）
 
 创建一个单独的.vue文件编写代码，组件文件命名规范：
 
@@ -915,6 +1095,8 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
 单文件组件的几个注意点：
 
 * template不会被渲染成真实DOM，只作代码包裹作用，也可以在HTML里使用，可以使用v-if，v-else-if和v-for，无法使用v-show。由于其不会被渲染的特性，在使用组件库的一些特殊情况也可以使用。
+
+* template必须且只能有一个根标签，原因是虚拟DOM的数据结构就是单根的属性结构。之所以这么设计是因为多跟的话diff不知道新的虚拟DOM子树对应旧虚拟DOM哪个子树
 
 * 除了根组件App.vue的data不用return {}外，其他所有组件都需要return {}
   
@@ -956,64 +1138,60 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
   <!-- 页面正常渲染 -->
   ```
   
-  
-  
   加了scoped的情况：
+
+```
+<template>
+  <div id="home">
+    <div class="box"></div>
+  </div>
+</template>
+
+<style>
+.box {}
+</style>
+
+<!-- DOM如下 -->
+<head>
+  <style>
+    .box[data-v-xxx] {}
+  </style>
+</head>
+<body>
+  <div id="home" data-v-xxx>
+    <div class="box" data-v-xxx></div>  
+  </div>
+</body>
+```
+
+  每个组件的style都会单独渲染为一个单独的style标签
+
+  scoped的影响总结，以下a代表某组件，b代表a的所有后代组件：
+
+* a，b都没有scoped，样式按照正常的层叠性覆盖，一般都是b比较靠后，所以b福噶a。
+
+* a无scoped，并有，a的样式会影响b，b不影响a，也就是全局样式也会影响有scoped的组件，原因：
   
   ```
-  <template>
-    <div id="home">
-      <div class="box"></div>
-    </div>
-  </template>
+  <!-- F12查看 -->
+  <!--
+  a的样式影响b是因为a的样式没有属性选择器的限制
+  b不影响a是因为，a没有属性data-v-b
+  -->
   
   <style>
+  /*a*/
   .box {}
   </style>
-  
-  <!-- DOM如下 -->
-  <head>
-    <style>
-      .box[data-v-xxx] {}
-    </style>
-  </head>
-  <body>
-    <div id="home" data-v-xxx>
-      <div class="box" data-v-xxx></div>  
-    </div>
-  </body>
+  <style>
+  /*b*/
+  .box[data-v-b] {}
+  </style>
   ```
+
+* a有scoped，b无，a不会影响b，b会影响a
   
-  每个组件的style都会单独渲染为一个单独的style标签
-  
-  scoped的影响总结，以下a代表某组件，b代表a的所有后代组件：
-  
-  * a，b都没有scoped，样式按照正常的层叠性覆盖，一般都是b比较靠后，所以b福噶a。
-  
-  * a无scoped，并有，a的样式会影响b，b不影响a，也就是全局样式也会影响有scoped的组件，原因：
-    
-    ```
-    <!-- F12查看 -->
-    <!--
-    a的样式影响b是因为a的样式没有属性选择器的限制
-    b不影响a是因为，a没有属性data-v-b
-    -->
-    
-    <style>
-    /*a*/
-    .box {}
-    </style>
-    <style>
-    /*b*/
-    .box[data-v-b] {}
-    </style>
-    ```
-    
-    
-  
-  * a有scoped，b无，a不会影响b，b会影响a
-    
-    a，b都有scoped，a和b互不影响。
+  a，b都有scoped，a和b互不影响。
   
   综上，一般开发中，App.vue不加scoped作为全局样式，其他组件一律加scoped。
   
@@ -1024,44 +1202,42 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
   a不加scoped，b、c加。
   
   在b中使用组件库，有两种方式：
+
+* App.vue写对应的全局样式，缺点是全局的组件库都修改了。
+
+* 样式穿透 /deep/，在保证不影响其他组件库组件的情况下修改样式
   
-  * App.vue写对应的全局样式，缺点是全局的组件库都修改了。
-  
-  * 样式穿透 /deep/，在保证不影响其他组件库组件的情况下修改样式
-    
-    ```
-    <template>
-      <div>
-        <el-input />
-      </div>
-    </template>
-    <!--F12查看HTML
-    <div data-v-xxx>
-      <div data-v-xxx ...>
-        <input class="el-input-inner" ... />
-      </div>
+  ```
+  <template>
+    <div>
+      <el-input />
     </div>
-    -->
-    
-    <!-- 
-    未使用样式穿透前，无法修改样式
-    因为scoped使选择器变成 .el-input__inner[data-v-xxx]
-    但<el-input>内部没有这个data-v-xxx
-    -->
-    <style scoped>
-    .el-input__inner {}
-    </style>
-    
-    <!--
-    使用样式穿透后，选择器变成[data-v-xxx] .el-input__inner
-    也就是想找到[data-v-xxx]再找到.el-input__inner
-    -->
-    <style>
-    /deep/ .el-input__inner {}
-    </style>
-    ```
-    
-    
+  </template>
+  <!--F12查看HTML
+  <div data-v-xxx>
+    <div data-v-xxx ...>
+      <input class="el-input-inner" ... />
+    </div>
+  </div>
+  -->
+  
+  <!-- 
+  未使用样式穿透前，无法修改样式
+  因为scoped使选择器变成 .el-input__inner[data-v-xxx]
+  但<el-input>内部没有这个data-v-xxx
+  -->
+  <style scoped>
+  .el-input__inner {}
+  </style>
+  
+  <!--
+  使用样式穿透后，选择器变成[data-v-xxx] .el-input__inner
+  也就是想找到[data-v-xxx]再找到.el-input__inner
+  -->
+  <style>
+  /deep/ .el-input__inner {}
+  </style>
+  ```
 
 * 样式引入；
   
@@ -1085,9 +1261,9 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
   <子组件 @click.native="..."></子组件>
   ```
 
-### 9.2 父子组件通信
+### 8.2 父子组件通信
 
-2.1 props,emit
+props,emit，都是响应式的。
 
 （1）props接收父组件参数实现父传子
 
@@ -1224,9 +1400,39 @@ fun2(i){
 this.$off('xxx')
 ```
 
-### 9.3 自定义组件上使用v-model
+（3）单项数据流
 
-v-model也可以用在自定义组件上，是结合props和emit的语法糖
+父子组件之间，所有属性都应该满足单向的自上而下的绑定，也就是说，父组件数据的更新能流向子组件，反过来则不行。可以避免子组件意外修改父组件的状态，防止数据流向变得复杂。如通过$parent修改父组件的数据是不合理的。若想修改父组件的数据，只推荐用emit派发自定义事件来修改。
+
+此外，子组件中修改props也是不合理的，每次父组件传入数据更新时，子组件所有属性都会刷新成最新值，这意味着子组件不应该修改props：
+
+在子组件中，通过this或v-model是可以修改props的。虽然修改只会改子组件，不会修改父组件的值，但是应该尽量避免这样做，props应该是只读的。
+
+若修改的是基本类型，Vue也会报一个警告来提示。
+
+若修改的是引用类型，Vue为了节约性能就不会检测，就不会警告，但自己要知道不能这么做。
+
+```
+...
+<input type="text" v-model="xxx">
+{{xxx}}
+...
+props: ['xxx'],
+mounted(){
+  this.aaa = 123
+}
+...
+```
+
+一般这种修改props的情况有两种：
+
+* props传过来的作为初始值使用，此时推荐将props的值赋值给data里面的某个属性。
+
+* props传过来的值可能做一些操作，此时推荐使用计算属性。
+
+### 8.3 组件v-model
+
+v-model也可以用在自定义组件上，是结合props和emit的语法糖。
 
 v-model的props的默认值是value，emit默认是input，可以通过子组件的model配置项修改默认值
 
@@ -1271,7 +1477,50 @@ export default {
 </script>
 ```
 
-### 9.4 非父子组件通信
+Vue2的组件v-model的缺点是只能v-model一个props属性，且若要修改props和emit默认值则需要在子组件里面改，控制权在子组件里。
+
+如果想双向绑定多个，可以使用.sync修饰符。xxx.sync的props的就是xxx，emit为update:xxx。需要双向绑定哪个props由父组件决定，控制权在父组件。
+
+```
+<template>
+  父组件
+  <son1 :xxx.sync="msg" />
+  <!-- 相当于
+  <son1 :xxx="msg" @update:xxx="msg = $event" />
+  -->
+</template>
+
+<script>
+import son1 from './son1.vue'
+export default {
+  components: {
+    son1
+  },
+  data(){
+    return {
+      msg: false
+    }
+  }
+}
+</script>
+
+<template>
+  子组件
+  <div @click="$emit('update:xxx',xxx)">{{value}}</div>
+</template>
+
+<script>
+export default {
+  props: {
+    xxx: Boolean
+  }
+}
+</script>
+```
+
+虽然组件v-model和sync都是双向绑定，但是也要符合单向数据流的原则（详见8.2），避免通过this直接修改props。正确的做法是通过emit来修改，如上面的代码
+
+### 8.4 非父子组件通信
 
 （1）事件总线
 
@@ -1297,11 +1546,213 @@ beforeDestroy(){
 
 第三方库mitt的用法的emit，on，off用法完全一样
 
-（2）Vuex，和订阅者观察者模式的第三方库也是非父子组件通信
+（2）Vuex，数据是响应式的，和订阅者观察者模式的第三方库也是非父子组件通信
 
-### 9.5 获取组件实例对象
+（3）透传：attrs和listeners
 
-组件在mounted后才完全渲染完，所以获取组件实例对象必须在mounted()中或之后
+可以实现父子/祖孙组件通信。父子/祖孙通信方式不同。
+
+子组件中：
+
+可以通过$attrs获取父组件中的子组件标签 :aaa = "xx" 传入数据，子组件若
+
+- 有props接收，放到this，且可以限制类型，设置默认值等操作
+
+- 没有props接收，都会放到 this.$attrs，无法限制类型，设置默认值等操作
+
+可以通过$listeners获取父组件中标签子组件标签中的除了.navtie的事件的相关信息，且不管子组件有没有emit对应的自定义事件也会获取。此外，也可以实现祖孙组件通信。
+
+```
+...父组件
+<子组件 :aaa="'aaa'" :bbb="'bbb'" @e1="xxx" @e2="xxx" @click.native="xxx"/>
+...
+
+...子组件
+...
+<孙组件 v-bind="$attrs" v-on="$listeners" />
+...
+
+<script>
+...
+export default {
+  ...
+  props: ['aaa'],
+  mounted(){
+    this.$emit('el');
+    console.log(this.$attrs);  //{bbb: 'bbb'}
+    console.log(this.$listeners); //{e1:...,e2:...}
+  }
+}
+</script>
+...
+
+...孙组件
+<script>
+export default {
+  mounted(){
+    console.log(this.$attrs)
+    console.log(this.$listeners)
+  }
+}
+</script>
+...
+```
+
+（4）依赖注入
+
+实现祖孙组件通信（跨代组件通信）
+
+祖孙通信就是，一个组件可以与它的所有后代（包括子组件）进行通信，而不仅仅是孙组件。
+
+```
+...某祖组件中，通过配置项privide提供数据
+<script>
+export default {
+  data(){
+    return {
+      aaa: 123,
+    }
+  },
+  //provide里面的数据只有提供给后代的作用，不能在该组件中使用
+  provide(){
+    return {
+      aaa: this.aaa,
+      bbb: 456
+    }
+  },
+  //测试是否是响应式
+  mounted(){
+    setInterval(() => {
+      this.aaa += 1;
+    },1000);
+  }
+
+}
+</script>
+...
+
+...某后代组件中，通过jnject注入数据
+<template>
+  <div>
+    {{aaa}} {{bbb}}
+  </div>
+<template>
+<script>
+export default {
+  inject: ['aaa','bbb'],
+  //inject里面的数据可以像data里面的数据一样使用
+  mounted(){
+    console.log(this.aaa);
+    console.log(this.bbb);
+  }
+}
+</script>
+...
+```
+
+可以看到，组组件的aaa修改了但是后代组件并没有修改，也就是没有响应式。有两种方式可以解决：
+
+方式一：
+
+传递的参数用一个函数返回
+
+```
+...某祖组件中
+<script>
+export default {
+  data(){
+    return {
+      aaa: 123,
+    }
+  },
+  provide(){
+    return {
+      aaa: () => this.aaa
+    }
+  },
+  //测试是否是响应式
+  mounted(){
+    setInterval(() => {
+      this.aaa += 1;
+    },1000);
+  }
+
+}
+</script>
+...
+
+...某后代组件中，通过jnject注入数据
+<template>
+  <div>
+    {{aaa()}}
+  </div>
+<template>
+<script>
+export default {
+  inject: ['aaa'],
+  //inject里面的数据可以像data里面的数据一样使用
+  mounted(){
+    //mounted由于只调用一次，看不是有没有变化
+    //updated不监听inject数据的修改，所以updated是不会回调的。
+    console.log(this.aaa());
+  }
+}
+</script>
+```
+
+方式二：
+
+将需要传递的参数定义成一个对象。
+
+官方解释：provide 和 inject 绑定并不是可响应的。这是刻意为之的。然而，如果你传入了一个可监听的对象，那么其对象的 property 还是可响应的。
+
+```
+...某祖组件中
+<script>
+export default {
+  data(){
+    return {
+      aaa: {a: 123},
+    }
+  },
+  provide(){
+    return {
+      aaa: this.aaa
+    }
+  },
+  mounted(){
+    setInterval(() => {
+      this.aaa.a += 1;
+    },1000);
+  }
+
+}
+</script>
+...
+
+...某后代组件
+<template>
+  <div>
+    {{aaa.a}} {{bbb}}
+  </div>
+<template>
+<script>
+export default {
+  inject: ['aaa'],
+  mounted(){
+    console.log(this.aaa.a);
+  }
+}
+</script>
+```
+
+（5）获取组件实例来实现父子组件通信/兄弟组件通信
+
+### 8.5 获取组件实例对象
+
+获取组件实例对象后，可以访问该组件实例的属性和方法，可以看做是一种组件通信方式，只是比较繁琐。
+
+注意，组件在mounted后才完全渲染完，所以获取组件实例对象必须在mounted()中或之后
 
 普通方法：
 
@@ -1311,7 +1762,12 @@ this.$children
 
 //子组件获得父组件实例：
 this.$parent //返回父组件对象
-this.$root   //返回根组件对象
+
+/*获取根组件实例
+这里的根组件并不是根组件App.vue，而是main.js中的
+new Vue()，可以获取这个Vue实例中的data数据等。
+*/
+this.$root
 ```
 
 ref
@@ -1332,6 +1788,8 @@ this.$refs.xxx
 
 * 父组件使用子组件时，即使在不同的组件，子组件里面的ref也不要重名。
 
+* 可以实现父子组件、兄弟组件通信，但都比较繁琐，跟推荐用其他方式。
+
 * 标签里面的ref值和this.$refs.的值必须完全一样，如：
   
   ```
@@ -1343,7 +1801,13 @@ this.$refs.xxx
   //console.log(this.$refs.aaaBbb)  //报错
   ```
 
-### 9.6 混入mixin
+### 8.6 组件扩展
+
+（1）逻辑扩展
+
+方案有mixin，entends
+
+① 混入mixin
 
 Vue配置项 mixins
 两个组件中有完全相同的代码，将其抽离成一个js文件，组件中所有的配置项包括生命周期函数都可以抽离
@@ -1355,12 +1819,16 @@ export xxx {
   methods: {...},
   ...
 }
-//用到的组件中
+//用到的组件中，局部混入
 import {mixinA} from '...'
+export default [
+  ...
+  mixins: [mixinA]
+]
 
-mixins: [mixinA]
-
-//全局混入在main.js的Vue配置项mixin: []中,使得所有组件都用到
+//全局混入在main.js
+//局部mixin和全局mixin冲突时，局部优先级高
+Vue.mixin(...);
 ```
 
 混入规则：
@@ -1373,7 +1841,36 @@ mixins: [mixinA]
   
   2. 钩子：  不管原来有没有，都在原来的基础上直接混入
 
-### 9.6 组件插槽
+缺陷；
+
+当mixin比较多的时候，就需要考虑大量的冲突问题。
+
+② extends
+
+配置项extedns，使用与mixin差不多，区别在于extends只能扩展一个：
+
+```
+import {xxx} from '...'
+export default {
+  ...
+  extends: xxx
+}
+```
+
+extends的冲突规则和mixin一样；若extends与mixin发生冲突，extends优先级高。
+
+Vue构造器Vue.extends()也能实现扩展：
+
+```
+let V = Vue.extends(options1);
+
+//options2就是扩展
+let vm = new V(options2);
+```
+
+（2）内容扩展
+
+扩展方案有组件插槽。
 
 使组件具有扩展性，用<slot>定义，<slot>没有id，class属性，所以要给插槽样式可以给包含插槽的div样式
 
@@ -1441,13 +1938,19 @@ mixins: [mixinA]
 //高版本的vue这里template也可以用div
 ```
 
-### 9.7 全局变量/函数和插件
+Vue2中，只要给父组件中的子组件标签里面放了html，子组件若：
 
-6.1 全局变量/函数
+- 有定义插槽接收，则不会放到this.$slot，而是渲染出来真实DOM
+
+- 没有定义插槽接收，以虚拟DOM形式放到this.$slot
+
+### 8.7 全局变量/函数和插件
+
+（1）全局变量/函数
 
 Vue.prototype = xxx
 
-6.2 插件
+（2）插件
 
 组件定义后，使用时要导入，注册，定义变量等，十分麻烦，若一个组件几乎哪里都用到，可以进一步封装成插件，就能this.$xxx直接调用
 
@@ -1477,23 +1980,203 @@ Vue.use(...)
 this.$toast.方法()
 ```
 
-## 10 其他
-
-7.1 Vue.use()
+（3）Vue.use() 和 import
 
 使用需要use的库时，在任何地方use一次就行，以后在哪里都可以用，但是必须要在app挂载之前use
 
 不需要use的库，则在每一个需要的组件都要import
 
-7.2 render
+## 9 Vue底层原理
 
-render: h => h('App')
-功能：没有模板解析器的vue中，解析模板
-vue由vue核心和模板解析器组成，但是模板解析器相对有点大，且webpack打包后代码都转化完能解析的，也不需要模板解析器
-vue的精简版没有模板解析器，正是考虑到它大且只在开发时用到。
-既然没有模板解析器，在开发时，就需要render函数解析模板
+### 9.1 响应式原理
 
-7.3 Vue原型对象
+（1）啥事响应式
+
+数据修改，视图同时会改就是响应式。
+
+原生JS中，修改一个数据后，每个用到该数据的地方都要操作一次DOM来修改视图，十分麻烦。Vue的响应式实现了修改数据就能同步到视图，节省了大量DOM操作，其实这就是MVVM中的数据驱动，开发者只需要关注数据，视图只需要随着数据变化即可。
+
+若Vue没有响应式或某些情况丢失了响应式，则数据修改时，在script中确实改了，当Vue没有监听，视图就不会改。
+
+vue在每次有值修改时，都会再解析一次vue模板，所以{{方法()}}会再调用
+
+（2）原理
+
+通过getter/setter和数据代理实现，Object.defineProperty()同时具备getter/setter和数据代理的功能，所以Vue2选择它来实现响应式。
+
+数据代理：通过一个对象代理对另一个对象的属性的读写操作。
+vue实例化一个vm（把data改成了_data），在操作_data里的属性，都需要 _data.xxx 十分麻烦，而事实上我们可以直接 xxx 调用，是因为vue用了数据代理
+
+实例化vm时，给vm增加了data里的所有属性并且都是Object.defineProperty()：
+
+```
+let data = {a: 1,b: 2};
+
+function react(data){
+  //每个属性都要失业Object.definedProperty()，所以嵌套的需要递归
+  for(let k in data){
+    if(...) reactive(data[k]);
+    else {
+      Object.defineProperty(data,k,{
+        get(){
+          //依赖收集，依赖就是用到该数据的地方
+          ...
+          return data[k]
+        },
+        set(newVal){
+          data[k] = newVal;
+          //根据收集的依赖，通知依赖更新
+          ...
+        }
+      ))
+    }
+  }
+}
+```
+
+最终data转成_data，vm中增加_data里的key，通过数据代理管理_data
+
+缺点：
+
+- 数组中的非对象属性不会被添加get，set方法，也就是说，通过索引的方式操作数组，值是改了，但是vue无法监测到，也就没有响应式。
+   可以通过数组的7个函数（如push）来操作数组，此时vue能监测到，就是响应式，这7个函数是vue对Array原型中的函数重新封装（先调用原生Array函数，后就重新解析模板等操作）
+  push() pop() shift() unshift() splice() reverse() sort()
+  以及
+  Vue.set(this.数组名,下标,新值);
+
+- 因为添加set，get是在vue实例化的时候进行的，所以在代码运行过程中，若想给对象和数组添加/删除key，是监测不到的，此时需要使用 Vue.set()方法，添加key，注意此时数组中新增的非对象元素也没有get，set，但是数组里新增的对象里的属性有
+
+- Set/Map/WeakSet/WeakMap没有响应式，Vue也没有提供对应的API，但可以通过计算属性解决，通过在聚酸属性中调用一个有响应式的数据使得计算属性收集这个依赖，在每次修改Set/Map/WeakSet/WeakMap的同时修改这个响应式数据，就能间接实现它们的响应式：
+  
+  ```
+  ...template
+  {{getSetList}}
+  ...
+  
+  <script>
+  export default {
+    data(){
+      return {
+        s: new Set([5]),
+        sTrack: false,
+      }
+    },
+    computed: {
+      getSetList(){
+        let x = this.sTrack;
+        return Array.from(this.s)
+      }
+    },
+    mounted(){
+      setTimeout(() => {
+        this.s.add(6);
+        this.sTrack = !this.sTrack;
+        console.log(this.s,this.sTrack);
+      },2000);
+    }
+  }
+  </script>
+  ```
+  
+  
+
+- 由于需要对所有data数据做响应式，嵌套的数据还需要递归，所以性能开销是很大的，降低了项目初始化速度。
+
+### 9.2 虚拟DOM（vdom）
+
+（1）什么是虚拟DOM
+
+虚拟DOM就是一个虚拟的DOM对象，本身是一个JavaScript对象，通过不同的属性描述一个视图结构。
+
+（2）虚拟DOM的好处
+
+将真实元素节点抽象成VNode，有效减少直接操作DOM的次数，从而提高程序的性能：
+
+* 直接操作DOM会额外消耗一些性能去做不必要的事，如diff，clone等操作，一个真实元素上有很多内容，如果对其进行diff操作，会额外diff一些没有必要的内容；同样的若果对其进行clone操作会clone全部内容，这也是没有必要的。但是，如果将这些操作转移到JavaScript对象上，就会变得简单很多。
+
+* 操作DOM是比较消耗性能的，频繁地操作DOM容易引起页面的重绘和回流，但是通过抽象VNode进行中间处理，可以有效减少操作DOM的次数。
+
+方便实现跨平台：
+
+* 同一个VNode可以渲染成不同平台对应的内容，如渲染在浏览器是DOM，渲染在ios、安卓则是对应的控件、可以实现SSR、渲染到WebGL中等等
+
+* Vue3允许开发者基于VNode实现自定义渲染器（render），针对不同平台进行渲染，uniapp就是这么做的。
+
+（3）虚拟DOM如何生成，又如何转为真实DOM
+
+template会被编译器-compiler编译为渲染函数，在接下来的挂载过程中会调用render函数，返回的就是虚拟DOM，在后续的patch过程中转化为真实DOM。
+
+挂载结束后，进入更新流程，一旦响应式数据发生变化，就会引起组件重新render，生成新的虚拟DOM，随后新的虚拟DOM和上一次的渲染结果进行diff算法就能找到变化的地方，从而转化成最小量的DOM操作，高效更新视图。
+
+（4）在diff算法中的作用
+
+### 9.3 diff算法
+
+### 9.4 vue-loader
+
+（1）介绍
+
+vue-loader是用于处理单文件组件（SFC）的webpack loader。
+
+欧了vue-loader后，我们就可以在项目中以SFC的形式编写组件，集合其他loader还可以pug的template，ts的script，less/sass的style
+
+（2）何时生效
+
+webpack预打包、打包的时候以loader的形式调用vue-loader
+
+（3）工作流程
+
+vue-loader执行时，会根据SFC中的template，script，style使用各自的loader处理，最终将这些处理完的块组装为组件模块。
+
+vue-loader底层调用的是vue编译器 @vue/compiler-sfc
+
+### 9.5 template到render的编译过程
+
+（1）渲染函数（render函数）
+
+使用js代码生成HTML
+
+如main.js中的 render: h => h('App')
+
+（2）Vue编译器
+
+Vue中有个独特得编译器模块compolter，主要作用是将template编译为js中可执行的render函数。
+
+这个编译器是非常有必要的，毕竟开发者更愿意编写html的template，而不是手写render函数，手写render函数不仅开发效率低，可读性差，也失去了编译中的优化能力。
+
+（3）编译过程
+
+1. 先对template进行解析（也叫parse），解析结束后得到一个js对象（也叫抽象语法树AST）
+
+2. 然后对AST进行深加工的转换过程（也叫transform），得到深加工的AST
+
+3. 深加工的AST转换为render函数。
+
+（4）Vue编译器执行时机
+
+引入的Vue是开发时还是运行时，执行时机也不同。
+
+Vue由vue核心和编译器组成，但是编译器相对有点大，且webpack打包后代码都转化完能解析的，不再需要编译器，
+
+* webpack引入vue的是精简版，也就是开发时，源码中没有编译器模块，template编译时靠vue-loader来预打包，vue-loader会提前编译template，所以执行时机在预打包阶段。
+
+* 引入带有编译器模块的vue，也就是运行时，编译器的执行阶段在组件的创建阶段
+
+### 9.6 实例的挂载过程
+
+通常指的是app.mount()的过程，主要做了初始化和建立更新机制。
+
+（1）初始化
+
+创建app实例以及各个组件实例，创建过程中进行数据状态的初始化，Options的处理，数据响应式等。
+
+（2）建立更新机制
+
+该步骤会立即执行一个组件更新函数，这回首次执行组件渲染函数得到虚拟DOM，随后执行patch将虚拟DOM渲染完真实DOM；
+
+同时此时组件渲染函数会创建响应式数据和组件更新函数之间的依赖关系，使得数据更新会调用组件更新函数。即在数据和视图之间创建了关联，使得数据变化时视图可以更新
+
+### 9.6 Vue原型
 
 ```
 Vue.prototype指向vue原型对象，vue原型对象._proto_指向Object原型对象
@@ -1765,6 +2448,8 @@ url在后端服务器中取得网站的内容（此时的html，css，js都是�
 
 ## 2 基本使用
 
+（1）使用
+
 路由的组件不需要注册
 未使用的路由组件不创建；跳转新路由后，旧路由销毁。
 router是所有路由共有，route是当前激活的路由独有。
@@ -1822,25 +2507,77 @@ import router from '...'
 <router-view></router-view>
 ```
 
-若想在js文件中使用：
+（2）若想在js文件中使用
 
 ```
 import router from '...'
 ```
 
-路由跳转默认是hash模式（url带#），可以在router配置项中修改为history模式（不带#）
+（3）路由懒加载
+
+将路由分包，初始时不加载全部的路由，只有用到时才会加载，极大地提高性能。
+
+路由配置的component给一个异步的promise导入组件即可。
+
+```
+{
+  path: '...',
+  component: () => import('...')
+}
+```
+
+这个import()是webpack提供的，作用是返回一个导入组件的Promise，自己也可以用动态import实现
+
+import()还可以结合注释，将大模块的几个页面放到一起。
+
+vite类似的有 rollupOptions 定义分块
+
+```
+component: () => import(/*webpackChunkName:"xxx"*/'...')
+```
+
+（4）模式
+
+vue-router中，有三种模式，分别是hash，history，memory，其中memory用的比较少。
+
+默认是hash模式，可以在router配置项中修改为history模式或memory模式。
 
 ```
 mode: 'history'
 ```
 
-hash与history区别：
+hash，history，memory区别：
 
-- hash兼容性比hidtory好点
+相同点：
 
-- hash的 #以及后面的都是哈希值，不会作为路径给服务器；而history整个url都会给服务器；但是url都是前端路由跳转的，整个url给服务器并没有对应的资源，粗线404。若想使用history且请求正常，需要后端解决。
+* 代码中使用的url形式都是一样的。
 
-路由跳转：
+* 底层实现上都是一样的，最终都是通过监听popstate事件触发路由跳转处理。
+
+它们三者的区别主要是浏览器中地址栏的展示和服务器部署上。
+
+* hash模式，浏览器地址栏会带上 '#' ，‘#’ 以及后面的都是哈希值，兼容性是最好的。
+  
+  ```
+  // '#/home' 就是哈希值
+  https://xxx.com/#/home
+  ```
+  
+  哈希值不会不会作为路径给服务器，所以服务器部署上比较简单。
+
+* history模式没有 '#' ，显得更好看。
+  
+  ```
+  http://xxx.com/home
+  ```
+  
+  但是在服务器部署上要做一些特殊的配置和处理。
+  
+  整个url都会给服务器，但url都是前端路由跳转的，整个url给服务器并没有对应的资源，所以需要做url回退处理，将url去掉后面的前端路由变为正确的域名，否则刷新页面出现404。总之，history模式需要后端去处理。
+
+* memory路由则是把url存到一个对象里，是不可见的，适合于非浏览器（小程序，app），但也不是必须的。
+
+（5）路由跳转
 
 跳转方式：
 
@@ -1887,9 +2624,15 @@ router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:
 
 跳转之后，编程式导航后面的代码也会执行。
 
+（6）router-link和router-view的原理
+
+router-link实现路由跳转，router-view渲染对应的组件，vue-router初始化会监听popstate事件以此监听编程式导航。
+
+router-link默认生成a标签，点击后是取消默认跳转行为，并执行navigate方法来pushState以激活事件处理函数，点击router-link后页面不会刷新（阻止了浏览器默认行为），而是拿出当前的path和routes中的path匹配，匹配成功后，拿出component给router-view渲染。
+
 ## 3 路由参数传递
 
-1 params
+1 params动态路由
 
 有些情况path是不能写死的，如用户id，此时需要配置params参数
 
@@ -1976,7 +2719,28 @@ to="/aaa/bbb"
 this.$router.push('/aaa/bbb')
 ```
 
-## 5 动态路由
+应用场景：
+
+当页面足够复杂，有公共的部分希望能够复用使用的时候，就可以使用嵌套路由。
+
+如项目的某些是由多层级组件组合而来的（如左侧菜单栏跳转的页面），在这种情况下，url各部分通常对应某个嵌套的组件。
+
+```
+菜单栏    |              主视图
+...      |       这是一个管理页面，这部分是不变的
+管理      |     
+--商品管理 | 点击切换商品管理或者订单管理，这部分是会百年的
+--订单管理 |
+...       |
+```
+
+底层实现原理：
+
+vue-router内部有一个deep属性，是通过provide，inject传递下去的，每个层级都能拿到对应的深度，再从match的匹配数组中根据deep得到对应的组件并渲染之。
+
+## 5 动态添加/删除路由
+
+这个和前面的动态路由不是一个东西，注意区分。
 
 通常用于权限管理
 
@@ -2109,6 +2873,32 @@ exclude="ccc"       除了name为ccc的路由无效，其他都生效
 
 一般会配合路由钩子activated和deactivated使用
 
+## 9 如何从零开始写一个vue-router
+
+需求分析：
+
+首先思考vue-router解决的问题：url的变化和组件之间产生映射关系，当用户点击跳转控件，内容就会切换，并且不刷新页面。
+
+实现思路：
+
+1. 自定义一个createRouter函数创建一个router实例，实例里面需要做几件事：
+   
+   * 保存用户传入的配置项
+   
+   * 监听hashchange事件或popstate事件处理跳转
+   
+   * 定义一个响应式数据url，给router-view监听使用
+   
+   * 回调里根据path匹配对应的component并渲染之
+   
+   * 借助hash或history.api实现url跳转页面不刷新
+
+2. 将router定义成一个Vue插件，即实现install方法，内部要做两件事：
+   
+   * 实现两个全局组件router-link和router-view
+   
+   * 实现亮哥哥全局变量，$route/r
+
 # 四、vuex
 
 ## 1 基本
@@ -2160,9 +2950,7 @@ import store from '...'
 
 ## 3 mutations
 
-官方推荐不应该直接对state进行修改，而是应该通过mutations提交进行修改，这样在Vue开发者工具才能看到数据的变化。
-
-mutations只是为了devtools能追踪到修改
+官方推荐不应该直接对state进行修改，而是应该通过mutations提交进行修改，这样在Vue开发者工具才能看到数据的变化，mutations也只是为了devtools能追踪到修改，mutations是vuex修改state数据的唯一途径。
 
 mutations里面的函数都是同步函数
 
@@ -2197,6 +2985,24 @@ export const xxx = ’xxx’
 import {xxx} from ‘...’
 //在组件中直接调用，而在mutations中，需要[xxx]调用
 ```
+
+监听vuex状态的变化：
+
+vue devtools是追踪vuex状态的变化，如果现在代码里监听并回调处理，有两种办法：
+
+* watch，可以监听单个状态，且可以获得修改前的值
+
+* vuex的API，store.subscribe()，但是所有的mutations修改都会回调，所以需要根据是哪个mutations来判断是哪个状态变化了，且无法获得修改前的值
+  
+  ```
+  store.subscribe((mutation,state) => {
+    if(mutation.type === 'add'){
+      console.log('add被提交了')  
+    }
+  })
+  ```
+
+watch更简单易用，store.subscribe适合开发vuex插件
 
 ## 4 actions
 
@@ -2238,9 +3044,19 @@ this.$store.getters.ccc(123,456)
 
 ## 6 modules
 
-Store是单一状态树，只定义一个store，但是有时候确实又要将共享状态进行划分。
-在modules里，每个属性就是一个store对象，可以定义state等
-但是一般不在里面再定义modules，也就是store一般就两层模块里定义的，不要与rootstore的同名
+store是单一状态树，只定义一个store，但是有时候确实又要将共享状态进行划分，比如当项目很大时就一定是需要粉模块的。
+在modules里，每个属性就是一个store对象，可以定义state等但是一般不在里面再定义modules，也就是store一般就两层模块里定义的，不要与rootstore的同名
+
+```
+// /store/moduleA.js
+...
+
+//// /store/index.js
+import {moduleA} from '...'
+...
+module: [moduleA]
+...
+```
 
 模块里面的state参数都是本模块的state
 模块里面的state会编译成一个对象放在rootstore中，所以使用时：
@@ -2312,7 +3128,13 @@ mutations: {
 
 推荐的做法就是使用Vuex插件来管理这些操作，有第三方的插件，也可以自己写插件。
 
-（1）第三方vuex插件：
+实现方式：
+
+（1）每次存取都调用storage，缺点已经说了不再赘述。
+
+（2）第三方vuex插件：
+
+有vuex-persistedstate和vuex-persist，这里只介绍vuex-persistedstate
 
 ```
 npm install --save vuex-persistedstate
@@ -2362,7 +3184,25 @@ export default new Vuex.Store({
 
 * 数据保存在 localStorage.vuex 中
 
-（2）自定义vuex插件：
+（3）自定义vuex插件，用的比较少，毕竟有现成的库。
+
+（4）还有一种方式是把vuex的数据存到数据库中，但是用的比较少
+
+## 10 如何从零开始实现Vuex
+
+需求分析：
+
+vuex是一个状态管理工具，需要确保管理的状态以可预见的方式变更。需要实现：
+
+* 一个store存储全局状态
+
+* 修改状态的API commit(type,payload) 和 dispatch(type,payload)
+
+实现思路：
+
+* 定义store类，构造函数接收options，设置state并对外暴露，state里面需要设置成响应式数据，提供commit和dispatch，同时store要定义我一个Vue插件
+
+* commit可以根据传入的typr调用对应的mutations来修改数据；dispatch类似，不过要考虑可能是异步的，需要返回一个Promise给用户处理结果。
 
 # 五、Vue3
 
@@ -2370,7 +3210,7 @@ export default new Vuex.Store({
 
 ### 1.1 基本
 
-V版本更新：https://github.com/vuejs/core/releases?after=v3.0.3
+Vue版本更新：https://github.com/vuejs/core/releases?after=v3.0.3
 
 Vue3的脚手架最低版本为4.5
 
@@ -2386,7 +3226,19 @@ Vue3的脚手架最低版本为4.5
 
 vue3开发者工具：vue.js devtools vue3的版本
 
-比Vue2更轻，更快，使用CompositionAPI（组合式API），更好支持ts
+z总体特点：
+
+比Vue2：
+
+* 更轻（更好的摇树优化）
+
+* 更快（使用CompositionAPI（组合式API），更好的响应式系统等等）
+
+* 更易维护（hook，更好支持ts+ts模块化）
+
+* 更容易扩展（hook，自定义渲染器）
+
+* 更易用，开发体验更好，可读性更好（setup）
 
 Vue2中的各个配置项叫做OptionsAPI，Vue3都变成了CompositionAPI（组合式API）
 
@@ -2419,6 +3271,34 @@ data(){
   可以不用根标签了
 </template>
 ```
+
+Vue3增加了很多新特性，在回答Vue2与Vue3区别的问题时，可以参考：Vue官网导航栏-文档-从Vue2迁移（https://v3-migration.vuejs.org/）
+
+最快速从Vue2迁移到Vue3，列举了最值得关注的新特性和破坏性的更新，以及插件、库的迁移指南。
+
+里面介绍了Vue3最值得注意的几个特性，回答时围绕这几个最重要的特性即可：
+
+重要性从上往下，越上面越重要
+
+* Composition API
+
+* script setup语法糖
+
+* Teleport
+
+* Fragments
+
+* 子组件配置项emits
+
+* 自定义渲染器
+
+* v-bind绑定CSS
+
+* style scoped现在可包含全局规则，以及只作用于插槽的内容
+
+* Suspense
+
+其他的比如框架更快更轻，虚拟DOM重写，编译器优化，响应式系统
 
 ## 1.2 setup与数据响应式
 
@@ -2460,7 +3340,7 @@ Vue3中也是可以写Vue2的OptionsAPI，但是Vue3和Vue2的写法不要混着
 
 #### 1.2.2 Vue3响应式
 
-setup里面的数据默认是非响应式的，响应式的数据需要自己定义，这样性能提高了
+setup里面的数据默认是非响应式的，响应式的数据需要自己定义：
 
 ```
 <template>
@@ -2514,9 +3394,28 @@ export default {
 
 ref()与Vue2的ref不一样，Vue2的ref也还可以用
 
-ref()的响应式原理与Vue2的Object.defindProperty()一样，ref()将数据封装成refImpL对象，也叫ref引用对象，简称ref对象
+ref()的响应式原理与Vue2的那一套getter/setter：
 
-- ref()封装基本数据类型使用Object.defindProperty()，封装引用数据类型时，底层使用了reactive()
+```
+//大致的ref响应式原理代码如下
+function ref(value) {
+  const refObject = {
+    get value() {
+      track(refObject, 'value')
+      return value
+    },
+    set value(newValue) {
+      value = newValue
+      trigger(refObject, 'value')
+    }
+  }
+  return refObject
+}
+```
+
+ref()将数据封装成refImpL对象，也叫ref引用对象，简称ref对象
+
+- ref()封装基本数据类型使用getter/setter，封装引用数据类型时，底层使用了reactive()
 
 - ref对象在setup使用需要.value，在模板中不用，需要.value是因为Object.defindProperty的数据代理
 
@@ -2696,7 +3595,7 @@ console.log(b2)
 
 （4）Proxy响应式
 
-Object.defineProperty()实现响应式最大的问题就是数组索引修改和对象增加删除属性不能实现响应式，是因为它的set监听不到这些修改，而能实现响应式的push，pop，Vue.set()，Vue.delete()等都是vue2二次封装或自己的API
+Vue2实现响应式用Object.defineProperty()是为了兼容性，但是这个实现响应式最大的问题就是性能开销大，数组索引修改和对象增加删除属性不能实现响应式，是因为它的set监听不到这些修改，而能实现响应式的push，pop，Vue.set()，Vue.delete()等都是vue2二次封装或自己的API
 
 Vue3响应式通过Proxy和Reflect实现
 
@@ -2769,18 +3668,31 @@ Proxy和Reflect结合：
 ```
 let p = new Proxy(person,{
   get(target,propName){
+    //依赖收集
     return Reflect.get(target,propName)
   },
   set(target,propName,value){
+    //通知更新
     return Reflect.set(target,propName,value)
   },
   deleteProperty(target,propName){
+    //通知更新
     return Reflect.delete(terget,propName)
   }
 })
 ```
 
 引用数据类型无论是用ref()还是reactive()封装，最终都是用reactive()封装成Proxy对象，所以，数组索引修改，对象增加删除属性都是响应式的了
+
+比起Vue2响应式：
+
+* 优点1：响应式数据自己按需定义；Proxy响应式懒处理，初始不对深层次的数据做处理，只有访问时了才会做深层次的递归，以上这两点使得性能提升非常明显。
+
+* 有点2：数组索引修改，对象增加/删除属性也是响应式
+
+* 优点3：自定义库需要做响应式时，只需要引入ref，reactive，不像Vue2要引入整个Vue
+
+* 缺点：Proxy是ES6的特性，IE浏览器有兼容性问题
 
 （5）判断是否为响应式数据
 
@@ -2857,25 +3769,7 @@ return {
 
 #### 1.2.4 setup参数与父子组件通信、插槽
 
-（1）Vue2回顾
-
-props：
-
-Vue2中，只要给父组件中的子组件标签 :aaa = "xx" 传入数据，子组件若
-
-- 有props接收，放到this，且可以限制类型，设置默认值等操作
-
-- 没有props接收，都会放到 this.$attrs，无法限制类型，设置默认值等操作
-
-插槽：
-
-Vue2中，只要给父组件中的子组件标签里面放了html，子组件若：
-
-- 有接收，则不妨到this.$slot，而是渲染出来真实DOM
-
-- 没有接收，以虚拟DOM形式放到this.$slot
-
-（2）setup参数props，context
+（1）setup参数props，context
 
 ```
 export default {
@@ -2891,6 +3785,7 @@ export default {
     1.attrs，相当于Vue2的$attrs
     2.slots，相当于Vue2的$slots
     3.emit，用来发射自定义事件
+    此外，vue3删除了$listeners,$listeners的相关内容翻到了attrs中
     */ 
     console.log(context)
     function fun(){
@@ -2903,9 +3798,30 @@ export default {
 
 使用ts时，父组件接收自定义事件的$event参数的类型是 xxx: Event
 
-（3）父组件中获取子组件实例
+（2）父组件中获取子组件实例
 
-由于setup中的this指向undefined，所以不能像Vue2一样使用this.$refs，Vue3使用的方法如下：
+由于setup中的this指向undefined，有两种方式来获取组件实例。
+
+方式一：
+
+在OptionsAPI中使用this：
+
+```
+...
+mounted(){
+  //删除了this.$children
+  console.log(this.$parent);
+  console.log(this.$root);
+  console.log(this.$refs);
+}
+...
+```
+
+但是都Vue3了，就不推荐这种方式
+
+方式二：
+
+在setup中获取组件实例
 
 ```
 <template>
@@ -2936,45 +3852,9 @@ export default {
 </script>
 ```
 
-nextTick的应用，解决一个问题
+（3）组件v-model
 
-```
-<template>
-  <div ref=box @click="changeMsg">{{msg}}</div>
-</template>
-
-<script>
-import {ref,nextTick} from 'vue'
-export default {
-  setup(){
-    let msg = ref(123)
-    let box = ref(null)
-    function changeMsg(){
-      msg.value = 456
-      console.log(msg.value)
-      //问你题就出在这，数据变了模板也变了456，维度这样从DOM取出来还是123
-      console.log(box.value.innerText)
-    }
-    return {msg,box,changeMsg}
-  }
-}
-</script>
-```
-
-```
-//解决
-import {ref,nextTick} from 'vue'
-...
-async function changeMsg(){
-  msg.value = 456
-  console.log(msg.value)
-  await nextTick()
-  console.log(box.value.innerText)
-}
-...
-```
-
-（4）组件v-model
+Vue3的组件v-model非常类似Vue2的sync，基本与sync区别不大。sync可以不用了。
 
 与Vue2相比：
 
@@ -3078,31 +3958,11 @@ export default {
 </script>
 ```
 
-（5）表单的v-model可以跨组件
+（4）Vue3中，父传子响应式数据，子组件修改该响应式数据父组件也会修改。
 
-这个要和组件v-model区分开
+如直接修改，表单v-model修改都会同时修改父组件的数据。其实这是不符合单项数据流原则的，视情况看是否要使用。
 
-Vue3中，父组件传递一个响应式数据给子组件，子组件的表单v-model双向绑定，表单修改时，父组件的变量也会改变。实现的必须的条件就是父传子响应式数据
-
-```
-...子组件
-<input type="text" v-model="aaa" />
-...
-props: ['aaa']
-...
-
-...父组件
-<xxx :aaa="data" />
-...
-let data = ref(0)
-...
-```
-
-（6）响应式数据可以跨组件修改值
-
-和表单v-model一样
-
-（7）插槽
+（5）插槽
 
 默认插槽写不写template都行，但是具名插槽必须这样写，无法再用Vue2的 <子组件 slot="asd">...<子组件>
 
@@ -3123,9 +3983,11 @@ v-slot: 可以简写为 #  如 v-slot:aaa 简写为 #aaa  v-slot:[xxx] 简写为
 
 （6）事件总线
 
-由于Vue3的createApp创建的app没有了$emit，所以Vue2的写法不再适用，官方推荐使用mitt
+由于Vue3的createApp创建的app没有了$on，所以Vue2的写法不再适用。可以自己实现一个Vue3的EventBus但是十分的麻烦，所以官方推荐使用mitt
 
+```
 npm install --save mitt
+```
 
 监听要在派发之前，多注意生命周期
 
@@ -3149,6 +4011,10 @@ EventBus.off('xxx',func)
 ### 1.3 常用的组合式API
 
 #### 1.3.1 计算属性
+
+计算属性会返回一个响应式对象。
+
+若依赖的数据不是字面量而是变量，则该变量必须是响应式数据，否则监听不到该依赖数据的变化，计算属性也就不会变。
 
 ```
 import {ref,reactive,computed} from 'vue'
@@ -3177,11 +4043,7 @@ export default {
 }
 ```
 
-#### 1.3.2 过滤器
-
-Vue3删除了过滤器，因为写法不好，也可以完全可以用计算属性和函数替代
-
-#### 1.3.3 watch
+#### 1.3.2 watch
 
 必须要ref()，reactive()封装的响应式数据才能使用watch，否则报错
 
@@ -3278,6 +4140,8 @@ setup(){
 
 watchEffect：
 
+可以看做高级的watch，会自动侦听回调函数内有调用get()的数据（ref()和reactive()的get()都行），初始调用一次
+
 ```
 export default {
   setup(){
@@ -3287,11 +4151,7 @@ export default {
     let arr = reactive([1,2])
 
     watchEffect(() => {
-      /*
-      1.初始调用一次
-      2.只监视该函数里面有调用get()的数据（ref()和reactive()的get()都行）
-      这里只调用了arr[0]，进而调用了内部的get()，所以只监视arr[0]
-      */
+     //这里只调用了arr[0]，进而调用了内部的get()，所以只监视arr[0]
      let w = arr[0]
       console.log('watchEffect')
     })
@@ -3300,19 +4160,23 @@ export default {
 }
 ```
 
-watchEffect与计算属性有点类似：
+watchEffect与计算属性区别：
 
-- 计算属性初始调用一次，当计算属性依赖的属性修改时再调用一次
+相同点：
+
+* 都是被依赖的数据被修改就回调一次
+
+* 都可以侦听多个数据的变化
+
+不同点：
+
+- 计算属性初始若没有在模板使用不调用，初始若有在模板使用就调用一次，当计算属性依赖的属性修改时再调用一次
 
 - watchEffect初始调用一次，当waychEffect函数用到数据get，且数据修改时回调一次
 
-#### 1.3.4 祖孙组件通信
+#### 1.3.3 依赖注入
 
-也叫跨代组件通信，也叫依赖注入
-
-父子组件通信依旧可用，用法变化详见setup参数
-
-祖孙通信就是，一个组件可以与它的所有后代（包括子组件）进行通信，而不仅仅是孙组件
+provide，inject变为组合式API
 
 ```
 //祖组件
@@ -3352,7 +4216,7 @@ inject<Reactive<xxx>>()
 注意，值也有可能是undefined（未传值时）,要么就设置联合类型，要么给默认值，如：
 ```
 
-#### 1.3.5 自定义指令
+#### 1.3.4 自定义指令
 
 （1）Vue3.0的自定义指令
 
@@ -3476,17 +4340,20 @@ const vMove = (el,dir) => {
 
 2. Vue2的el未挂载也会走beforeCreate和created，而Vue3不会
 
-3. 依旧可以使用OptionsAPI的生命周期钩子，但也符合上面2条
-
-4. 由于setup在beforeCreate之前执行，Vue3也就把setup认为是beforeCreate和created，因此组合式API没有beforeCreated和created
-
-5. 组合式API的生命周期名字前加on
-
-6. 组合式API和OptionsAPI混着写时，顺序：
+3. 组合式API的生命周期名字前加on。Vue3依旧可以使用OptionsAPI的生命周期钩子，但也符合上面2条。组合式API和OptionsAPI混着写时，顺序：
    
    setup-beforeCreate(opt)-created(opt)-onBeforeMount(com)-beforeMount(opt).....
 
-（2）使用：‘
+4. setup的执行是最早的，在beforeCreate之前执行，setup过时组件实例已经创建好了，相当做了beforeCreate和created，因此组合式API没有也没必要有beforeCreated和created
+
+5. 增加了3个在调试和服务端渲染的生命周期，分别是：
+   
+   | renderTracked   | 调试钩子，响应式依赖被收集时回调      |
+   | --------------- | --------------------- |
+   | renderTriggered | 调试钩子，响应式依赖被触发时回调      |
+   | serverPrefetch  | ssr only，组件在服务端渲染之前回调 |
+
+（2）使用：
 
 ```
 /*
@@ -3515,17 +4382,30 @@ export default {
 }
 ```
 
+nextTick也变为组合式API，用法也有些许变化但功能还是一样的，功能可以解释成等待下一次DOM更新刷新的工具方法：
+
+```
+...tempalate
+<div ref="box">{{msg}}</div>
+<button @click="changeMsg">修改数据</button>
+...
+
+...script
+import {ref,nextTick} from 'vue'
+...setup
+async function changeMsg(){
+  msg.value = 456
+  console.log(msg.value)
+  await nextTick()
+  console.log(box.value.innerText)
+  //也可以写成Vue2的写法 nextTick(callback)
+}
+...
+```
+
 ### 1.5 hook函数
 
-将setup中的代码进行封装
-
-Vue2中，一个组件可能会有多个功能，但是这些功能的数据，函数，生命周期等都分散在各个OptionsAPI中，维护起来很不方便。
-
-Vue3中，将每个功能的数据，函数，生命周期等封装在一个hook函数中，需要使用的组件再将其导入，这样每个功能用到的东西都集中在一个文件，维护以及复用都很方便。
-
-hook函数就是组合式API的强有力体现，将某功能用到的东西组合起来，在组件中又将一个个功能组合起来使用。
-
-很类似Vue2中的混入，但由于是封装起来了就不像混入有冲突问题
+将setup中的代码进行封装，类似于mixin和extends，是一种新的组件扩展方式，优点是每个hook都是独立封装的，不会产生冲突问题。
 
 使用，以获取鼠标坐标的功能为例：
 
@@ -3601,9 +4481,17 @@ export default {
 </script>
 ```
 
-vue自己也自带一些hook函数，如 import {useAttr} from 'vue'
+vue自己也自带一些hook函数，如 import {useAttr} from 'vue'，也有hook库如vueuse
 
-hook库如vueuse
+hook函数就是组合式API的强有力体现，将某功能用到的东西组合起来，在组件中又将一个个功能组合起来使用。，CompositionAPI和OptionsAPI的区别在于：
+
+代码组织更规范，可读性更强，简洁高效地复用逻辑
+
+Vue2中，一个组件可能会有多个功能，但是这些功能的数据，函数，生命周期等都分散在各个OptionsAPI中，维护起来很不方便。起初Vue是为了开发者能规范地写代码，但是后来发现项目越来越复杂的时候，代码会显得非常复杂，难以维护。
+
+Vue3中，将每个功能的数据，函数，生命周期等封装在一个hook函数中，需要使用的组件再将其导入，这样每个功能用到的东西都集中在一个文件，维护以及复用都很方便。在不使用hook的情况下，也建议在setup内将同一个功能的属性、方法、生命周期等写在一块。
+
+总之，如果项目比较小，也不用经常维护，使用OptionsAPI仍是一个好的选择，但是只要项目足够大足够复杂，使用CompositionAPI会更好
 
 ### 1.6 其他组合式API和新的内置组件
 
@@ -4037,13 +4925,15 @@ Vue3新的内置组件
 
 - setup()使用async修饰后（Vue3.2 script setup 内，函数外使用await后setup()直接变async）,必须使用defineAsyncComponent引入组件，且在内使用引入的异步组件
 
-- 由于路由js文件无法使用，所以路由组件不能使用async setup()。解决：路由组件内异步引入普通子组件并使用，在该子组件里使用await
+- 路由组件不能使用async setup()。虽然懒加载是异步的，但只是异步加载，并不意味着这是个异步组件
+  
+  解决：路由组件内异步引入普通子组件并使用，在该子组件里使用await
 
 （6）缓存组件
 
-里面也可以放普通组件了，使得里面的组件即便被销毁了也能缓存状态。
+keep-alive里面也可以放普通组件了，使得里面的组件不会被销毁，能缓存状态。
 
-同时，生命周期发生了变化，不再走onUnMounted，新增了onActivated和onDeactivated
+同时，生命周期发生了变化，不再走onBeforeUnMounted和onUnMounted，可以使用onActivated，onDeactivated，beforeRouteEnter了。
 
 在页面初次加载时，同时走onMounted和onActivated，在以后的每次展示和销毁缓存组件时走onActivate和onDeactivate
 
@@ -4055,7 +4945,7 @@ max="整数" 限制缓存组件的最大个数
 
 include和exclude 包含和排除组件，值为该组件的name，多个用空格隔开
 
-#### 1.6.3 其他新的内置组件
+#### 1.6.4 其他新的内置组件
 
 （1）<Fragment>
 
@@ -4105,9 +4995,9 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 3. data配置项应始终声明为 data(){return{}}
 
-4. v-if的邮寄变得高于v-for了，两者可以同时使用，底层先v-if判断再v-for渲染，不再会浪费性能
+4. v-if的优先级变得高于v-for了，底层先v-if判断再v-for渲染。
 
-5. 删除了过滤器
+5. 删除了过滤器，因为写法不友好，完全可以用计算属性和函数替代
 
 6. 过渡类名变更：v-enter v-leave 变为 v-enter-from v-leave-from
 
@@ -4530,17 +5420,15 @@ Vuex4是vue3使用的vuex版本，但是很不方便，推荐使用pinia
 npm install --save pinia
 ```
 
-官方推荐的Vuex的代替品，优势：
+官方推荐的Vuex的代替品，解决了Vuex的痛点，优点：
 
 1. Vue2，Vue3都可以使用
 
-2. 抛弃了mutations，使用state，actions，getters就可以了
+2. 抛弃了mutations，使用state，actions，getters就可以了，数据也可以直接修改因为vue devtools能够追踪
 
-3. 不需要嵌套模块
+3. 不需要嵌套模块，且分模块也非常方便
 
-4. 完全支持ts
-
-5. 代码简洁
+4. 完全支持ts，且js和ts代码都很简洁，无论是在store文件中还是在组件中使用都很方便。
 
 Pinia支持Vue2和Vue3，下面只记录Vue3的写法
 

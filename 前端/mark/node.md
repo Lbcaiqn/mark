@@ -351,9 +351,17 @@ app.post('/login',async (request,response) => {
 wx.login();
 ```
 
-拿到token后，将token存放到vuex和storag鄂中。
+拿到token后，将token存放到storage和vuex中。
 
 token作为登录凭证来保持持久登录，无需账号密码。
+
+那既然都存到storage了，为什么还要存到vuex中？
+
+* 相对来说vuex的存取比storage方便一些，且配合vuex的持久化存储插件可以更加方便
+
+* vuex的数据是响应式的，而storage不是响应式，有时候可能会考虑这一点
+
+* vuex存在内存中，而storage存在本地磁盘中，在内存中存取数据会快一点
 
 跳转页面，可以全局前置守卫判断是否需要登录和是否已登录：
 
@@ -654,8 +662,6 @@ function filteRoutes(userRoutes, allRoutes){
 ③ 前端实现方案3，不太推荐，后端只返回权限信息和路由信息，不返回菜单
 
 把①的先定义全部路由改为先定义全部菜单，筛选路由改为筛选菜单即可
-
-
 
 其他：
 

@@ -323,8 +323,6 @@ Vue的配置项computed，通过属性之间的计算得到的属性，具有缓
 
 * 与methods最大的区别就是缓存，computed多次调用只计算结果一次并保存，而methods多次调用就多次计算结果，所以compted比methods好很多。
 
-
-
 语法类似方法，但不是方法，不能带形参，使用时不加括号。其实本质就是个属性。
 
 ```
@@ -387,8 +385,6 @@ export default {
   }
 }
 ```
-
-
 
 ### 3.2 过滤器
 
@@ -816,6 +812,108 @@ v-for常用的一个应用，一般用计算属性或watch实现，计算属性�
 用到的函数：数组的filter()和sort()，字符串的indexOf() 自定义的防抖函数
 原理：以indexOf作为返回条件给filter过滤，再对过滤结果进行排序。
 
+（4）大量数据的列表渲染
+
+所有的前端应用中最常见的性能问题就是渲染大型列表。无论一个框架性能有多好，渲染成千上万个列表项**都会**变得很慢，因为浏览器需要处理大量的 DOM 节点。
+
+```
+<div v-for="(i,iIndex) in 100000" :key="iIndex">{{i}}</div>
+```
+
+我们并不需要立刻渲染出全部的列表，目前有两种解决方式：
+
+① 分页渲染
+
+有时候后端可能不会帮我们给数据分页，而返回全部数据，我们可以在前端将数据分页，通过切换页数来切换数据渲染。
+
+```
+<template>
+  <div id="List">
+      <div>
+        <div v-for="(i,iIndex) in nowPageData" :key="iIndex">{{i}}</div>
+      </div>
+      <div class="btn">
+        <button @click="page <= 1 ? 1 : --page">-</button>
+        {{page}}
+        <button @click="totalData.length <= size * page ? page : ++page">+</button>
+      </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data(){
+    return {
+      page: 1,
+      size: 12,
+      totalData: []
+    }
+  },
+  computed: {
+    nowPageData(){
+      return this.totalData.slice((this.page - 1) * this.size, this.size * this.page)
+    }
+  },
+  mounted(){
+    //模拟数据
+    for(let i =0; i < 1000000; i++)  this.totalData.push(i);
+  }
+}
+</script>
+
+<style scoped lang="less">
+#List {
+  display: flex;
+}
+</style>
+```
+
+适合用于通过点击页数切换数据的场景，无论页数多大，页面始终显示限定的数量，大大提高性能。
+
+② 长列表分片渲染
+
+有时候后端可能不会帮我们给数据分页，而返回全部数据，我们可以在前端将数据分页，通过懒加载的形式按需添加数据来渲染。
+
+只需要修改①部分代码即可：
+
+```
+computed: {
+    nowPageData(){
+      return this.totalData.slice(0, this.size * this.page);
+    }
+  },
+```
+
+适合用于上拉加载更多的场景，需要注意的是，随着页数的不断增加，页面的数据会不断增多，性能会越来越差。为了解决这个问题，我们使用虚拟列表。
+
+虚拟列表：
+
+虚拟列表（也叫虚拟滚动）解决，原理是页面始终显示视口区域的数据，其他不显示，不显示的区域用空盒子占位使得当前处于正确的高度。
+
+与②懒加载的区别实：②懒加载中数据会随着页数增多而增多，而虚拟列表始终是限制的数据数量。
+
+自己实现虚拟列表不是很容易，可以使用第三方库，主要有两个：
+
+* vue-virtual-scroller
+
+* vue-virtual-scroll-grid
+
+以vue-virtual-scroller为例：
+
+```
+npm install --save vue-virtual-scroller
+```
+
+注册：
+
+```
+//main.js
+...
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import VueVirtualScroller from 'vue-virtual-scroller'
+Vue.use(VueVirtualScroller)
+```
+
 ### 6.3 v-if，v-show，v-for两两之间结合使用
 
 （1）v-if，v-for集合使用
@@ -838,7 +936,7 @@ Vue3中，v-if的优先级高于v-for了，底层会先v-if判断再v-for循环�
 
 如果想实现情况一，可以：
 
-* 最佳实现：用计算属性根据条件过滤列表再v-for展示，参考v-for笔记（3）
+* 最佳实现：用计算属性根据条件过滤列表再v-for展示，参考v-for笔记（3），计算属性的性能开销远比v-for与v-if一起使用少得多。
 
 情况二：
 
@@ -2077,8 +2175,6 @@ function react(data){
   }
   </script>
   ```
-  
-  
 
 - 由于需要对所有data数据做响应式，嵌套的数据还需要递归，所以性能开销是很大的，降低了项目初始化速度。
 
@@ -2188,6 +2284,10 @@ $xxx一直找到vue原型对象
 ```
 
 # 二、Vue模块化
+
+模块化是在代码层面上，将各类代码或各类功能分成各个模块。
+
+组件化是在UI层面上，布局分成各个小组件。
 
 ## 1 基本介绍和npm，yum
 
@@ -3595,7 +3695,7 @@ console.log(b2)
 
 （4）Proxy响应式
 
-Vue2实现响应式用Object.defineProperty()是为了兼容性，但是这个实现响应式最大的问题就是性能开销大，数组索引修改和对象增加删除属性不能实现响应式，是因为它的set监听不到这些修改，而能实现响应式的push，pop，Vue.set()，Vue.delete()等都是vue2二次封装或自己的API
+Vue2实现响应式用Object.defineProperty()是为了兼容性，但是这个实现响应式最大的问题就是性能开销大，数组索引修改，对象增加删除属性，Set/Map/WeakSet/WeakMap不能实现响应式，而能实现响应式的push，pop，Vue.set()，Vue.delete()等都是vue2二次封装或自己的API
 
 Vue3响应式通过Proxy和Reflect实现
 
@@ -3688,7 +3788,7 @@ let p = new Proxy(person,{
 
 * 优点1：响应式数据自己按需定义；Proxy响应式懒处理，初始不对深层次的数据做处理，只有访问时了才会做深层次的递归，以上这两点使得性能提升非常明显。
 
-* 有点2：数组索引修改，对象增加/删除属性也是响应式
+* 有点2：数组索引修改，对象增加/删除属性，Set/Map/WeakSet/WeakMap也是响应式
 
 * 优点3：自定义库需要做响应式时，只需要引入ref，reactive，不像Vue2要引入整个Vue
 

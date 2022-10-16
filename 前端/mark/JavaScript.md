@@ -1388,8 +1388,6 @@ aaa`${a}${b}`  //相当于 aaa(['','',''],a,b);
 aaa`q${b}w${b}e${b}r`  //相当于 aaa(['q','w','e','r'],b,b,b);
 ```
 
-
-
 ### 1.10 生成器
 
 本质是一个函数，但是语法与传统函数完全不同，是es6提供的一个异步解决方案，进行异步编程。解决了回调地狱。
@@ -3148,8 +3146,6 @@ try {
 
 find()的逆向版。
 
-
-
 ## 10 关于ECMA新特性的使用、
 
 注意，自从TC39进程指定以来，新特性提案阶段就比ecma版本更为重要，因为某个ecma版本发布的新特性不一定全部能用，未正式发布的新特性也可能可以使用。
@@ -3721,17 +3717,9 @@ let obj1 = {a: 1}, arr1 = [1]
 let obj2 = o1, arr2 = arr1
 ```
 
-数组，对象判空：
 
-不能用arr == [] 和 obj == {} 判断，因为这是比较两个数组/对象的地址
 
-```
-arr.length == 0
-Object.keys(obj).length == 0
-JSON.stringify(arr) == '[]'
-JSON.stringify(obj) == '{}' 
-//不推荐，JSON.stringify()自身的问题，如undefiend和函数会被忽略
-```
+
 
 浅拷贝出现在引用数据类型，即数组，对象
 
@@ -4155,5 +4143,40 @@ btn.onclick = function(){
   catch(err) {
     alert(err)
   }
+}
+```
+
+# 七、JS编码技巧
+
+（1）数组、对象判空
+
+不能用arr == [] 和 obj == {} 判断，因为这是比较两个数组/对象的地址。
+
+```
+//数组判空
+arr.length == 0
+JSON.stringify(arr) == '[]'
+
+//对象判空
+Object.keys(obj).length == 0
+Object.getOwnPropertyName(obj).length == 0
+JSON.stringify(obj) == '{}' 
+
+```
+
+/JSON.stringify()要慎用，它有自身的限制，如undefiend和函数会被忽略，详见ajax笔记
+
+也可以自定义一个判空函数：
+
+```
+//可判断数组、对象是否非空
+function isEmpty(data){
+  let isEmpty = true;
+  // 没有/有进入循环，说明空/非空
+  for(let i in data){
+    isEmpty = false;
+    break;  
+  }
+  return isEmpty
 }
 ```

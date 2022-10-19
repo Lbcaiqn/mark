@@ -1,3 +1,7 @@
+狭义的ajax就是指ajax这个技术。
+
+广义的ajax泛指通过ajax实现的网络请求技术的统称，如fetch，axios等。
+
 # 一、ajax
 
 ## 1 基本
@@ -234,7 +238,20 @@ function formatDatetime(datetime,fmt){
 }
 ```
 
-## 4 jQuery的ajax
+## 4 fetch
+
+浏览器提供的原生api，返回Promise
+
+```
+// window.fetch(url,options)
+fetch('...',{
+  method: 'get'
+}).then(res => {
+
+}).catch(err => {})
+```
+
+## 5 jQuery的ajax
 
 ```
 //引入
@@ -255,7 +272,7 @@ $.ajax({
 })
 ```
 
-## 5 axios
+## 6 axios
 
 原生ajax配置和使用麻烦，而jqeury-ajax有需要导入jquery，都不适合，而vue有专门的axios
 npm install axios --save    npm install axios –g
@@ -496,6 +513,10 @@ F12—network—All--Name中是项目的所有html/js等，点开能看到请求
 # 四、跨域
 
 跨域问题只会出现PC端、移动端的浏览器，小程序/app则没有跨域问题，服务器与服务器之间也没有跨域问题。
+
+浏览器虽然有跨域问题，但是不会限制script标签，link标签，iframe标签，img标签的跨域，a标签部分情况会限制跨域。
+
+发送post，put，delete请求时若出现跨域问题，浏览器会自己先发送一个options请求进行预检查，以判断后端支不支持这类请求，后端需要对options请求做处理（详见node笔记），前端就不用管了。
 
 ## 1 同源策略
 

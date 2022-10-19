@@ -317,7 +317,7 @@ Vue.directive(‘xxx’,{//完整写法}) Vue.directive(‘xxx’,()=>{//简写}
 
 ### 3.1 计算属性
 
-Vue的配置项computed，通过属性之间的计算得到的属性，具有缓存功能。
+Vue的配置项computed，通过属性之间的计算得到的属性，具有缓存功能。计算属性只能在template只能怪使用，无法在script中使用。
 
 * 比直接在模板中写{{ 复杂表达式 }}代码可读性高
 
@@ -654,6 +654,12 @@ function 创建挂载组件(cpn){
 
 ...->A子beforeCreate->A子->created->A子beforeMount->A子mounted->BbeforeCreate->B子->created->B子beforeMount->B子mounted->...
 
+（7）生命周期小技巧
+
+若每个组件的body样式不同，比较容易想到的解决方式是在每个组件的style设置body，但是由于组件的style一般都会设置scoped，使得body选择器变成body[属性]选择器使得样式无法命中，设置失效。
+
+可以在每个组件的beforeCreate中修改，在beforeDestroy中恢复。
+
 ## 5 事件绑定
 
 完整 v-on:click="fun"   
@@ -884,19 +890,21 @@ computed: {
   },
 ```
 
-适合用于上拉加载更多的场景，需要注意的是，随着页数的不断增加，页面的数据会不断增多，性能会越来越差。为了解决这个问题，我们使用虚拟列表。
+适合用于上拉加载更多或数据量不多的场景。
+
+需要注意的是，若数据量很大，随着页数的不断增加，页面的数据会不断增多，性能会越来越差，页面越来越卡顿。为了解决这个问题，我们使用虚拟列表。
 
 虚拟列表：
 
-虚拟列表（也叫虚拟滚动）解决，原理是页面始终显示视口区域的数据，其他不显示，不显示的区域用空盒子占位使得当前处于正确的高度。
+虚拟列表（也叫虚拟滚动），效果是始终显示视口区域放得下的数据，其他数据不显示都是空白。
 
 与②懒加载的区别实：②懒加载中数据会随着页数增多而增多，而虚拟列表始终是限制的数据数量。
 
 自己实现虚拟列表不是很容易，可以使用第三方库，主要有两个：
 
-* vue-virtual-scroller
+* vue-virtual-scroller，文档：https://github.com/Akryum/vue-virtual-scroller
 
-* vue-virtual-scroll-grid
+* vue-virtual-scroll-grid，文档：https://github.com/rocwang/vue-virtual-scroll-grid
 
 以vue-virtual-scroller为例：
 
@@ -910,9 +918,94 @@ npm install --save vue-virtual-scroller
 //main.js
 ...
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+//vue-virtual-scroller@1.x版本的引入方式，2.x引入方式不明
 import VueVirtualScroller from 'vue-virtual-scroller'
 Vue.use(VueVirtualScroller)
 ```
+
+使用：
+
+```
+<template>
+  <div
+>   <!-- 未使用虚拟列表 -->
+    <!-- <div v-for="(i,iIndex) in list" :key="iIndex">{{i.name}}</div> -->
+
+  <!-- 使用虚拟列表 -->
+  <RecycleScroller
+    style="height: 200px;"
+    :items="list"
+    :item-size="32"
+    key-field="id"
+    :buffer="200"
+  >
+    <template v-slot="{item}">
+      <div class="user">{{ item.name }}</div>
+    </template>
+  </RecycleScroller>
+</div>
+</template>
+
+<script>
+export default {
+  data(){
+    return {
+        list: []
+    }
+
+  },
+  mounted(){
+    //若页面加载慢，不是因为虚拟列表的原因，而是for循环阻塞了渲染
+    //测试数据
+    for(let i = 0; i <= 100000; i++){
+      this.list.push({
+        id: i,
+        name: i
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.scroller {
+
+}
+
+/* .user {
+  height: 32%;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+} */
+</style>
+```
+
+注意事项：
+
+* RecycleScroller必须要设置高度，item-size为每个item的高度也要给，否则会报错
+
+* key-field为item的唯一标识，若不设置默认为'id'；列表数据里面必须邀有一个唯一标识，所以数据必须是对象数组。
+
+* buffer为缓存的item数，适当的设置可以防止滚动时加载数据时的空白。
+
+如果想自己实现虚拟列表，参考以下思路：
+
+1. 准备一个固定高度的父盒子用来展示数据，设置overflow允许y轴滚动
+
+2. 设置每条数据的高度，通过 父盒子高度 / 每条数据高度 计算得出可视区域可以放几条数据，这里记为n
+
+3. 父盒子监听滚动事件并节流，通过 父盒子scrollTop / 每条数据的高度 计算得出被卷去的数据条数，记为m
+
+4. xxx.slice(m,m+n) 取出当前要展示的数据，并在父盒子scrollTop值的地方展示，并清空可视区域外的数据。
+
+5. 功能基本实现，可以继续优化如数据高度不同的情况，数据缓存等
+
+③ 优化数据更新
+
+若数据不会更新，使用v-once
+
+若数据需要更新，可以优化更新的方式，使用v-memo缓存下来，实现有条件的更新。如数据中某些数据不需要更新就永远不给它更新，需要更新的才允许它更新，以此来提高数据的复用率避免不必要的更新
 
 ### 6.3 v-if，v-show，v-for两两之间结合使用
 
@@ -1094,7 +1187,11 @@ Vue本身也是一个组件
 Vue和组件的template必须要有根标签div
 组件继承于Vue，基本一样，但是data(){return {}}必须这样写
 
-组件无法使用原生事件，这是因为自定义组件的事件默认都会认为是自定义事件，需要事件修饰符.native让组件认为是原生事件，才能使用
+组件无法使用原生事件，这是因为自定义组件的事件默认都会认为是自定义事件，需要事件修饰符.native让组件认为是原生事件，才能使用。
+
+子组件分割策略：大组件分为多个小组件，通过props达到更好的复用性。但注意不要过度分割，尤其是为了所谓的组件抽离将一些不需要渲染的组件特意抽出来，实际上组件的性能小号远大于DOM；
+
+需要提醒的是，只减少几个组件实例对于性能不会有明显的改善，所以如果一个用于抽象的组件在应用中只会渲染几次，就不用操心去优化它了。考虑这种优化的最佳场景还是在大型列表中。想象一下一个有 100 项的列表，每项的组件都包含许多子组件。在这里去掉一个不必要的组件抽象，可能会减少数百个组件实例的无谓性能消耗。
 
 ### 8.1 基本使用
 
@@ -1192,9 +1289,13 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
 
 单文件组件的几个注意点：
 
+① template
+
 * template不会被渲染成真实DOM，只作代码包裹作用，也可以在HTML里使用，可以使用v-if，v-else-if和v-for，无法使用v-show。由于其不会被渲染的特性，在使用组件库的一些特殊情况也可以使用。
 
 * template必须且只能有一个根标签，原因是虚拟DOM的数据结构就是单根的属性结构。之所以这么设计是因为多跟的话diff不知道新的虚拟DOM子树对应旧虚拟DOM哪个子树
+
+② script
 
 * 除了根组件App.vue的data不用return {}外，其他所有组件都需要return {}
   
@@ -1208,11 +1309,13 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
   }
   ```
   
-  data(){return {}} 是为了防止不同组件的data数据之间的冲突，return出去后每个data都是独立的了。
+  这是因为一个组件可能会在多个地方复用而创建多个组件实例，如果data是一个对象的话就浅拷贝了，使得一个组件实例的数据修改会影响所有该组件的组件实例，data(){return {}} 是为了防止不同组件的data数据之间的冲突，每次创建组件实例调用data函数，return出去后data对象都是独立的了，相当于深拷贝。
 
-* style 的 scoped
+③ style
+
+* scoped
   
-  scoped 使组件的样式不受外面营销，也不会影响外面
+  scoped 使组件的样式不受外面营销，也不会影响外面，实现style模块化
   
   原理：选择器最后面加上属性选择器[data-v-xxx]，且该组件的每个DOM元素都增加一个相同的属性data-v-xx，xxx为随机哈希值，每个组件的哈希值是唯一的。
   
@@ -1237,105 +1340,105 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
   ```
   
   加了scoped的情况：
-
-```
-<template>
-  <div id="home">
-    <div class="box"></div>
-  </div>
-</template>
-
-<style>
-.box {}
-</style>
-
-<!-- DOM如下 -->
-<head>
-  <style>
-    .box[data-v-xxx] {}
-  </style>
-</head>
-<body>
-  <div id="home" data-v-xxx>
-    <div class="box" data-v-xxx></div>  
-  </div>
-</body>
-```
-
-  每个组件的style都会单独渲染为一个单独的style标签
-
-  scoped的影响总结，以下a代表某组件，b代表a的所有后代组件：
-
-* a，b都没有scoped，样式按照正常的层叠性覆盖，一般都是b比较靠后，所以b福噶a。
-
-* a无scoped，并有，a的样式会影响b，b不影响a，也就是全局样式也会影响有scoped的组件，原因：
   
   ```
-  <!-- F12查看 -->
-  <!--
-  a的样式影响b是因为a的样式没有属性选择器的限制
-  b不影响a是因为，a没有属性data-v-b
-  -->
+  <template>
+    <div id="home">
+      <div class="box"></div>
+    </div>
+  </template>
   
   <style>
-  /*a*/
   .box {}
   </style>
-  <style>
-  /*b*/
-  .box[data-v-b] {}
-  </style>
+  
+  <!-- DOM如下 -->
+  <head>
+    <style>
+      .box[data-v-xxx] {}
+    </style>
+  </head>
+  <body>
+    <div id="home" data-v-xxx>
+      <div class="box" data-v-xxx></div>  
+    </div>
+  </body>
   ```
+  
+  每个组件的style都会单独渲染为一个单独的style标签
+  
+  scoped的影响总结，以下a代表某组件，b代表a的所有后代组件：
+  
+  - a，b都没有scoped，样式按照正常的层叠性覆盖，一般都是b比较靠后，所以b福噶a。
+  
+  - a无scoped，并有，a的样式会影响b，b不影响a，也就是全局样式也会影响有scoped的组件，原因：
+    
+    ```
+    <!-- F12查看 -->
+    <!--
+    a的样式影响b是因为a的样式没有属性选择器的限制
+    b不影响a是因为，a没有属性data-v-b
+    -->
+    
+    <style>
+    /*a*/
+    .box {}
+    </style>
+    <style>
+    /*b*/
+    .box[data-v-b] {}
+    </style>
+    ```
+  
+  - a有scoped，b无，a不会影响b，b会影响a
+    
+    a，b都有scoped，a和b互不影响。
+    
+    综上，一般开发中，App.vue不加scoped作为全局样式，其他组件一律加scoped。
 
-* a有scoped，b无，a不会影响b，b会影响a
-  
-  a，b都有scoped，a和b互不影响。
-  
-  综上，一般开发中，App.vue不加scoped作为全局样式，其他组件一律加scoped。
-  
-  组件库修改样式：
+* 组件库修改样式：
   
   以下a是App.vue，b是App.vue子组件，c是b子组件。
   
   a不加scoped，b、c加。
   
   在b中使用组件库，有两种方式：
-
-* App.vue写对应的全局样式，缺点是全局的组件库都修改了。
-
-* 样式穿透 /deep/，在保证不影响其他组件库组件的情况下修改样式
   
-  ```
-  <template>
-    <div>
-      <el-input />
+  * nApp.vue写对应的全局样式，缺点是全局的组件库都修改了。
+  
+  * 样式穿透 /deep/，在保证不影响其他组件库组件的情况下修改样式
+    
+    ```
+    <template>
+      <div>
+        <el-input />
+      </div>
+    </template>
+    <!--F12查看HTML
+    <div data-v-xxx>
+      <div data-v-xxx ...>
+        <input class="el-input-inner" ... />
+      </div>
     </div>
-  </template>
-  <!--F12查看HTML
-  <div data-v-xxx>
-    <div data-v-xxx ...>
-      <input class="el-input-inner" ... />
-    </div>
-  </div>
-  -->
-  
-  <!-- 
-  未使用样式穿透前，无法修改样式
-  因为scoped使选择器变成 .el-input__inner[data-v-xxx]
-  但<el-input>内部没有这个data-v-xxx
-  -->
-  <style scoped>
-  .el-input__inner {}
-  </style>
-  
-  <!--
-  使用样式穿透后，选择器变成[data-v-xxx] .el-input__inner
-  也就是想找到[data-v-xxx]再找到.el-input__inner
-  -->
-  <style>
-  /deep/ .el-input__inner {}
-  </style>
-  ```
+    -->
+    
+    <!-- 
+    未使用样式穿透前，无法修改样式
+    因为scoped使选择器变成 .el-input__inner[data-v-xxx]
+    但<el-input>内部没有这个data-v-xxx
+    -->
+    <style scoped>
+    .el-input__inner {}
+    </style>
+    
+    <!--
+    使用样式穿透后，选择器变成[data-v-xxx] .el-input__inner
+    也就是想找到[data-v-xxx]再找到.el-input__inner
+    -->
+    <style>
+    /deep/ .el-input__inner {}
+    </style>
+    ```
 
 * 样式引入；
   
@@ -1353,6 +1456,9 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
    @import '...';
    </style>
    ```
+
+④ 组件标签
+
 * 自定义组件绑定事件都会认为是子组件发射的自定义事件，所以如果要绑定原生事件的话就需要加修饰符来表明它是原生事件
   
   ```
@@ -1421,7 +1527,7 @@ props: {
 {{xxx.a.aa.aaa}}
 ```
 
-会出问题，不能从undefine中读取undefine，这是因为有一个时间节点，子组件还未获取到践传过来的数据，此时xxx为空对象，在模板中展示就是从undefine的属性中.undefind
+这样会出问题，不能从undefine中读取undefine，这是因为有一个时间节点，子组件还未获取到践传过来的数据，此时xxx为空对象，在模板中展示就是从undefine的属性中.undefind
 解决：
 
 ```
@@ -1471,6 +1577,32 @@ props: {
 <cpn :xxx="obj?.a" />
 ```
 
+此外，提高props的稳定性可以提高一些性能：
+
+在 Vue 之中，一个子组件只会在其至少一个 props 改变时才会更新。思考以下示例：
+
+```
+<ListItem
+  v-for="item in list"
+  :id="item.id"
+  :active-id="activeId" 
+/>
+```
+
+在 ListItem组件中，它使用了 `id` 和 `activeId` 两个 props 来确定它是否是当前活跃的那一项。虽然这是可行的，但问题是每当 `activeId` 更新时，列表中的**每一个** ListItem都会跟着更新！
+
+理想情况下，只有活跃状态发生改变的项才应该更新。我们可以将活跃状态比对的逻辑移入父组件来实现这一点，然后让 ListItem改为接收一个 active prop：
+
+```
+<ListItem
+  v-for="item in list"
+  :id="item.id"
+  :active="item.id === activeId" 
+/>
+```
+
+现在，对于大多数的组件来说，activeId改变时，它们的 active prop 都会保持不变，因此它们无需再更新。总结一下，这个技巧的核心思想就是让传给子组件的 props 尽量保持稳定。
+
 （2）emit发射给父组件自定义事件实现子传父
 
 ```
@@ -1497,6 +1629,8 @@ fun2(i){
 //自定义事件解除，有时会用的高，在子组件中
 this.$off('xxx')
 ```
+
+props的数据与data一样，可以在computed，watch等等中使用
 
 （3）单项数据流
 
@@ -1843,6 +1977,8 @@ export default {
 }
 </script>
 ```
+
+此外，依赖注入还可以传入methods的函数，传递与使用方式与data数据一样。但是不能传递计算属性。
 
 （5）获取组件实例来实现父子组件通信/兄弟组件通信
 
@@ -2615,7 +2751,7 @@ import router from '...'
 
 （3）路由懒加载
 
-将路由分包，初始时不加载全部的路由，只有用到时才会加载，极大地提高性能。
+将路由分包，初始时不加载全部的路由，只有用到时才会加载，极大地提高首屏加载性能。
 
 路由配置的component给一个异步的promise导入组件即可。
 
@@ -3040,6 +3176,7 @@ import store from '...'
 
 //组件中
 this.$store.state.xxx
+//与peops一样可以在computed，watch中使用
 ```
 
 若想在js文件中使用：
@@ -3207,7 +3344,9 @@ moduls建立一个文件夹
 
 ## 9 vuex数据持久化
 
-Vuex的数据在页面刷新后就会全部丢失，想要持久化存储就需要将Vuex的数据保存到storage中。
+Vuex的数据在页面刷新后就会全部丢失，想要持久化存储
+
+就需要将Vuex的数据保存到storage中，或存到数据库中（存到数据库中比较少见就不赘述了）
 
 ```
 //store/index.js

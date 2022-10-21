@@ -722,7 +722,11 @@ v-show="boolean"
   
   在不需要频繁切换的场景，由于v-show初始时就会创建，而v-if是俺需创建，所以此时v-if性能高于v-show，有效防止初始时加载过大。
 
-（4）Vue中表单的复用：
+（4）条件渲染与v-once结合
+
+当v-once与 `v-if` 或 `v-show` 一起使用时，一旦我们的元素被渲染一次，`v-if` 或 `v-show` 将不再适用，这意味着如果它在第一次渲染时可见，它将始终可见。如果它是隐藏的，它将永远是隐藏的。
+
+（5）Vue中表单的复用：
 在控制input显示隐藏时，若表单已经输入了值，则else切换的另一个表单会保留值，这是因为Vue使用虚拟DOM将元素放到内存中，在渲染时，出于性能考虑，Vue会做一些复用，比如input的复用：
 当切换表单时，Vue会发现隐藏表单后，显示另一个表单，所以Vue直接使用原来的表单并保留值，但是会把id，type，class属性等替换成新的。虽然控制台看到的id不同，实际上是同一个表单。
 若不想保留值：
@@ -1475,6 +1479,8 @@ props,emit，都是响应式的。
 
 //props和data的变量是放在内存不同地方的，但使用方法相同
 
+props除了传递变量外，还能传递函数，但是计算属性不能传。
+
 ```
 //1.Vue的配置项props，子组件中配置子组件接收的变量
 //方式一
@@ -1980,6 +1986,8 @@ export default {
 
 此外，依赖注入还可以传入methods的函数，传递与使用方式与data数据一样。但是不能传递计算属性。
 
+传递的函数内部调用的资源都是provide的那个组件的资源。
+
 （5）获取组件实例来实现父子组件通信/兄弟组件通信
 
 ### 8.5 获取组件实例对象
@@ -2314,6 +2322,22 @@ function react(data){
 
 - 由于需要对所有data数据做响应式，嵌套的数据还需要递归，所以性能开销是很大的，降低了项目初始化速度。
 
+（3）去除响应式
+
+在data定义的数据都会变成响应式数据，但是有些数据并不需要响应式，为了节约性能可以去除响应式：
+
+```
+export default {
+  data: () => ({
+    users: {}
+  }),
+  async created() {
+    const users = await axios.get("/api/users");
+    this.users = Object.freeze(users);
+  }
+};
+```
+
 ### 9.2 虚拟DOM（vdom）
 
 （1）什么是虚拟DOM
@@ -2425,9 +2449,9 @@ $xxx一直找到vue原型对象
 
 组件化是在UI层面上，布局分成各个小组件。
 
-## 1 基本介绍和npm，yum
+## 1 npm，yum，pnpm
 
-Vue是一定要打包的，否则页面加载会很慢
+（1）npm
 
 ```
 npm install -g xxx   全局安装xxx
@@ -2457,6 +2481,8 @@ npm缺点：
 - 由于package.json版本号的特点，不同人安装的版本可能小版本不同，可能会出问题
 
 - 装多个包时，若一个包出错了，会把这个出错的日志和其他成功安装的日志混在一起，就很难看出是哪里出错了
+
+（2）yarn
 
 yarn就是为了解决npm的这些缺点：
 
@@ -2488,7 +2514,39 @@ yarn和npm切换；C盘搜索找到.vuerc文件，打开，修改
 
 节点 "packageManager": "npm"
 
+（3）pnpm
+
+performant npm ，意味“高性能的 npm”。pnpm由npm/yarn衍生而来，解决了npm/yarn内部潜在的bug，极大的优化了性能，扩展了使用场景。被誉为“最先进的包管理工具”。
+
+特点：
+
+速度快、节约磁盘空间、支持monorepo、安全性高
+
+pnpm 相比较于 yarn/npm 这两个常用的包管理工具在性能上也有了极大的提升，根据目前官方提供的 benchmark 数据可以看出在一些综合场景下比 npm/yarn 快了大概两倍。
+
+安装：
+
+```
+npm install -g pnpm
+
+#查看版本信息
+pnpm -v
+#升级版本
+pnpm add -g pnpm to update
+```
+
+设置镜像源：
+
+```
+pnpm config get registry   #查看源
+pnpm config set registry https://registry.npmmirror.com    #切换淘宝源 
+```
+
+其他的像安装依赖、运行项目都和npm一样。
+
 ## 2 webpack
+
+webpack是一个模块打包工具，Vue是一定要打包的，否则页面加载会很慢，打包会进行代码压缩等等
 
 ```
 npm install -g webpack
@@ -2743,13 +2801,13 @@ import router from '...'
 <router-view></router-view>
 ```
 
-（2）若想在js文件中使用
+若想在js文件中引入：
 
 ```
 import router from '...'
 ```
 
-（3）路由懒加载
+（2）路由懒加载
 
 将路由分包，初始时不加载全部的路由，只有用到时才会加载，极大地提高首屏加载性能。
 
@@ -2772,7 +2830,7 @@ vite类似的有 rollupOptions 定义分块
 component: () => import(/*webpackChunkName:"xxx"*/'...')
 ```
 
-（4）模式
+（3）模式
 
 vue-router中，有三种模式，分别是hash，history，memory，其中memory用的比较少。
 
@@ -2813,7 +2871,7 @@ hash，history，memory区别：
 
 * memory路由则是把url存到一个对象里，是不可见的，适合于非浏览器（小程序，app），但也不是必须的。
 
-（5）路由跳转
+（4）路由跳转
 
 跳转方式：
 
@@ -2860,24 +2918,43 @@ router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:
 
 跳转之后，编程式导航后面的代码也会执行。
 
-（6）router-link和router-view的原理
+（5）router-link和router-view的原理
 
 router-link实现路由跳转，router-view渲染对应的组件，vue-router初始化会监听popstate事件以此监听编程式导航。
 
 router-link默认生成a标签，点击后是取消默认跳转行为，并执行navigate方法来pushState以激活事件处理函数，点击router-link后页面不会刷新（阻止了浏览器默认行为），而是拿出当前的path和routes中的path匹配，匹配成功后，拿出component给router-view渲染。
 
-## 3 路由参数传递
+## 3 命名视图
 
-1 params动态路由
+```
+/ /src/router/index.js
+...
+{
+  path: '/Home',
+  components: {
+    default: () => import('../views/Home/Home.vue'),
+    aaa:() => import('../views/Home/aaa.vue')
+  }
+},
+...
 
-有些情况path是不能写死的，如用户id，此时需要配置params参数
+//组件中
+<router-view />   展示deafult的组件
+<router-view name="aaa" />  展示名为aaa的组件
+```
 
-params是传递参数的方式之一，但一次只能传递一个参数（params）
+## 4 动态路由
+
+有些情况path是不能写死的，如用户id，此时可以给路由配置一个params参数变成动态路由。
+
+params是传递参数的方式之一，但一次只能传递一个参数。
 
 ```
 //如user组件
 //路由配置中
 {
+  //配置动态路由后，必须携带参数才能访问该路由
+  //如果动态路由想不携带参数也能访问，可以配置可选参数 path: 'user/:aaa?'
   path:’/user/:aaa’
   component:user
 }
@@ -2894,7 +2971,43 @@ this.$router.push({name:'...',params:{...}})
 this.$route.params.xxx    
 ```
 
-2 传递对象参数（query）
+注意事项：
+
+一般情况下，路由跳转会销毁跳转前的组件，除非使用了keep-alive，但如果是在动态路由内跳转该动态路由，只是params不一样，该组件不会重新销毁再创建，这会带来一些问题，比如无法进入created请求数据。
+
+解决方法：给router-view一个唯一标识的key，使Vue认为上面的情况跳转前后的组件时不一样的
+
+```
+<router-view :key="$route.fullPath" />
+```
+
+还有两种特殊的动态路由，不需要params参数：
+
+* path: '/:pathMatch(正则)‘，注意这里的正则不需要//包裹
+
+* NotFound路由，若访问了没有配置的路由，则不显示任何内容，外面的正常显示，此时可以路由到自己的404页面
+  
+  ```
+  [
+    ...
+    {
+      path: '/*',
+      //或 path: '/:catchAll(.*)',
+      component: () => import('...')    
+    }
+   ...
+  ]
+  ```
+  
+  和默认路由一样可以写在蹼泳路由前面后面都行
+  
+  若是 '/*'，NotFound路由必须写在默认路由之后，否则默认路由会是NotFound
+  
+  若是 '/:catchAll(.*)' 则没有这个问题
+
+## 5 路由参数传递
+
+除了动态路由传递一个params参数外，还可以传递一个对象参数query。
 
 路由配置的path正常写就行 path: '/aaa'
 
@@ -2929,7 +3042,7 @@ props传递路由参数：
    
    * 获得params或query参数，形参$router可以解构赋值
 
-## 4 嵌套路由
+## 6 嵌套路由
 
 使用嵌套路由时，嵌套的路由组件也要再用，如：
 
@@ -2974,7 +3087,7 @@ this.$router.push('/aaa/bbb')
 
 vue-router内部有一个deep属性，是通过provide，inject传递下去的，每个层级都能拿到对应的深度，再从match的匹配数组中根据deep得到对应的组件并渲染之。
 
-## 5 动态添加/删除路由
+## 7 动态添加/删除路由
 
 这个和前面的动态路由不是一个东西，注意区分。
 
@@ -3008,29 +3121,7 @@ console.log(this.$router.getRouters())
 
 也可以设置动态默认路由，addRouter添加默认路由或getRoutes[0].redirect = '/xxx'，若修改默认路由时默认路由不在首位则需要找出来
 
-## 6 NotFound路由
-
-ruo访问了没有配置的路由，则不显示任何内容，外面的正常显示，此时可以路由到自己的404页面
-
-```
-[
-  ...
-  {
-    path: '/*',
-    //或 path: '/:catchAll(.*)',
-    component: () => import('...')    
-  }
- ...
-]
-```
-
-和默认路由一样可以写在蹼泳路由前面后面都行
-
-若是 '/*'，NotFound路由必须写在默认路由之后，否则默认路由会是NotFound
-
-若是 '/:catchAll(.*)' 则没有这个问题
-
-## 7 导航守卫
+## 8 导航守卫
 
 路由元数据：路由配置项meta，可以定义该路由需要用到的数据
 
@@ -3091,7 +3182,7 @@ beforeRouteEnter((to,from,next)=>{})
 afterRouteLeave((to,from)=>{})
 ```
 
-## 8 keep-alive
+## 9 keep-alive
 
 keep-alive：缓存路由
 当在一个父路由a中访问了子路由，切换到另一个父路由b再访问路由a，由于a的子路由不使用则被destory()了，不会显示。keep-alive就是不destory，使得再次访问a时，显示子路由
@@ -3109,7 +3200,7 @@ exclude="ccc"       除了name为ccc的路由无效，其他都生效
 
 一般会配合路由钩子activated和deactivated使用
 
-## 9 如何从零开始写一个vue-router
+## 10 如何从零开始写一个vue-router
 
 需求分析：
 
@@ -3282,7 +3373,9 @@ this.$store.getters.ccc(123,456)
 ## 6 modules
 
 store是单一状态树，只定义一个store，但是有时候确实又要将共享状态进行划分，比如当项目很大时就一定是需要粉模块的。
-在modules里，每个属性就是一个store对象，可以定义state等但是一般不在里面再定义modules，也就是store一般就两层模块里定义的，不要与rootstore的同名
+在modules里，每个属性就是一个store对象，可以定义state等，但是一般不在modules里面再定义modules，也就是store一般就两层，这是为了不让store更复杂。
+
+modules里定义的状态不要与rootstore的同名
 
 ```
 // /store/moduleA.js
@@ -3295,18 +3388,32 @@ module: [moduleA]
 ...
 ```
 
-模块里面的state参数都是本模块的state
-模块里面的state会编译成一个对象放在rootstore中，所以使用时：
-this.$store.state.模块名.属性
+注意事项：
 
-而getters则编译后直接放在root
-this.$store.getters.模块的方法
-第二个参数getters是root的getters
-只有模块内的getters有第三个参数rootState，调用root的state
+* 模块里面的state参数都是本模块的state，但是模块里面的state会编译成一个对象放在rootstore中，所以使用时：this.$store.state.模块名.属性
 
-mutations的提交一样，事件类型的先在root找，再到模块内找，这也是不起同名的原因
+* 而getters则编译后直接放在root：this.$store.getters.模块的方法，第二个参数getters是root的getters；只有模块内的getters有第三个参数rootState，调用root的state
 
-actions的参数context此时是本模块store
+* mutations的提交一样，事件类型的先在root找，再到模块内找，这也是不起同名的原因
+
+* actions的参数context此时是本模块store
+
+命名空间namespace：
+
+给模块开启命名空间，使用更方便：
+
+```
+...
+modules: [
+  moduleA: {
+    namespace: true,
+    ...  
+  }
+]
+...
+```
+
+...
 
 ## 7 map语法
 
@@ -5250,7 +5357,25 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 ### 1.7 Vue3↑ 新特性
 
-#### 1.7.1 Vue3.2
+#### 1.7.1 Vue2.7
+
+尽管现在 Vue3 是默认版本，但还有许多用户、相关库、周边生态使用的是 Vue2，且由于依赖兼容性、浏览器支持要求或没有足够的带宽升级，导致不得不继续使用 Vue2。 Vue2.7 中，从 Vue3 向后移植了一些最重要的功能，以便 Vue2 用户也可以从中受益
+
+
+
+在 Vue2.7 中，Vue3 的很多功能将会向后移植，以便于 Vue2 的很多项目可以使用 Vue3 的一些很好用的新特性，点型的例如：
+
+
+
+* Composition API 
+
+* Vue3.2的script setup
+
+* Vue3.2中的CSS v-bind 
+
+如果有需要使用，就去看文档，主要关注那些VUe3特性可用，那些不可用。
+
+#### 1.7.2 Vue3.2
 
 （1）script setup语法糖
 
@@ -5446,11 +5571,34 @@ console.log(useCssModule('m1'))  //m1
 </style>
 ```
 
+（3）新指令v-memo
+
+相当于可以设置条件的v-once，它接受一个依赖数组，并且只有在数组中的一个值发生变化时才会重新渲染。
+
+v-once是始终只渲染一次，v-memo是依赖数组的一个值改变就重新渲染，不改变就不重新渲染，连虚拟DOM也不会生成。
+
+```
+<template>
+  <p v-memo="[msg]">{{ msg }}</p>
+  <el-button @click="msg = 'change msg'">切换</el-button>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const msg = ref('hello')
+</script>
+```
+
+如果传入一个空的依赖项数组，它将与使用 `v-once` 相同，它永远不会重新渲染。
+
+**注意**，v-memo在v-for循环内部中不起作用，所以如果我们想用 `v-for` 记忆一些东西，我们必须把v-memo和v-for放在同一个元素上。
+
 ## 2 vue router4
 
 vue3使用的路由版本
 
-### 2.1 基本使用
+（1）基本使用
 
 js的路由写法
 
@@ -5532,38 +5680,9 @@ export default [
 </script>
 ```
 
-### 2.2 命名视图
+（2）导航守卫的一些小变化
 
-```
-/ /src/router/index.js
-...
-{
-  path: '/Home',
-  components: {
-    default: () => import('../views/Home/Home.vue'),
-    aaa:() => import('../views/Home/aaa.vue')
-  }
-},
-...
-
-//组件中
-<router-view />   展示deafult的组件
-<router-view name="aaa" />  展示名为aaa的组件
-```
-
-### 2.3 动态路由新增
-
-（1）可选参数
-
-path: '/Home:id?'
-
-（2）pathMatch(正则)，如
-
-path: '/:pathMatch(.*) 
-
-### 2.4 导航守卫的一些小变化
-
-（1）next不再是必选参数
+① next不再是必选参数
 
 ```
 //老写法，也支持
@@ -5583,7 +5702,7 @@ router.beforeEach((to,from) => {
 })
 ```
 
-（2）组件内守卫
+② 组件内守卫
 
 变为组合式API，onBeforeRouteUpdate，onBeforeRouteLeave，但是没有onBeforeRouteEnter，只能写成OptionsAPI
 
@@ -5623,7 +5742,7 @@ export default {
 </script>
 ```
 
-### 2.5 路由相关组件的插槽
+（3）路由相关组件的插槽
 
 router-view的默认+作用域插槽，route是当前路由配置，可以获取route.meta等，Component是当前路由使用的组件实例
 
@@ -5643,7 +5762,7 @@ Vue3要对router-view使用transition和keep-alive，必须是这种写法
   </router-view>
 ```
 
-### 2.6 修复了vue2路由的两个bug
+（4）修复了vue2路由的两个bug
 
 bug1：当跳转的路由就是当前路由时，不再像vue2会有警告
 
@@ -5903,12 +6022,12 @@ pinia.use(myPlugin({
 
 # 三、Vue使用ts
 
-## 1 用前须知：
+（1）用前须知：
 
 不推荐vue+ts使用vue-cli构建项目，推荐vite，因为vue-cli编译ts反应非常慢，且一旦使用了script setup语法就会关闭类型检查，即使用回V，ue3.0语法也不行，需要重启run才行。
 目前vite的版本使用的js语法，如可选链操作符，vin7最高支持的node版本13.14已经识别不出，必须要更高的系统
 
-## 2 Vue2使用ts
+（2）Vue2使用ts
 
 Vue2以及Vue3中使用OptionsAPI，要用ts需要借助vue-class-component或vue-class-decoretor
 
@@ -5916,7 +6035,7 @@ vue-class-compoennt是vue官方出的
 
 vue-class-decorator是社区出的，具有vue-class-compoennt的全部功能，在此之上又增加了一些新功能
 
-## 3 Vue3使用ts
+（3）Vue3使用ts
 
 defineComponent定义组件：
 

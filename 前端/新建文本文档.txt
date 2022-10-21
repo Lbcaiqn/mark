@@ -1,25 +1,5 @@
-图片懒加载：自定义指令，uniapp
-
-动态路由: 跳转同样的页面但是:不同不重新加载
-
-vue2.7 pnpm
-
-or in 数组判断存在属性 hasprop
-
-
-https://blog.csdn.net/qq_41176306/article/details/124650401
-
-diff ssr 长列表渲染
-
-vue3.2新指令v-memo，相当于可以设置条件的v-once
-
-
-
-服务端渲染SSR 静态网站生成SSG
-
-vue3编译器优化
-
-vuex module namespace
+diff vue3编译器优化
+SSR SSG
 
 提交规范；husky  lint-staged
 ex-lint
@@ -27,29 +7,6 @@ ex-lint
 后台管理系统：管理公众号，低代码活动页
 el-admin-template  el-element-admin
 
-ajax：
 web socket
-
-uniapp：
-uni.reLoad()
-getCurrentPages()
-小程序分包预下载
-路由url可传递多个参数
-路由跳转url太长不行，需要encodeURL和decodeURL处理参数后在传递
-image懒加载
-image :src 绑定本地路径正常
-click tap区别
-uniapp网络请求
-navbar隐藏
-uniapp各平台样式相同
-设计稿
-微信和uniapp的vhvw视口大小 滚动click100ms
-tabbar路由自动keepalive   
-uni对象怎么在template使用
-uni-ui  可在源代码修改样式
-uniapp没有闭包
-$http传参，exclude拦截器
-static的文件不会被编译（不能放css、js等），专门用来放静态资源（图片、音视频等）
-
-其他：
-牛客网，公众号，浏览器兼容
+ 
+牛客网，浏览器兼容

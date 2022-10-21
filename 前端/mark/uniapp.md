@@ -47,6 +47,8 @@
 | enablePullDownRefresh (是否开启下拉刷新，默认关)         | boolean     |
 | onReachBottomDistance (上拉距底部多少距离触发对应事件，单位px) | number      |
 
+"navigationStyle":"custom"  隐层导航栏
+
 （3）tabBar配置项配置tabbar的样式：
 
 可以放顶部和底部，2<=item数<=5，顶部只显示文本，底部显示icon和text
@@ -54,6 +56,8 @@
 tabBar配置项属性（只有list数组的text和pagePath是必填项）：
 
 pagePath必须是pages目录
+
+tabbar页面会有类似keep-alive的效果，缓存状态；而非tabbar页面则没有。
 
 ```
 "tabBar":{
@@ -244,11 +248,22 @@ swiper属性
 
 （4） <image>
 
-类似于img标签，但他是双标签
+与img的区别：
 
-注意，不像img，image若设置width为100%，高度是不会自适应的
+* img，若设置width为100%，高度是会自适应的
 
-图片必须放在项目的miniprogram文件夹下的images文件夹  src="/images/..."
+* image[若设置width为100%，高度是不会自适应的，当可以通过mode属性设置
+
+与Vue的img区别：
+
+* 本地图片必须放在项目的miniprogram文件夹下的images文件夹，也就不存在Vue中普通情况下无法动态绑定src的情况：
+  
+  ```
+  <image src="/images/..." />
+  <image src="/static/..." />
+  ```
+
+* 同样只能使用相对路径和webpack配置的路径，无法使用绝对路径
 
 通过mode属性决定图片的裁剪和缩放模式，值：
 
@@ -258,6 +273,8 @@ swiper属性
 | aspectFile      | 保持比例，缩放直到填充满image，所以可能会裁剪图片         |
 | widthFix        | 宽度不变，高度自保持比例适应                      |
 | heightFix       | 高度不变，宽度保持比例自适应                      |
+
+通过lazy-load属性设为true可以实现图片懒加载，但有平台限制，详情见文档。
 
 ### 3.3 表单组件
 
@@ -320,6 +337,25 @@ onLoad(options){
 }
 ```
 
+若传参时参数太多使得url超过长度限制，或参数有特殊字符，此时就会报错，需要通过encodeURLComponent()编码才行：
+
+```
+//跳转前编码以下url
+let paramse = {a: 1,b: 2};
+let encode = encodeURLComponent(JSON.stringify(parmas));
+let url = '...?item=${encode}';
+uni.navigateTo({url});
+
+//跳转后解码拿到参数
+onLoad(options){
+  let params = JSON.parse(decodeURLComponent(options.
+}
+
+
+```
+
+
+
 ### 3.5 其他
 
 map地图组件，canvas画布组件，开放能力，无障碍访问
@@ -330,11 +366,23 @@ map地图组件，canvas画布组件，开放能力，无障碍访问
 
 大部分的css的功能都能使用，只有小部分不能用，如id选择器，通配符选择器无法使用，可以用 page {}  代替 * {}
 
-此外，wxss还有自己的特性，有rpx和import导入css
+此外，wxss还有自己的适配单位rpx：
 
-rpx是适配单位，将宽度分为750rpx，会根据不同屏幕来自动转化px
+rpx将宽度分为750rpx，会根据不同屏幕来自动转化px
 
-@import '/xxx.wxss';    //导入miniprogram目录下的xxx.wxss
+假设设计稿宽度为total，每处px的标注为n，则：
+
+```
+rpx = 750 * n / total
+```
+
+
+
+也可以使用vw，但是vw在一些小尺寸（如1px）不够精确，此时就使用rpx。
+
+使用vh时需要注意，微信小程序的视口大小是会随着navbar和tabbar的显示隐藏变化的，因此vh也会变化。
+
+
 
 （2）全局样式与局部样式
 
@@ -1058,6 +1106,8 @@ Component({
 
 ## 1 基本
 
+### 1.1 介绍
+
 uniapp用vue的语法开发小程序、安卓、ios等
 
 开发工具-HBuilder：
@@ -1077,10 +1127,6 @@ hbuilder保存后微信开发者工具会热更新（json不会），所以最�
 配置文件：
 
 HBuilder的json文件一些会变成图形界面（manifast.json settings.json，点开后可在左侧栏最下面点击源码视图），一些不会
-
-manifast.json是整个项目的配置文件，可配置项目名，Vue版本，小程序的appid，logo等
-
-pages.json类似于原生小程序，配置页面路由、窗口样式、导航栏、tabBar等。
 
 第三方库安装；
 
@@ -1111,7 +1157,7 @@ appid：
 
 除了各个小程序的appid外，uniapp自己本身也有一个appid
 
-目录结构：
+### 1.2 目录结构
 
 可以像温馨小程序一样，新建页面、新建组件等快速创建文件
 
@@ -1123,7 +1169,7 @@ appid：
 
 - uni_modules：存放dcloud插件市场下载的第三方库（如uni-ui）
 
-- app.vue：编写应用声明周期，全局样式，不需要写template
+- App.vue：编写应用声明周期，全局样式，不需要写template
 
 - uni.scss：系统会自动引入，配置全局样式（需要自行npm安scss）
 
@@ -1133,29 +1179,68 @@ appid：
 
 - vue.config.json：webpack配置文件（需要自己创建）
 
-## 2 语法
+## 2 使用
 
-采用Vue语法+微信小程序配置文件的开发模式，规范如下：
+### 2.1 基本语法
 
-- uniapp的顶级对象是uni，有各个端的api，微信小程序的全部api都可以通过uni调用，可以通过 uni.xxx = yyy 来挂载到uni，保留了H5的定时器。
+采用Vue语法+微信小程序语法/配置文件的开发模式，规范如下：
 
-- 每个页面对应一个.vue文件，可以使用所有的Vue语法，此外还可以使用微信小程序的组件、生命周期（应用生命周期都写在app.vue）
+（1）顶级对象uni
 
-- uniapp事件总线：
-  
-  uni.$emit()
-  
-  uni.$on()
-  
-  uni.$off()
+uniapp的顶级对象是uni，有各个端的api，微信小程序的全部api都可以通过uni调用，可以通过 uni.xxx = yyy 来挂载到uni，保留了H5的定时器。
 
-- 若使用了div，span，img，input，button，编译成微信小程序会变成view，text，image，input，button，为了兼容多端推荐使用微信小程序的标签
+（2）Vue语法
 
-- css为了兼容多端，推荐使用flex布局
+每个页面对应一个.vue文件，可以使用所有的Vue语法，此外还可以使用微信小程序的组件、生命周期（应用生命周期都写在app.vue）
 
-- 引入资源时，不推荐使用相对路径，推荐使用绝对路径， ‘@/xxx.png’ 是根目录下的xxx.png（但如果是路径保存为js的变量，就不能加@）；非引入资源时（如路由跳转），就根据各自的语法规范。
+（3）事件总线
 
-Vue3使用：
+uniapp事件总线：
+
+```
+uni.$emit()  uni.$on()  uni.$off()
+```
+
+（4）HTML
+
+若使用了div，span，img，input，button，编译成微信小程序会变成view，text，image，input，button，为了兼容多端推荐使用微信小程序的标签
+
+（5）CSS
+
+css为了兼容多端，推荐使用flex布局。
+
+uniapp也有自己的适配单位upx，起初是为了兼容多个平台而设计的；但随着rpx的兼容性不断增强，再加上upx的精确性不如rpx，使得现在推荐使用rpx。
+
+如何设置全局样式：
+
+```
+//app.vue
+<style>
+page {
+
+}
+</style>
+```
+
+
+
+（6）资源引入
+
+引入资源时，不推荐使用相对路径，推荐使用绝对路径， ‘@/xxx.png’ 是根目录下的xxx.png（但如果是路径保存为js的变量，就不能加@）；非引入资源时（如路由跳转），就根据各自的语法规范。
+
+（7）开发/生产环境
+
+生产环境判断：
+
+```
+if(process.env.NODE_ENV == 'development')
+  console.log('开发环境')
+else console.log('生产环境')
+```
+
+### 2.2 Vue如何使用
+
+一般情况下Vue语法直接使用就行，但是Vue版本需要配置，Vue3.2的script 色图片语法糖对于原有的微信小程序语法也有变化。
 
 需要在manifast.json中配置：
 
@@ -1177,36 +1262,23 @@ onLoad((options) => {
 </script>
 ```
 
-全局样式：
+### 2.3 配置文件
 
-```
-//app.vue
-<style>
-page {
+（1）manifast.json
 
-}
-</style>
-```
+manifast.json是整个项目的配置文件，可配置项目名，Vue版本，小程序的appid，logo等，里的mp-weixin配置项就是微信小程序project.config.json的相关配置。
 
-生产环境判断：
-
-```
-if(process.env.NODE_ENV == 'development')
-  console.log('开发环境')
-else console.log('生产环境')
-```
-
-配置文件：
-
-amnifast.json里的mp-weixin配置项就是微信小程序project.config.json的相关配置
+（2）pages.json
 
 pages.json和微信小程序的app.json用法一样，可配置页面，导航栏，tabBar等，
 
 不同点：
 
-1. window配置项变成了globalStyle
+* window配置项变成了globalStyle
 
-2. pages配置项不是数组，而是对象，每个对象可以放path，style，style里面就是微信小程序各个页面的json文件中的样式属性，会覆盖全局配置的样式
+* pages配置项不是数组，而是对象，每个对象可以放path，style，style里面就是微信小程序各个页面的json文件中的样式属性，会覆盖全局配置的样式
+
+### 2.4 分包
 
 分包的使用与微信小程序相同，但是pages配置项和主包一样可以设置style
 
@@ -1224,13 +1296,17 @@ pages.json和微信小程序的app.json用法一样，可配置页面，导航�
 ],
 ```
 
+### 2.5 自定义组件
+
 自定义组件都放在 /components 目录下，可通过右键新建组件快速创建
 
 自定义组件不用像vue需要引入注册，也不需要像微信小程序需要配置json，而是直接使用
 
-uni-ui：
+### 2.6 uni-ui
 
-跑版本会自动放在components中，新版本需要自己新建一个uni_modules文件夹，栽倒dcloud官网下载uni-ui
+uni-app内置的组件库
+
+旧版本会自动放在components中，新版本需要自己新建一个uni_modules文件夹，栽倒dcloud官网下载uni-ui
 
 uni-ui的组件都不需要引入就可以直接使用
 

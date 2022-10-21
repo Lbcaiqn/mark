@@ -252,7 +252,24 @@ xun
 
 2. !== 先判断类型是否一致，不一致直接true，再比较
 
-（4）其他
+（4）in运算符
+
+判断数组/对象是否存在某个key
+
+```
+let arr = [5,undefined,7];
+let obj = {a: 1};
+
+console.log(0 in arr); //true
+console.log(1 in arr); //true
+console.log(2 in arr); //true
+console.log(3 in arr); //false
+
+console.log('a' in obj); //true
+console.log('b' in obj); //false
+```
+
+（5）其他
 
 判断数据类型的运算符在下面介绍。
 
@@ -2999,7 +3016,7 @@ let obj = new A();
 console.log(getPri(obj));  //no static
 ```
 
-⑤ in 运算符
+⑤ 配合in运算符
 
 由于尝试访问对象上不存在的私有属性/方法，会发生异常，因此需要能够检查对象是否具有给定的私有属性/方法噶。
 
@@ -3720,7 +3737,7 @@ let name='window'
 
 ```
 <body>
-    <input type="text">
+    <input type="text" >
   </body>
   <script>
     let inp = document.querySelector('input')
@@ -4320,6 +4337,8 @@ console.log('aaa' in obj); //true
 console.log(obj.hasOwnProperty('a'));   //true
 console.log(obj.hasOwnProperty('b'));   //false
 console.log(obj.hasOwnProperty('aaa')); //false
+
+//ES13新增Object.hasOwn()，简化了hasOwnProperty
 ```
 
 （3）条件分支优化
@@ -4356,8 +4375,6 @@ if(!a){
 //简化，类似的运算符还有 || && ?. ??= &&= ||=
 res = a ?? '';
 ```
-
-
 
 （4）变量相关
 

@@ -769,13 +769,37 @@ margin配置定位或translate实现
 
 ## 1 新属性
 
-### 1.1 半透明效果：
+### 1.1 文本类
+
+文本阴影
+
+```
+text-shadow: h-shadow(必写) v-shadow(必写) | blur | color; 使用与盒子阴影一样。
+```
+
+
+
+### 1.2 背景类
+
+半透明效果：
 
 ```
 background: rgba(r,g,b,a)，a为透明度（0-1），0全透明，1不透明
 ```
 
-### 1.2 圆角边框：
+渐变背景色
+
+```
+background-image: linear-gradient(to right,red,rgba(0,255,0,0.8),blue)
+第一个参数可以省略，默认为 to bottom
+颜色参数可以有任意个，可以使用rgba()和transparent
+```
+
+
+
+### 1.3 盒子类
+
+圆角边框：
 
 ```
 border-radius: 
@@ -785,7 +809,7 @@ border-radius:
 也可以如border-top-left-radius设置单独圆角。
 ```
 
-### 1.3 盒子阴影：
+盒子阴影
 
 ```
 box-shadow: h-shadow(必写) v-shadow(必写) | blur | spread | color | inset;
@@ -798,20 +822,16 @@ box-shadow: h-shadow(必写) v-shadow(必写) | blur | spread | color | inset;
 内或外阴影(默认外，可设inset内)
 ```
 
-### 1.4 文本阴影
+### 1.4 CSS API
 
-```
-text-shadow: h-shadow(必写) v-shadow(必写) | blur | color; 使用与盒子阴影一样。
-```
-
-### 1.5 滤镜
+滤镜
 
 ```
 filter: 函数();
 最常用的模糊处理：blur( xpx )，x越大越模糊，0为不模糊。
 ```
 
-### 1.6 宽度自动计算
+宽度自动计算
 
 如：width: calc(100%-80px); 可以永远比父少80px，+-*/均可
 
@@ -829,7 +849,7 @@ transition: height 2s ease 1s,width 2s ease 1s; ease和延时可省。
 transition: all 2s ease 1s;
 ```
 
-### 1.8 transiform平面转换
+### 1.5 transiform平面转换
 
 ```
 transform: none; 没有任何转换效果
@@ -864,14 +884,6 @@ transform: skewX(xdeg) transform: skewY(ydeg) 2d
 (5) 多重转换
 transform: translate() rotate()
 旋转会改变移动的x轴方向，所以一般移动在旋转之前才能水平移动
-```
-
-### 1.9 渐变背景色
-
-```
-background-image: linear-gradient(to right,red,rgba(0,255,0,0.8),blue)
-第一个参数可以省略，默认为 to bottom
-颜色参数可以有任意个，可以使用rgba()和transparent
 ```
 
 ## 2 新选择器

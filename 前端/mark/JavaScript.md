@@ -951,41 +951,25 @@ event.stopPropagation()  有兼容性问题
 
 | API            | 说明                                                         |
 | -------------- | ---------------------------------------------------------- |
-| e.offsetTop    | 元素e的中心点距父元素顶部的偏移，注意没有offsetBottom                          |
-| e.offsetLeft   | 元素e的中心点距父元素左边的偏移，注意没有offsetRight                           |
+| e.offsetTop    | 元素e的左边缘距父元素顶部的偏移，注意没有offsetBottom                          |
+| e.offsetLeft   | 元素e的上边缘距父元素左边的偏移，注意没有offsetRight                           |
 | e.offsetWidth  | 获取元素e的宽（包含widtj，内边距和边框，不包含外边距），与处于什么盒子模型无关                 |
 | e.offsetHeight | 获取元素e的高（包含height，内边距和边框，不包含外边距），与处于什么盒子模型无关                |
 | e.offsetParent | 获取父元素，若父元素没有定位或没有父元素，返回body；与e.parentNode区别是parentNode不用定位 |
 
-e.offset与e.style区别：
+e.offset与e.style.xxx的区别：
 
-* e.style只能获取行内样式，e.offset可获取任意的样式
+* e.style.xxx只能获取行内样式，e.offset可获取任意的样式
 
-* e.style返回有单位的字符串，e.offest返回不带单位的数值
+* e.style.xxx读写有单位的字符串，e.offest返回不带单位的数值
 
 * e.style的宽高只有width/height，不包含内外边距和边框
 
-* e.style可读写，e.offset是只读
+* e.style.xxx可读写，但是e.style.top/width等是只写，读的话是空；e.offset是只读
 
-应用：
 
-实现模态框（可拖拽移动的盒子）
 
-盒子监听鼠标按下事件，计算鼠标在盒子内坐标：
 
-```
-var x = 鼠标x坐标 - (e.offsetLeft - offsetWidth / 2);
-var y = 鼠标y坐标 - (e.offsetTop - offsetHeight / 2);
-```
-
-并在内部监听鼠标移动事件，修改盒子的坐标：
-
-```
-e.style.left = 鼠标x坐标 - x;
-e.style.top = 鼠标y坐标 - y;
-```
-
-全局documentj监听鼠标弹起事件，remove鼠标移动事件
 
 （2）client
 
@@ -1008,6 +992,50 @@ e.style.top = 鼠标y坐标 - y;
 | e.scrollLeft   | 返回滚动后被卷去的那部分left，即滚动距离           |
 | e.scrollWidth  | clientWidth的基础上，加上盒子内的内容超出部分的大小  |
 | e.scrollHeight | clientHeight的基础上，加上盒子内的内容超出部分的大小 |
+
+### 4.7 常见网页特效
+
+（1）模态框
+
+可拖拽移动的盒子，盒子需要设置为绝对定位：
+
+```
+<style>
+#box {
+  position: absolute;
+  left: 100px;
+  top: 100px;
+  width: 100px;
+  height: 100px;
+  border: 1px solid #000;
+}
+</style>
+
+<body>
+  <div id="box"></div>
+</body>
+
+<script>
+let box = document.querySelector('#box');
+
+box.addEventListener('mousedown',function(mouseDown){
+  //计算鼠标在盒子内，距离盒子左边和上边的距离
+  let innerX = mouseDown.pageX - box.offsetLeft;
+  let innerY = mouseDown.pageY - box.offsetTop;
+  
+  function boxMove(mouseMove){
+    box.style.left = mouseMove.x - innerX + 'px';
+    box.style.top = mouseMove.y - innerY + 'px';
+  }
+  document.addEventListener('mousemove',boxMove);
+  document.addEventListener('mouseup',function(){
+    document.removeEventListener('mousemove', boxMove)
+  });
+})
+</script>
+```
+
+
 
 # 四、BOM
 

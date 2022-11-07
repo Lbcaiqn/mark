@@ -10,3 +10,6 @@ el-admin-template  el-element-admin
 web socket
  
 牛客网，浏览器兼容
+
+null是关键字，undefined不是
+var可以重复声明

@@ -222,14 +222,17 @@ option的属性，selected=”selected”则默认被选上。
 
 注意，IE9这些标签不是块元素，所以使用时最好display: block;
 
-```
-<header></header>          头部
-<nav></nav>                导航栏    
-<aside></aside>            侧边栏
-<article></article>        内容
-<section></section>        某个区域        
-<footer></footer>            尾部
-```
+| 标签      | 说明   |
+| ------- | ---- |
+| header  | 头部   |
+| main    | 主体部分 |
+| footer  | 底部   |
+| nav     | 导航栏  |
+| aside   | 侧边栏  |
+| article | 文章   |
+| section | 某段内容 |
+
+
 
 ## 2 多媒体标签
 
@@ -238,7 +241,7 @@ option的属性，selected=”selected”则默认被选上。
 只支持MP4,WebM，Ogg三种格式，且各个浏览器支持的各不相同，不过几乎所有浏览器都支持MP4
 
 ```
-video src="路径"></video>
+<video src="路径"></video>
 
 由于各个浏览器支持的格式不同，可以这样处理：
 <video>
@@ -314,9 +317,11 @@ readyState 返回当前就绪状态
 
 * 4获得
 
-## 3 input新特性
+## 3 input增强
 
-### 3.1 新增的type：若输入的格式不一致，会自动报错。
+### 3.1 新增的type
+
+若输入的格式不一致，会自动报错。
 
 email 邮箱   url 网址  tel 手机  number
 date       time  month  week 
@@ -415,7 +420,13 @@ c.width  c.height 获得画板宽高，以计算半径
   </svg>
 ```
 
-## 5 web storage
+## 4 拖放API
+
+## 5 地理定位
+
+Geolocation
+
+## 6 Web Storage
 
 本地存储，多页面可共享数据，在F12的application可以看到loaclstorage和cookie
 与h5之前的cookie相比：
@@ -439,6 +450,6 @@ removeItem('key')      删
 clear()                清空所有
 JSON有转换类型的api，如JSON.stringify(obj)将对象转字符层
 
-## 6 地理定位
+## 7 Web Worker
 
-Geolocation
+## 8 Web Socket

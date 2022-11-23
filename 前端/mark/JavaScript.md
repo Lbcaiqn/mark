@@ -967,10 +967,6 @@ e.offset与e.style.xxx的区别：
 
 * e.style.xxx可读写，但是e.style.top/width等是只写，读的话是空；e.offset是只读
 
-
-
-
-
 （2）client
 
 获取元素的边框和可视区域宽高（不带单位的number）
@@ -1022,7 +1018,7 @@ box.addEventListener('mousedown',function(mouseDown){
   //计算鼠标在盒子内，距离盒子左边和上边的距离
   let innerX = mouseDown.pageX - box.offsetLeft;
   let innerY = mouseDown.pageY - box.offsetTop;
-  
+
   function boxMove(mouseMove){
     box.style.left = mouseMove.x - innerX + 'px';
     box.style.top = mouseMove.y - innerY + 'px';
@@ -1034,8 +1030,6 @@ box.addEventListener('mousedown',function(mouseDown){
 })
 </script>
 ```
-
-
 
 # 四、BOM
 
@@ -3374,42 +3368,42 @@ https://github.com/tc39/ecma262/blob/main/README.md
   
   ```
   async function fun2(){
-  console.log('d')
+    console.log('d');
   }
   async function fun1(){
-  console.log('c')
-  await fun2()
-  console.log('e')
-  await fun2()
-  console.log('f')
+    console.log('c');
+    await fun2();
+    console.log('e');
+    await fun2();
+    console.log('f');
   }
   
-  setTimeout(() => console.log(1)) //不给时间，默认0
-  console.log(2)
-  setTimeout(() => console.log(3),0)
-  setTimeout(() => console.log(4),100)
-  console.log(5)
+  setTimeout(() => console.log(1)); //不给时间，默认0
+  console.log(2);
+  setTimeout(() => console.log(3),0);
+  setTimeout(() => console.log(4),100);
+  console.log(5);
   new Promise(resolve => {
-  resolve()
+    resolve();
   }).then(() => {
-  console.log('a')
-  new Promise(resolve => {
-    resolve()
+    console.log('a');
+    new Promise(resolve => {
+      resolve();
   }).then(() => {
-    console.log('b')
+      console.log('b');
+    })
   })
-  })
   new Promise(resolve => {
-  console.log(6)
-  resolve()
+    console.log(6);
+    resolve();
   }).then(() => {
-  console.log(7)
+    console.log(7);
   })
   process.nextTick(() => {
-  console.log(8)
+    console.log(8);
   })
   setImmediate(() => {
-  console.log(9)
+    console.log(9);
   })
   fun1()
   

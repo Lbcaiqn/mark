@@ -553,4 +553,4 @@ response.setHeader('Access-Control-Allow-Origin','*')
 
 具体详见node笔记
 
-# 四、web socket
+# 

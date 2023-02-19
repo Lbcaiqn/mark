@@ -1,4 +1,0 @@
-﻿  LinkList.cpp
-d:\作业\笔记\datastructcode\linklist\linklist.cpp(18): warning C4715: “initList”: 不是所有的控件路径都返回值
-  LinkList.vcxproj -> D:\作业\笔记\dataStructCode\LinkList\Debug\LinkList.exe
-  LinkList.vcxproj -> D:\作业\笔记\dataStructCode\LinkList\Debug\LinkList.pdb (Partial PDB)

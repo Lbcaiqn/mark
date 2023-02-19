@@ -809,7 +809,7 @@ e.dataset.xxx    e.data.xxxXxx
 e.dataset[‘xxx’]  e.dataset[‘xxxXxx’]
 ```
 
-## 3 节点操作：
+## 3 节点操作
 
 页面的所有内容都是节点，节点操作是对元素的父子兄的操作
 如获得e的子元素对象，需要：
@@ -902,7 +902,7 @@ event.keyCode 可获得按键码，up，down不区分大小写，press区分
 
 onscroll  滚动事件
 
-## 4.4 事件对象：
+### 4.4 事件对象
 
 事件函数给个形参event，事件函数内 console.log(event) 可以看到
 事件对象保存了事件类型，事件源等信息，如event.type 事件类型
@@ -916,7 +916,7 @@ event.preventDefault()
 onclick事件函数内：
 event.returnValue   或  return false
 
-## 4.5 事件流：
+### 4.5 事件流
 
 即事件的传播过程
 捕获阶段：触发事件后，从document-html-body-…，一旦有有定义该事件的事件函数就会执行
@@ -933,7 +933,7 @@ event.stopPropagation()  有兼容性问题
 事件冒泡的应用：事件委托（事件代理/事件委派）
 只给父元素注册事件，子都不注册，当子触发事件后，通过事件冒泡执行父的事件函数，里面用event.target处理子。这样就只操作了一次DOM。
 
-## 4.6 offset，client，scroll
+## 5 offset，client，scroll
 
 首先需要了解几个概念：
 
@@ -989,47 +989,7 @@ e.offset与e.style.xxx的区别：
 | e.scrollWidth  | clientWidth的基础上，加上盒子内的内容超出部分的大小  |
 | e.scrollHeight | clientHeight的基础上，加上盒子内的内容超出部分的大小 |
 
-### 4.7 常见网页特效
-
-（1）模态框
-
-可拖拽移动的盒子，盒子需要设置为绝对定位：
-
-```
-<style>
-#box {
-  position: absolute;
-  left: 100px;
-  top: 100px;
-  width: 100px;
-  height: 100px;
-  border: 1px solid #000;
-}
-</style>
-
-<body>
-  <div id="box"></div>
-</body>
-
-<script>
-let box = document.querySelector('#box');
-
-box.addEventListener('mousedown',function(mouseDown){
-  //计算鼠标在盒子内，距离盒子左边和上边的距离
-  let innerX = mouseDown.pageX - box.offsetLeft;
-  let innerY = mouseDown.pageY - box.offsetTop;
-
-  function boxMove(mouseMove){
-    box.style.left = mouseMove.x - innerX + 'px';
-    box.style.top = mouseMove.y - innerY + 'px';
-  }
-  document.addEventListener('mousemove',boxMove);
-  document.addEventListener('mouseup',function(){
-    document.removeEventListener('mousemove', boxMove)
-  });
-})
-</script>
-```
+# 
 
 # 四、BOM
 
@@ -3567,18 +3527,34 @@ var没有块级作用域，所以在if，for等里面的var是全局变量，而
 
 ```
 function fun(){
-  var a=0,b=0
+  let a=0,b = 0;
   return function(){
-   console.log(++a)
- }
+    console.log(++a);
+  }
 }
-var f=fun()
-f() //输出1
-f() //输出2
+let f = fun();
+f(); //输出1
+f(); //输出2
 /*
 闭包现象在哪：在fun函数外，可以访问到fun函数里面的变量a，
 哪个是闭包：return出的函数为闭包
 垃圾回收：a因为被用了，不会被回收，b没有用，被回收
+*/
+
+//闭包的错误使用例子
+function fun(){
+  let a=0,b = 0;
+  return function(){
+    console.log(++a);
+  }()
+}
+fun(); //输出1
+fun(); //输出1
+/*
+之所以没有达到预期的效果，是因为return出去的是函数且直接调用了，使得每次调用fun()，都是
+新的独立的闭包，a自然就不是同一个了。
+这种错误使用不仅仅没有达到闭包的效果，也使得闭包的变量没有销毁；且由于每次调用都是新的一
+个闭包，调用n次就有n个闭包变量，完全没有意义且占用内存；所以需要特别注意
 */
 ```
 
@@ -3616,6 +3592,12 @@ function fun(a,b){
 
 闭包好处：*可在函数外访问函数内的资源 *可防止函数内的资源被回收
 闭包坏处：函数内的资源不被回收，用不好会导致内存损耗（低版本IE更会导致内存泄漏）。解决方法是将不需要使用的闭包设置为null
+
+（4）也可以用其他方式实现闭包相同的效果
+
+- 定义成全局变量，但是肯定会产生变量冲突问题
+
+- 定义一个class，存放闭包使用的变量和原来闭包的函数
 
 ## 4 this指向全总结
 
@@ -3810,7 +3792,9 @@ function throttle(fn,delay=1000){
 
 ### 5.4 ts中的防抖和节流
 
-ts中没有闭包，可以用class来保存原来js闭包的数据，以下是ts的防抖/节流的封装（这里加了个功能，可通过immediate来控制是否一开始就立即执行一次）
+ts中也可以使用闭包实现。
+
+不过ts的class也挺好用，所以也可以用class来保存原来js闭包的数据，以下是ts的防抖/节流的封装（这里加了个功能，可通过immediate来控制是否一开始就立即执行一次）
 
 ```
 export class Debunce {
@@ -4427,4 +4411,26 @@ let a = 1;
 a = a + 1;
 //简化，类似的还有++ -- -= *= /= %= ^=
 a += 1;
+```
+
+（4）函数
+
+在函数内有多层条件嵌套时，可以简化，增加可读性：
+
+```
+//简化前
+function func(a, b){
+  if(a < 0){
+    if(b < 0)[
+      return true;
+    ]  
+  }
+}
+
+//简化后
+function func(){
+  if(a < 0)  return;
+  if(b < 0)  return;
+  return true;
+}
 ```

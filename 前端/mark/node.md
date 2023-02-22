@@ -824,6 +824,21 @@ file表单读取文件
 
 （6）上传进度：
 
+有相应的库，使用详见文档：
+
+```
+npm install --save nprogress
+```
+
+
+
+```
+import nprogress from 'nprogress';
+import "nprogress/nprogress.css";
+```
+
+也可以手写：
+
 axios的配置项onUploadProgress可以实时监听，至于上传速度可以用已上传大小和已花费时间计算，剩余时间可以用上传速度和剩余大小计算
 
 ```
@@ -833,6 +848,8 @@ onUploadProgress: progress => {
  console.log('当前百分比:',Math.round((progress.loaded*100)/progress.total) + '%')
 }
 ```
+
+此外，不仅是上传，在其他业务中也可能需要用到进度条。
 
 （7）HASH命名文件：
 

@@ -157,10 +157,24 @@ data(){
 
 * 将图片放到 /src/static 下就行
 
-* 图片放哪里都行，代码里url放require()里面
+* 本地图片放哪里都行，但是使用时需要导入
   
   ```
-  devURL: require('...')
+  //webpack
+  data(){
+    return {
+      imgURL: require('...')  
+    }
+  }
+  
+  //vite
+  import imgURL from '...'
+  ...
+  data(){
+    return {
+      imgURL
+    }
+  }
   ```
 
 此外，Vue为了安全，静态的src的url也必须是相对路径或webpack配置的路径，无法使用绝对路径
@@ -5793,7 +5807,7 @@ Pinia支持Vue2和Vue3，下面只记录Vue3的写法
 import {createPinia,defineStore} from 'pinia'
 const pinia = createPinia()
 
-const mainStore = defineStore('main',{
+const MainStore = defineStore('Main',{
   state(){
     return {
       aaa: 100,
@@ -5819,7 +5833,7 @@ const mainStore = defineStore('main',{
 
 export {
   pinia,
-  mainStore
+  MainStore
 }
 
 //main.js
@@ -5828,9 +5842,9 @@ import {pinia} from './store'
 app.use(pinia)
 
 //用到的组件中
-import {mainStore} from '...'
-//store是一个Proxy响应式对
-const store = mainStore()
+import {MainStore} from '...'
+//mainStore是一个Proxy响应式对
+const mainStore = MainStore()
 ```
 
 steate变量的调用与修改，getters：
@@ -6025,7 +6039,54 @@ pinia.use(myPlugin({
 
 当然，vite可能是为了不影响热更新的速度，它的类型检查就不是实时的，只有build才会检查，但比起vue-cli来说，至少不会因为热更新中长时间的类型检查使得写着代码突然报错。
 
-（2）Vue2使用ts
+vite可以再vite.config.json中将 "dev": "vite" 修改伪 "dev": "vite && vue-tsc"，这样虽然热更新依然不会进行类型检查，但至少npm run dev会了。
+
+（2）路径别名
+
+若果在webpack.config.json或vite.config.json配置了路径别名，那么必须在tsconfig.json经一部配置，否则会报错
+
+webpack环境中的tsconfig.json：
+
+```
+{
+  "compilerOptions": {
+    //...
+    "types": [
+      "webpack-env"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  }
+}
+```
+
+
+
+vite环境中的tsconfig.json：
+
+```
+//需要 npm install -D @types/node
+{
+  "compilerOptions": {
+    //...
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  }
+}
+```
+
+
+
+（3）Vue2使用ts
 
 Vue2以及Vue3中使用OptionsAPI，要用ts需要借助vue-class-component或vue-class-decoretor
 
@@ -6033,7 +6094,7 @@ vue-class-compoennt是vue官方出的
 
 vue-class-decorator是社区出的，具有vue-class-compoennt的全部功能，在此之上又增加了一些新功能
 
-（3）Vue3使用ts
+（4）Vue3使用ts
 
 defineComponent定义组件：
 

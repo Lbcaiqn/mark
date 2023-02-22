@@ -72,13 +72,15 @@ JSON.stringify(obj)  //将对象序列化为字符串
 JSON.parse(string)   //将字符串还原为对象
 ```
 
+在使用JSON.stringify进行深拷贝或者ajax传输数据时，需要考虑它的限制性：
+
 （1）JSON.stringify()序列化对象的限制：
 
 - 值为undefined，值为函数，Symbole键的属性，Symbole值的属性都会被忽略
 
 - 值为NaN变为null，值为Date变为字符串
 
-- 值为RegExp/Set/WeakSet/Map/WeakMap类型，变成空对象
+- 值为RegExp/Set/WeakSet/Map/WeakMap类型，变成空对象，可以使用一些方法来解决，如使用Arra.from()将Map转化为二维数组，二维数组再转为Map
 
 - 若源对象给原型上绑定了自定义的属性和方法，也无法拷贝过来
 
@@ -506,7 +508,7 @@ module.exports = {
   devServer: {
     proxy: {
       '/xxx': {
-        terget: 'https://1.2.3.4:5000/',
+        terget: 'https://1.2.3.4:5000',
         changeOrigin: true,  //允许跨域
         pathRewrite: {
           '^/xxx': ''
@@ -517,10 +519,28 @@ module.exports = {
 }
 ```
 
-配置完成后，发送请求变成了：
+如果用的是vite，则在vite.config.js中配置：
 
 ```
-axios.get('xxx/login').then(res => {})
+//vite.config.js
+module.exports = {
+  // ...
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://1.2.3.4:5000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  }
+}
+```
+
+配置完成后，发送请求，实际url会变为 https://1.2.3.4:5000/login
+
+```
+axios.get('/xxx/login').then(res => {})
 ```
 
 原理解释：

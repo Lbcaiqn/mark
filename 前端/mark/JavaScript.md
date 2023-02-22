@@ -2339,28 +2339,94 @@ exec和match，matchAll获得的匹配结果可用匹配结果.groups.num 获得
 console.log(/\p{Script_Extensions=Greek}/.test('π'));
 ```
 
-（5）异步迭代器
+（5）异步迭代器（异步循环，for...await...of）
 
-在之前使用async/await时，如果想循环执行某个异步操作，需要这样做：
+要理解一步循环，先要理解包含异步操作的正常for循环是如何执行的：
+
+下一段代码符合js执行机制，先执行完全部的同步操作，再执行异步操作
 
 ```
-async function aaa(){
-  for(i of [1,2,3]){
-    await dosomething();  
+function func(i) {
+  return new Promise((resolve) => {
+    // 传入的i值分别为0,1,2，延迟分别为3000,2000,1000
+    setTimeout(() => {
+      resolve(i);
+    }, (3 - i) * 1000);
+  });
+}
+
+
+for (let i = 0; i < 3; i++) {
+  console.log(`同步${i}`);
+  func(i).then((res) => {
+    console.log(`异步${res}`);
+  });
+}
+console.log("end");
+/*输出
+同步0
+同步1
+同步2
+end
+异步2
+异步1
+异步0
+*/
+```
+
+如何此时结合了async/await，会使得前一部分是同步for循环，后一部分是异步for循环，原因是await后面的代码相当于.then里面的代码造成的，await后面的await相当于嵌套的.then，因此造成了两个结果
+
+* 使得后一部分for循环变为异步
+
+* 一个异步操作完成后，才能再执行下一个异步操作
+
+结合这些特性，就非常适合用于发送一系列请求且一个请求的发送需要上一个请求的结果的场景
+
+```
+async function run1() {
+  for (let i = 0; i < 3; i++) {
+    console.log(`同步${i}`);
+    let res = await func(i);
+    console.log(`异步${res}`);
   }
 }
+run1();
+console.log("end");
+/*输出
+同步0
+end
+异步0
+同步1
+异步1
+同步2
+异步2
+*/
 ```
 
-由于for循环是同步操作，会在异步之前全部先循环完再依次执行每一个异步的dosomething()
 
-新增的异步迭代器则可以让for循环也变成异步，而且是每一次循环执行一次dosomething()
+
+而此次新增的异步迭代器则是让整个for循环都变成异步，相当于上一段代码展示的for循环里面只有异步代码没有同步代码的情况
 
 ```
-async function aaa(){
-  for await (i of [1,2,3]){
-    dosomething();  
+//for...await...of必须连用，且必须在async函数内
+async function run2() {
+  for await (i of [0, 1, 2]) {
+    console.log(i);
+    let res = await func(i);
+    console.log(`异步${res}`);
   }
 }
+run2();
+console.log("end");
+/*
+end
+0
+异步0
+1
+异步1
+2
+异步2
+*/
 ```
 
 ## 5 ES10

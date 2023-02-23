@@ -368,6 +368,8 @@ let fun3 = (a: number):number => {
 
 let fun4: (a: number,b: number) => number
 
+//rest参数的类型为any[]
+fun5(...rest: any[]){}
 
 //返回值推断，空返回值，never
 //若没有给定返回值类型，则会根据return自动推断
@@ -618,8 +620,12 @@ HTML标签对应的类型：
 定时器：
 
 ```
-let timer1: Number | null = null
-let timer2: Number | null = null
+npm install --save @types/node
+```
+
+```
+let timer1: NodeJS.Timeout | null = null
+let timer2: NodeJS.Timeout | null = null
 clearTimeout(Number(timer1))
 clearInterval(Number(timer2))
 ```

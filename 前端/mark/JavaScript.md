@@ -2163,10 +2163,27 @@ async function a(){
 a()
 ```
 
-awsait失败的另一种写法，返回数组
+await失败的另一种写法，返回数组
 
 ```
 const [err,res] = await xxx.catch(err => err)
+```
+
+如果await得到的数据有子项，需要注意：
+
+```
+//方式一，可以但不优雅
+let xxx = await p
+let res = xxx.data
+
+//错误写法
+//let xxx = await p.data
+
+//方式二
+let data = (await p).data
+
+//方式三
+let {data} = await p
 ```
 
 （2）字符串方法的扩展
@@ -2402,8 +2419,6 @@ end
 异步2
 */
 ```
-
-
 
 而此次新增的异步迭代器则是让整个for循环都变成异步，相当于上一段代码展示的for循环里面只有异步代码没有同步代码的情况
 
@@ -3587,18 +3602,18 @@ var没有块级作用域，所以在if，for等里面的var是全局变量，而
 
 内部函数可访问外部函数的资源，则该内部函数就是闭包，被访问的资源不会被回收，最常见的是函数内return子函数，该子函数就是一个闭包，子函数内引用父函数的资源不会被回收，但是没引用的会回收
 
-（2）闭包实现
+（2）闭包的实现
 
 例1：
 
 ```
-function fun(){
-  let a=0,b = 0;
+function func1(){
+  let a = 0,b = 0;
   return function(){
     console.log(++a);
   }
 }
-let f = fun();
+let f = func1();
 f(); //输出1
 f(); //输出2
 /*
@@ -3608,14 +3623,16 @@ f(); //输出2
 */
 
 //闭包的错误使用例子
-function fun(){
-  let a=0,b = 0;
+function func2(){
+  let a = 0,b = 0;
   return function(){
     console.log(++a);
   }()
 }
-fun(); //输出1
-fun(); //输出1
+func2();    //1
+func2();    //1
+func1()();  //1
+func1()();  //1
 /*
 之所以没有达到预期的效果，是因为return出去的是函数且直接调用了，使得每次调用fun()，都是
 新的独立的闭包，a自然就不是同一个了。
@@ -3624,7 +3641,38 @@ fun(); //输出1
 */
 ```
 
-例2：
+例2，参数为函数fn时且想在闭包内调研，fn的形参如何定义：
+
+```
+//普通参数
+function func1(fn){
+  return function(a){
+    fn(a)
+  }
+}
+
+let f1 = func1((a) => {
+  console.log(a)
+})
+f1(123)
+
+//rest参数
+function func2(fn){
+  return function(...rest){
+    fn(...rest)
+  }
+}
+
+let f2 = func1((a, b, c) => {
+  console.log(a, b, c)
+})
+f2(123, 456)
+
+```
+
+
+
+例3：
 
 ```
 for(var I=0;i<=3;i++){
@@ -3642,13 +3690,13 @@ for(var I=0;i<=3;i++){
 //使用立即执行函数将异步代码的函数包裹，使得异步代码的函数成为闭包，闭包使用i使得i驻留在内存中。
 ```
 
-例3：
+例4：
 
 ```
 //筛选出数组中[a,b]的元素
 function fun(a,b){
   return function(item){
-    return item>= a && item<=b
+    return item >= a && item <= b
   }
   arr.fiter(fun(a,b))
 }
@@ -3763,6 +3811,14 @@ let name='window'
 
 ## 5 防抖与节流
 
+有对应的库：
+
+```
+npm install --save lodash
+```
+
+也可以手写。
+
 ### 5.1 基本
 
 防抖与节流的作用都是为了减少函数不必要的执行，限制执行次数，比如在网络请求中如果有大量不必要的请求时非常损耗性能的。又比如滚动事件的调用是非常频繁的，而实际并不需要这阿么多次的调用。
@@ -3814,6 +3870,15 @@ let name='window'
     inp.oninput = debunce(function(){
       console.log(this.value)
     },1000)
+
+    /*错误写法
+    inp.oninput = function(){
+      debunce(function(){
+        console.log(this.value)
+      },1000)()
+    }
+    */
+
     function debunce(fn,delay=1000){
       //这里使用了闭包，使得t不会被销毁
       let t = null
@@ -3856,15 +3921,105 @@ function throttle(fn,delay=1000){
 }
 ```
 
-### 5.4 ts中的防抖和节流
 
-ts中也可以使用闭包实现。
 
-不过ts的class也挺好用，所以也可以用class来保存原来js闭包的数据，以下是ts的防抖/节流的封装（这里加了个功能，可通过immediate来控制是否一开始就立即执行一次）
+### 5.4 Vue中使用
+
+Vue使用会有一个非常容易出错的点：
+
+Vue2：
+
+```
+method: {
+  //func1，func2是事件监听函数
+  //这样试错的，因为这样根本就不是同一个闭包，参考闭包笔记
+  func1: function(){
+    debunce(() => {
+      console.log(123)
+    },1000)()
+  },
+  //这样才是对的
+  func2: debunce(() => {
+      console.log(123)
+    },1000)  
+}
+```
+
+Vue3：
+
+Vue3的this指向undefined，所以防抖节流函数中的 let that = this 可以删去，fn.call(that) 改为 fn()
+
+```
+setup(){
+  //func1，func2，func3是事件监听函数
+  //错误写法
+  function func1(){
+    debunce(() => {
+      console.log(123)
+    },1000)()
+  }
+
+  //正确写法
+  let func2 = debunce(() => {
+    console.log(123)
+  },1000)
+
+  //也可以这么写，不过就不太优雅了
+  let f = debunce(() => {
+      console.log(123)
+   },1000)
+  function func3(){
+    f()
+  }
+}
+```
+
+总之，就是要保证事件监听函数使用的是同一个闭包函数。
+
+### 5.5 ts中的防抖和节流
+
+ts中也可以使用闭包实现，注意形参和定时器的类型。
+
+需要先安装 @types/node 获取定时器的类型：
+
+```
+npm install --save @types/node
+```
+
+闭包版：
+
+```
+export function debunce(fn: Function, delay: number = 1000) {
+  let t: NodeJS.Timeout | null = null;
+  return function () {
+    if (t != null) clearTimeout(t)
+    t = setTimeout(() => {
+      fn();
+    }, delay)
+  }
+}
+
+export function throttle(fn: Function,delay: number = 1000){
+  let flag: boolean = true;
+  return function(){
+    if(flag){
+      setTimeout(() => {
+        fn();
+        flag = true;
+      },delay);
+      flag = false;
+    }
+  }
+}
+```
+
+class版：
+
+不过ts的class也挺好用（虽然js也可以用class，不过个人不太喜欢js的class语法），所以也可以用class来保存原来js闭包的数据，以下是ts的防抖/节流的封装（这里加了个功能，可通过immediate来控制是否一开始就立即执行一次）.
 
 ```
 export class Debunce {
-  private timer: Number | null = null
+  private timer: NodeJS.Timeout | null = null
   private immediate: boolean = false
   public debunce(func: Function,delay: number, immediate: boolean = false){
     let that = this
@@ -3905,6 +4060,18 @@ export class Throttle {
     }
   }
 }
+```
+
+使用：
+
+```
+import {Debunce} from '...'
+...
+//每个功能都要new一个，防止冲突
+let func1 = new Debunce().debunce(() => {
+  console.log(123) 
+}, 1000)
+...
 ```
 
 ## 6 传值传址，深浅拷贝

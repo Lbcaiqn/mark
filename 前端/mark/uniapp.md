@@ -350,11 +350,7 @@ uni.navigateTo({url});
 onLoad(options){
   let params = JSON.parse(decodeURLComponent(options.
 }
-
-
 ```
-
-
 
 ### 3.5 其他
 
@@ -376,13 +372,9 @@ rpx将宽度分为750rpx，会根据不同屏幕来自动转化px
 rpx = 750 * n / total
 ```
 
-
-
 也可以使用vw，但是vw在一些小尺寸（如1px）不够精确，此时就使用rpx。
 
 使用vh时需要注意，微信小程序的视口大小是会随着navbar和tabbar的显示隐藏变化的，因此vh也会变化。
-
-
 
 （2）全局样式与局部样式
 
@@ -1221,8 +1213,6 @@ page {
 }
 </style>
 ```
-
-
 
 （6）资源引入
 

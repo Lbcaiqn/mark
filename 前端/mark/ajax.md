@@ -386,14 +386,14 @@ HomeRequestMultidata().then().catch()
 ts：
 
 ```
-//1. /src/network/index.ts  第一层封装
-import axios,{AxiosInstance,AxiosRequestConfig,AxiosResponse} from 'axios'
+//1. /src/network/request.ts  第一层封装
+import axios,{AxiosInstance,InternalAxiosRequestConfig,AxiosResponse} from 'axios'
 
 let instance: AxiosInstance = axios.create({
   baseURL: 'http://152.136.185.210:7878/api/hy66',
   timeout: 1000 * 60
 })
-instance.interceptors.request.use((config: AxiosRequestConfig) => {
+instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config
 })
 instance.interceptors.response.use((res: AxiosResponse) => {
@@ -401,9 +401,9 @@ instance.interceptors.response.use((res: AxiosResponse) => {
 })
 export default instance
 
-//2. /src/network/Home.ts  第二层封装
-import {AxiosRequestConfig,AxiosResponse} from 'axios'
-import instance from './index'
+//2. /src/network/index.ts  第二层封装
+import {InternalAxiosRequestConfig,AxiosResponse} from 'axios'
+import instance from './request'
 
 export function HomeRequestMultidata(): Promise<AxiosResponse>{
   return instance({

@@ -1084,7 +1084,7 @@ Vue3中，v-if的优先级高于v-for了，底层会先v-if判断再v-for循环�
 
 v-show和v-for已经说过，至于v-if，v-show，v-for没有意义。
 
-## 7 动画
+## 7 过渡
 
 （1）<transition>
 
@@ -1097,7 +1097,7 @@ vue动画显示隐藏元素是立刻执行的，动画只是播放而已，如�
   name 类名的v换成name 如xxx-enter-to
   appear或:appear="true"  页面一刷新就展示动画
   :duration="x ms" 限制自定义动画的时间（动画库无效）,值也可以是 "{enter:..,leave:..}"
-</transition>、
+</transition>
 ```
 
 （2）动画类名
@@ -1116,8 +1116,8 @@ vue动画显示隐藏元素是立刻执行的，动画只是播放而已，如�
 ```
 //若过渡到的状态是原本的样式，如这里的v-enter-to和v-leave,则可以不写
 //来之前 = 去之后   来之后 = 去之前
-.x-enter,
-.x-leave-to {
+.v-enter,
+.v-leave-to {
   width: 0px;
   height: 0px;
 }
@@ -1176,6 +1176,46 @@ export default {
 }
 </script>
 ```
+
+实例：
+
+```
+<template>
+  <div>
+    <button @click="show = !show">切换</button>
+    <transition name="fade">
+      <p v-if="show">Hello, Vue3 过渡效果</p>
+    </transition>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      show: false,
+    };
+  },
+};
+</script>
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease-in-out;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
+```
+
+注意事项：
+
+* 由于Vue过渡是通过CSS动画增加/删除类名实现的，所以行内样式的变化无法实现过渡，可以通过v-if，v-show钙元素解决，如果真的要对具体的行内样式变化做过渡，请使用Vue过渡的生命周期钩子。
+
+* v-... 会且只会对所有未命名的transition生效，xxx-....只会对对应的有命名的transition生效。
 
 （5）多个元素的过渡：
 只能包裹一个元素，要实现多个元素或者列表渲染的过渡，可以：
@@ -5261,7 +5301,7 @@ Vue3新的内置组件
 ```
 <Suspense>
   <template v-slot:default>
-    <xx></xxx>
+    <xxx></xxx>
   </template>
   <template v-slot:fallback>
     <h3>loading...</h3>
@@ -6063,8 +6103,6 @@ webpack环境中的tsconfig.json：
 }
 ```
 
-
-
 vite环境中的tsconfig.json：
 
 ```
@@ -6083,8 +6121,6 @@ vite环境中的tsconfig.json：
   }
 }
 ```
-
-
 
 （3）Vue2使用ts
 

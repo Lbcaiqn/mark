@@ -434,6 +434,37 @@ ts，请求拦截器中添加请求头需要注意：
 
 * config.headers!.xxx = 'xxx'
 
+## 7 mock
+
+在前段开发的时候，有时候可能后端接口还在开发中，这时候就可以用mock模拟后端接口，mock可以自定义数据或随机生成数据，可以拦截网络请求并返回模拟数据。
+
+```
+npm install --savce mockjs
+
+#ts还需要安装types
+npm install --save @types/mockjs
+```
+
+基本使用：
+
+```
+// /src/mock/xxx.json
+...
+
+// /src/mock/mockServer.js
+import Mock from 'mockjs'
+import xxx from './xxx.json'
+Mock.mock("/abc", { code: 200, data: xxx })
+
+// /src/main.js
+import "@/mock/mockServer"
+
+//使用
+axios('/abc').then(res => {
+  console.log(res.data)
+})
+```
+
 # 二、http协议与网络调试
 
 有关http协议的内容、get/post请求的区别、状态码等内容详见计算机网络笔记。 

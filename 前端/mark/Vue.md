@@ -506,10 +506,10 @@ OptionsAPI在beforeCreated后created前初始化
 
 beforeMount之前，检查是否有未编译的模板，有则继续无则在运行时实施编译模板得到render函数。
 
-| 生命周期        | 简介                                                                         | 适合做的事        |
-| ----------- | -------------------------------------------------------------------------- | ------------ |
-| beforeMount | 此时Vue解析完模板，生成虚拟DOM放在内存中，但是还未转成真实DOM，页面也未解析vue语法来渲染。此时若操作DOM无效              | 无            |
-| mounted     | 虚拟DOM已经转为真实DOM，并保存一份到 $el 里。此时DOM渲染完成，展示模板，可以操作DOM。mounted之后，一个组件的初始化才真正结束 | 操作DOM、获取组件实例 |
+| 生命周期        | 简介                                                                                                                                | 适合做的事        |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| beforeMount | 此时Vue解析完模板，生成虚拟DOM放在内存中，但是还未转成真实DOM，页面也未解析vue语法来渲染。此时若操作DOM无效                                                                     | 无            |
+| mounted     | 虚拟DOM已经转为真实DOM，并保存一份到 $el 里。此时DOM渲染完成，展示模板，可以操作DOM。mounted之后，一个组件的初始化才真正结束。但是需要注意的是，如果mounted之前有异步的操作如网络请求，如果时间太久也会在mounted之后才会完成 | 操作DOM、获取组件实例 |
 
 （2）数据更新
 
@@ -581,9 +581,11 @@ methods(){
 
 nextTick应用场景主要有两个：
 
-* 几乎所有更新数据后操作dom的操作，都需要用到nextTick
+* 几乎所有更新数据后操作dom的操作，都需要用到nextTick，有时还会结合watch
 
-* mounted之前的钩子DOM都是未挂载完的，如果非要在mounted之前操作DOM，可以使用nextTick
+* 如果在created发起了网络请求或其他异步操作，而这些操作完成后会重新渲染DOM，且无法保证在mounted前完成的情况下，可以把网络请求或异步操作放在mounted中，再用watch内部使用nextTick
+  
+  需要注意的是，如果在mounted之前的生命周期中使用nextTick是无法保证DOM已经渲染完成的，所以尽量不要在mounted之前使用nextTick
 
 （3）组件销毁
 
@@ -1213,7 +1215,9 @@ export default {
 
 注意事项：
 
-* 由于Vue过渡是通过CSS动画增加/删除类名实现的，所以行内样式的变化无法实现过渡，可以通过v-if，v-show钙元素解决，如果真的要对具体的行内样式变化做过渡，请使用Vue过渡的生命周期钩子。
+* 过渡的容器必须用v-if或v-show，由于Vue过渡是通过CSS动画增加/删除类名实现的，所以行内样式的变化无法实现过渡。如果真的要对具体的行内样式变化做过渡，请使用Vue过渡的生命周期钩子。
+
+* width和height的过渡效果需要注意，因为width/height是从0开始过渡的，所以在过渡过程中内容会溢出，解决方法是给过渡的容器设置overflow:hidden;，或者过渡的容器使用flex布局（利用flex布局会压缩内容的特点，使得过渡过程中内容不会溢出）
 
 * v-... 会且只会对所有未命名的transition生效，xxx-....只会对对应的有命名的transition生效。
 
@@ -2937,7 +2941,7 @@ hash，history，memory区别：
 
 分为声明式导航和编程式导航
 
-编程式导航，后面的代码还会执行
+编程式导航跳转后，后面的代码还会执行。
 
 若to内使用了变量，则需要v-bind，否则则不用
 
@@ -2971,6 +2975,12 @@ fun(0}{
 router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:’…’}，只有path可简写成’/…’
 
 跳转之后，编程式导航后面的代码也会执行。
+
+两种跳转类型的取舍：
+
+* 声明式简单：适用于只跳转或者只携带一点参数的路由跳转，不适用于有v-for出大量的列表情况，因为会创建出大量的router-link组件，影响性能。
+
+* 编程式导航：扩展性强，适合需要业务逻辑或大量参数的路由跳转，以及v-for出大量列表的情况，可以配合事件委派进一步提升性能。
 
 （5）router-link和router-view的原理
 
@@ -3925,10 +3935,26 @@ export default {
   //a = newData;
   //a = ref(newData);
   
-  //正确做法，这样就不是整个ref重新赋值
-  a.value = newData;
+  //正确做法一，这样就不是整个ref重新赋值，Vue监听的一直是原来的reactive对象
   b.data = newData;
+  b.xxx = newData;
+  /*如果觉得template中b.xxx麻烦，也可以配合toRef,toRefs
+  let xxx = toRef(b.xxx)
+  */
+  
+  //正确做法二，这样就不是整个ref重新赋值，vue监听的一直是原来的ref对象
+  a.value = newData;
   ```
+  
+  但是使用watch时需要注意，watch监听的是具体的响应式数据，上面的a.value，b.xxx，实际上Vue监听的是a，b，所以不会丢失响应式，而watch监听的是value，xxx，所以对value和xxx的重新赋值就监听不到了：
+  
+  ```
+  let a = ref([123]), b = reactive(xxx: 123);
+  watch(a.value,() => {});  //a.value换成a也不行
+  watch(b.xxx,() => {});    //b.xxx换成b就可以
+  ```
+  
+  不过可以通过 () => a.value 和 () => b.xxx 完美解决。 
 
 - 在给ref对象.value赋值为引用类型，和reactive对象增加属性时，都不需要给ref和reactive
   
@@ -4226,7 +4252,7 @@ mounted(){
 ```
 <template>
   父组件
-  <son1 ref="son1" />
+  <son1 ref="son1Ref" />
 </template>
 
 <script>
@@ -4238,7 +4264,7 @@ export default {
     son1
   },
   setup(){
-    let son1 = ref(null)  //子组件实例
+    let son1Ref = ref(null)  //子组件实例
     onMounted(() => {
       //模板加载完才能获得子组件实例
       console.log(son1Ref.value.sonName)

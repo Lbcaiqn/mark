@@ -781,32 +781,52 @@ var g=document.documentElement //html
 
 以下e代表element元素对象
 
+文本：
+
 ```
-//文本：
-e.innerText  写：覆盖所有文本       读：去除所有空格和换行，读取文本
-e.innerHTML 写：覆盖所有文本和标签 读：保留空格和换行，读取文本和标签
+e.innerText  //写：覆盖所有文本      读：去除所有空格和换行，读取文本
+e.innerHTML  //写：覆盖所有文本和标签 读：保留空格和换行，读取文本和标签
+```
 
-//普通标签的属性：
+原生属性：
+
+只能读写原生属性
+
+```
+//普通属性
 e.属性
-*表单属性：
-e.value   表单内容
-e.disable  true为不能输入/选中
-e.type    表单类型
 
-//样式
-e.style.样式属性（小驼峰） 行内样式
-e.className  修改类名，会覆盖原有，多个类名空格隔开
+//表单属性
+e.value   //表单内容
+e.disable //true为不能输入/选中
+e.type    //表单类型
+```
 
-//自定义属性：
-直接在标签中写属性，就是自定义属性
-e.属性 只能读写内置属性
-e.getAttribute(‘属性’ ) //可获得内置/自定义属性的值
+自定义属性：
+
+直接在标签中写属性，就是自定义属性，H5的自定义属性命名规范；data-xxx data-xxx-xxx，如：
+
+```
+<div data-xxx="123"></div>
+```
+
+```
+e.getAttribute(‘属性’ )      //可获得内置/自定义属性的值
 e.setAttribute(‘属性’,’值’ ) //可修改内置/自定义属性的值
-e.removeAttribute(‘属性’ ) //删除自定义属性
-H5的自定义属性命名规范；data-xxx data-xxx-xxx
-新增获得自定义属性得到api：(省略data-，xxx-xxx变成xxxXxx)
-e.dataset.xxx    e.data.xxxXxx
-e.dataset[‘xxx’]  e.dataset[‘xxxXxx’]
+e.removeAttribute(‘属性’ )  //删除自定义属性
+
+//H5新增获得自定义属性得到api：(省略data-，xxx-xxx变成xxxXxx)
+e.dataset.xxx 
+e.data.xxxXxx
+e.dataset[‘xxx’] 
+e.dataset[‘xxxXxx’]
+```
+
+样式：
+
+```
+e.style.样式属性  //（小驼峰） 行内样式
+e.className     //修改类名，会覆盖原有，多个类名空格隔开
 ```
 
 ## 3 节点操作
@@ -918,20 +938,33 @@ event.returnValue   或  return false
 
 ### 4.5 事件流
 
-即事件的传播过程
-捕获阶段：触发事件后，从document-html-body-…，一旦有有定义该事件的事件函数就会执行
-冒泡阶段：从…-body-html-document传播，一旦有定义该事件的时间函数就会执行
-Js只能选择捕获/冒泡其中一个观察效果
-onclick,attachEvent只能观察冒泡
-addEventListener(‘click’,function(){},true) 第三个参数为true/false，为捕获/冒泡，参数补给则默认false
-一般都是冒泡
-事件冒泡：当子触发事件后，它的祖先只要有该事件类型的事件函数，都会执行。
-阻止冒泡：
-子到祖先的所有该事件事件函数中：
-event.stopPropagation()  有兼容性问题
-无兼容性问题：event.cancelBubble 
-事件冒泡的应用：事件委托（事件代理/事件委派）
-只给父元素注册事件，子都不注册，当子触发事件后，通过事件冒泡执行父的事件函数，里面用event.target处理子。这样就只操作了一次DOM。
+即事件的传播过程：
+
+* 捕获阶段：触发事件后，从document-html-body-…，一旦有有定义该事件的事件函数就会执行。
+
+* 冒泡阶段：从…-body-html-document传播，一旦有定义该事件的时间函数就会执行
+  Js只能选择捕获/冒泡其中一个观察效果。
+
+指定捕获还是冒泡：
+
+* onclick,attachEvent只能观察冒泡
+
+* addEventListener(‘click’,function(){},true) 第三个参数为true/false，为捕获/冒泡，参数补给则默认false。一般都使用冒泡。
+
+事件冒泡：
+
+* 当子触发事件后，它的祖先只要有该事件类型的事件函数，都会执行。
+
+* 阻止冒泡：子到祖先的所有该事件事件函数中，event.stopPropagation()  有兼容性问题
+  无兼容性问题：event.cancelBubble 
+
+事件委托（事件代理/事件委派）：
+
+* 事件冒泡的应用，原理是只给父元素注册事件，子元素都不注册，当子元素触发事件后，通过事件冒泡执行父元素的事件函数，这样就能将n个事件监听变为一个事件监听，提升性能
+
+* 通过e.target获取触发事件的子元素
+
+* 事件委派中，可以给子元素增加自定义属性，通过自定义属性区分每个子元素
 
 ## 5 offset，client，scroll
 
@@ -3667,10 +3700,7 @@ let f2 = func1((a, b, c) => {
   console.log(a, b, c)
 })
 f2(123, 456)
-
 ```
-
-
 
 例3：
 
@@ -3920,8 +3950,6 @@ function throttle(fn,delay=1000){
   }
 }
 ```
-
-
 
 ### 5.4 Vue中使用
 

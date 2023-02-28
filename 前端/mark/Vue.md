@@ -1629,7 +1629,7 @@ props: {
 */
 ```
 
-同理，数组也会出现undefined的情况，使用数组时{{xxx[0]}}，若xxx还未传入也会报错，可以在父元素中v-if解决。
+同理，数组也会出现undefined的情况，使用数组时{{xxx[0]}}，若xxx还未传入也会报错，可以在子组件中渲染区域的父元素中或直接在父组件中的子组件标签v-if解决。
 
 在网络请求数据等情况也会出现，解决方法一样
 
@@ -5335,7 +5335,7 @@ Vue3新的内置组件
 </Suspense>
 ```
 
-此外，使用异步组件和后，setup中就可以return一个Promise了，setup当然也可以用async修饰，使得setup里面可以使用await
+此外，使用异步组件后，setup中就可以return一个Promise了，setup当然也可以用async修饰，使得setup里面可以使用await
 
 在没有使用异步组件和之前，setup不能return一个Promise，因为这样模板就拿不到setup中的东西，setup自然也不能用async修饰
 
@@ -5350,6 +5350,8 @@ Vue3新的内置组件
 总结：
 
 - setup()使用async修饰后（Vue3.2 script setup 内，函数外使用await后setup()直接变async）,必须使用defineAsyncComponent引入组件，且在内使用引入的异步组件
+
+- 注意await后面的代码是then，所以最好把await放到最后面
 
 - 路由组件不能使用async setup()。虽然懒加载是异步的，但只是异步加载，并不意味着这是个异步组件
   
@@ -5493,7 +5495,13 @@ export default {
 
 setup语法糖的父子组件通信写法
 
-由于script setup语法下无法写PotionsAPI，也拿不到setup()的参数，这样之前Vue3.0的父子组件写法就需要新的写法，需要defineProps()和defineEmits()，这两个函数不需要引入。
+由于script setup语法下无法写PotionsAPI，也拿不到setup()的参数，这样之前Vue3.0的父子组件写法就需要新的写法，需要defineProps()和defineEmits()。
+
+注意：
+
+* defineProps，defineEmits，withDefaults都已经集成到编译器中，所以不需要引入
+
+* defineProps、defineEmits各自都只能定义一次，即使给不同的变量也不行；defineProps和withDefault之中只能有一个，即使给不同的变量也不行
 
 props
 
@@ -5517,7 +5525,7 @@ defineProps接收的变量可以在<template>和<style>中直接使用，但是�
 带默认值的props
 
 ```
-//js写法与原来一样
+//js写法与Vue3.0差不多
 //ts写法
 type props = {
   aaa: string
@@ -6182,6 +6190,8 @@ Vue3中ts直接用就行，写在setup里面或者export default{}外面都行
 4. 函数形参都要指定ts类型，而返回值一般不用，它自己类型推论就行（但有时候推论不出来就需要指定ts类型）
 
 5. 是在不知道用什么类型那就用any或unkown凑合，如网络请求的数据，传给子组件的网络请求数据等。
+
+6. 类型可以统一放在 /types/index.ts 中，需要的时候再导入使用
 
 使用示例：
 

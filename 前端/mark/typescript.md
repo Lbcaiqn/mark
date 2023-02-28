@@ -1015,7 +1015,7 @@ type Readonly<T> = {
 */
 ```
 
-Pck<T,K>，根据传入的泛型取出对应的属性
+Pick<T,K>，根据传入的泛型取出对应的属性
 
 ```
 type p3 = Pick<Person,'name' | 'age'>

@@ -479,7 +479,9 @@ $watch('xxx',(newValue,oldValue)=>{})
 ## 4 生命周期
 
 在vue的创建到销毁的过错中，有一些生命周期函数（也叫钩子），在相应的节点就会回调这些函数，由此可以在vue的相应节点编写代码，实现在特定的时间做特定的事。
-生命周期函数与data，methods等同级，函数里面调用data等时也用this
+生命周期函数与data，methods等同级，函数里面调用data等时也用this。
+
+生命周期狗子尽量不要用async修饰使得其变成异步。
 
 使用示例：
 
@@ -1255,6 +1257,8 @@ Vue和组件的template必须要有根标签div
 
 需要提醒的是，只减少几个组件实例对于性能不会有明显的改善，所以如果一个用于抽象的组件在应用中只会渲染几次，就不用操心去优化它了。考虑这种优化的最佳场景还是在大型列表中。想象一下一个有 100 项的列表，每项的组件都包含许多子组件。在这里去掉一个不必要的组件抽象，可能会减少数百个组件实例的无谓性能消耗。
 
+如果组件被v-if或v-show控制而隐藏时，组件也会执行完后面的代码和生命周期。
+
 ### 8.1 基本使用
 
 分为非单文件组件和单文件组件，非单文件组件了解即可，开发中都是用单文件组件
@@ -1531,7 +1535,7 @@ export default 的对象里面的一个个属性，叫做配置项，也叫做Op
 
 props,emit，都是响应式的。
 
-（1）props接收父组件参数实现父传子
+#### 8.2.1 props接收父组件参数实现父传子
 
 子组件中的props的变量就能显data()的变量一样使用
 
@@ -1667,7 +1671,57 @@ props: {
 
 现在，对于大多数的组件来说，activeId改变时，它们的 active prop 都会保持不变，因此它们无需再更新。总结一下，这个技巧的核心思想就是让传给子组件的 props 尽量保持稳定。
 
-（2）emit发射给父组件自定义事件实现子传父
+#### 8.2.2 props传递函数实现子传父
+
+props也可以传递函数实现子传父：
+
+```
+...父组件
+<template>
+  <div>
+    <cpn :childData="showChildData" />  
+  </div>
+</template>
+<script>
+import cpn from ...
+export default {
+  components: {
+    cpn
+  },
+  methods: {
+    showChildData(xxx){
+      console.log(data.xxx);
+    }  
+  }
+}
+<script>
+
+...子组件
+<template>
+  <div>
+    <div @click="putChildData"></div>  
+  </div>
+</template>
+<script>
+export default {
+  props: ['childData'],
+  data(){
+    return {
+      a: 123
+    }
+  },
+  methods: {
+    putChildData(){
+      this.childData(this.a);
+    }  
+  }
+}
+</script>
+```
+
+不过一般子传父常使用emits。
+
+#### 8.2.3 emit发射给父组件自定义事件实现子传父
 
 ```
 //子传父
@@ -1696,7 +1750,7 @@ this.$off('xxx')
 
 props的数据与data一样，可以在computed，watch等等中使用
 
-（3）单项数据流
+#### 8.2.4 单项数据流
 
 父子组件之间，所有属性都应该满足单向的自上而下的绑定，也就是说，父组件数据的更新能流向子组件，反过来则不行。可以避免子组件意外修改父组件的状态，防止数据流向变得复杂。如通过$parent修改父组件的数据是不合理的。若想修改父组件的数据，只推荐用emit派发自定义事件来修改。
 
@@ -2802,9 +2856,8 @@ url在后端服务器中取得网站的内容（此时的html，css，js都是�
 
 （1）使用
 
-路由的组件不需要注册
+路由的件不需要注册
 未使用的路由组件不创建；跳转新路由后，旧路由销毁。
-router是所有路由共有，route是当前激活的路由独有。
 
 ```
 //1.路由文件一般放在/src/router/index.js
@@ -2855,9 +2908,35 @@ import router from '...'
   ,,,  
 })
 
-//3.用到的组件的template中，router-view可以有多个，一个router-view展示一次路由组件
+//3.要展示的组件的template中，router-view可以有多个，一个router-view展示一次路由组件
+//router-view可以使用v-if，但是无法使用v-show
 <router-view></router-view>
+
+//4.组件中使用
+<template>
+  <div>
+    router是所有路由共有，route是当前激活的路由独有。
+    {{ $route }}  {{ $router }}  
+  </div>
+</template>
+
+<script>
+console.log(this.$route);
+console.log(this.$router);
+</script>
 ```
+
+this.\$route 中 有path和fullPath，区别：
+
+- path包含url和params参数，没有query参数，如 '/Profile/shop:123'
+
+- fullPath包括query'参数，如 '/Profile/shop:123?a=2'
+
+this.\$route 和 this.\$router.currentRoute的区别：
+
+* Vue2没区别
+
+* Vue3，route是proxy对象，router.currentRoute是ref对象
 
 若想在js文件中引入：
 
@@ -2972,6 +3051,12 @@ fun(0}{
 }
 ```
 
+router.push()和router.replace()：
+
+* push可返回，replace不可返回
+
+* 都返回一个Promise，跳转完成后回调。
+
 router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:’…’}，只有path可简写成’/…’
 
 跳转之后，编程式导航后面的代码也会执行。
@@ -3013,6 +3098,8 @@ router-link默认生成a标签，点击后是取消默认跳转行为，并执�
 
 params是传递参数的方式之一，但一次只能传递一个参数。
 
+注意与get请求的params不是一个概念。
+
 ```
 //如user组件
 //路由配置中
@@ -3024,11 +3111,12 @@ params是传递参数的方式之一，但一次只能传递一个参数。
 }
 
 //组件中
-//第一种
-v-bind:to=”’/user/’+ xxx”
-this.$router.push('/user/' + xxx)
-//第二种，这里只能用name不能用path
-v-bind:to=”{name:'...',params:{...}}”
+//注意不加:
+//声明式导航
+<router-link :to=”’/user’+ xxx” />
+<router-link :to=”{name:'...',params:{...}}” />
+//编程式导航
+this.$router.push('/user' + xxx)
 this.$router.push({name:'...',params:{...}})
 
 //若想获得跳转过来的路由参数，可以
@@ -3063,7 +3151,7 @@ this.$route.params.xxx
   ]
   ```
   
-  和默认路由一样可以写在蹼泳路由前面后面都行
+  和默认路由一样可以写在普通路由前面后面都行
   
   若是 '/*'，NotFound路由必须写在默认路由之后，否则默认路由会是NotFound
   
@@ -3071,13 +3159,17 @@ this.$route.params.xxx
 
 ## 5 路由参数传递
 
-除了动态路由传递一个params参数外，还可以传递一个对象参数query。
+除了动态路由传递一个params参数外，还可以传递一个对象参数query（类似于get请求的params参数，要与路由的params区分开）。
 
 路由配置的path正常写就行 path: '/aaa'
 
 ```
 //path name都可以
-v-bind:to="{path:'/aaa',query:{a:1,b:2}}"
+//声明式导航
+<router-link :to="{path:'/aaa',query:{a:1,b:2}}" />
+<router-link :to="{path:'/aaa?a=1&b=2' />
+
+//编程式导航
 this.$router.push({}
   path: '/aaa',
   query: {
@@ -3088,6 +3180,7 @@ this.$router.push({}
 
 //获取传过来的参数
 this.$query.a
+this.$route.query.a
 ```
 
 props传递路由参数：
@@ -3105,6 +3198,56 @@ props传递路由参数：
    * props(router){ xxx:router.params或query.xxx } 组件中 props:[‘xxx’]
    
    * 获得params或query参数，形参$router可以解构赋值
+
+注意事项：
+
+* parmas和query可以同事传，但是params只有一个参数，query可以多个
+
+* 可以只写携带参数的url，也可以写不带参数的url而另外写参数，也可以都写，因为不管怎样vue-router都会结合url和另外的参数，生成携带所有参数的url，并补充params和query对象。
+  
+  不过url不会识别query参数，只会识别params参数
+  
+  ```
+  ...跳转
+  this.$router.push('/Profile:lgx?a=1&b=2');
+  ...Profile.vue
+  console.log(this.$route)
+  /*
+  path: '/Profile:lgx',
+  fullPath: '/Profile:lgx?a=1&b=2',
+  params: {id: 'lgx'},
+  query: {}
+  */
+  
+  ...跳转
+  this.$router.push({
+    path: '/Profile',
+    params: {id: 'lgx'},
+    query: {a: 1, b: 2}
+  });
+  ...Profile.vue
+  console.log(this.$route)
+  /*
+  path: '/Profile:lgx',
+  fullPath: '/Profile:lgx?a=1&b=2',
+  params: {id: 'lgx'},
+  query: {a: 1, b: 2}
+  */
+  
+  ...跳转
+  this.$router.push({
+    path: '/Profile:lgx',
+    query: {a: 1, b: 2}
+  });
+  ...Profile.vue
+  console.log(this.$route)
+  /*
+  path: '/Profile:lgx',
+  fullPath: '/Profile:lgx?a=1&b=2',
+  params: {id: 'lgx'},
+  query: {a: 1, b: 2}
+  */
+  ```
 
 ## 6 嵌套路由
 
@@ -3262,9 +3405,57 @@ exclude="ccc"       除了name为ccc的路由无效，其他都生效
 </keep-alive>
 ```
 
-一般会配合路由钩子activated和deactivated使用
+一般会配合路由钩子activated和deactivated使用。
 
-## 10 如何从零开始写一个vue-router
+## 10 滚动行为
+
+滚动行为是指在路由跳转后，要滚动到什么位置，默认是滚动到顶部。
+
+可以自定义滚动行为：
+
+```
+const router = new VueRouter({
+  routes: ...,
+  scrollBehavior (to, from, savedPosition) {
+    /*
+    to：路由切换到的目标路由对象。
+    from：路由切换前的路由对象。
+    savedPosition：记录滚动位置的对象，仅在使用浏览器的前进/后退按钮时才可用。
+    */
+     
+    /*默认不配置滚动行为的情况
+    return { x: 0, y: 0 };
+    */
+
+    /*若想a前进后退b，保留a位置
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { x: 0, y: 0 };
+    }
+    */
+
+    /*跳转到指定位置   this.router.push({path: '/xxx', hash: '#nav'})
+    //hash只能是ID
+    if (to.hash) {
+      return { 
+        selector: to.hash,
+        //behavior: 'smooth',       //平滑动画
+        //offset: { x: 0, y: 100 }  //跳转到hash + offset的位置
+      };
+    } else {
+      return { x: 0, y: 0 };
+    }
+    */
+
+    //还可以自定义动画，详见文档
+  }
+})
+```
+
+
+
+## 11 如何从零开始写一个vue-router
 
 需求分析：
 
@@ -4422,7 +4613,7 @@ npm install --save mitt
 import mitt from 'mitt'
 export default new mitt()
 
-//mitt是比较老的库了，实现基于ES5的构造函数且没有做ts支持，会报错，这里童年过类型断言为any解决
+//低版本的mitt，实现基于ES5的构造函数且没有做ts支持，如果报错了，这里可以通过类型断言为any解决
 //export default new (mitt as any)()
 
 
@@ -4468,6 +4659,10 @@ export default {
   }
 }
 ```
+
+return后再templae就像属性一样使用。
+
+script内部调研需要.value。
 
 #### 1.3.2 watch
 
@@ -5546,7 +5741,10 @@ const emit = defineEmits(['aaa','bbb']) //这条相当于Vue3.0的emits配置项
 const clickEvent = () => {
   emit('aaa')
 }
-/*
+
+//setup语法糖自动return出自定义的emit，所以模板中可以直接使用emit
+
+/*传参
 当需要传递多个参数时，js直接传对象，而ts因为不好限定这个对象的类型，所以分多个参数
 emit('aaa',{a:1,b:2})   //js，父组件接收时一个对象形参
 emit('aaa',a:number,b:number)  //ts，父组件接收时多个形参

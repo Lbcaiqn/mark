@@ -898,43 +898,116 @@ e.removeEventListener(‘click’,func) //注册事件时，事件函数不能�
 e.detachEvent(‘onclick’,func) //注册事件时，事件函数不能是匿名函数
 ```
 
+可以通过元素对象直接在代码触发事件：
+
+```
+var box = document.querySelector('#box');
+box.onclick = function(){
+  console.log(123);
+};
+box.click();
+```
+
 ### 4.3 事件类型：
 
-onclick  点击
-onfocus 获得焦点
-onblur  失去焦点
-onmousemove 鼠标移动
-onmouseover  鼠标经过  经过子盒子时也触发
-onmouseenter  与mouseover区别，经过子盒子不触发
-onmouseout   鼠标离开，离开子盒子也触发
-onmouseleaves 离开子盒子不触发
-onmouseup    鼠标弹起
-onmousedown  鼠标按下
-contextmemu 鼠标右键菜单，事件函数中event.preventDefault()可阻止菜单打开
-selectstart 鼠标选中触发，事件函数中event.preventDefault()可阻止选中
-鼠标事件对象常用的是坐标 event.pageX  event.pageY
-onkeydown 按键弹起
-onkeypress 按键按着不放就一直触发，不能识别功能键
-onkeyup   按键按着不放就一直触发，可识别所有键
-三个键盘事件不管代码顺序，执行顺序都是down-press-up
-event.keyCode 可获得按键码，up，down不区分大小写，press区分
-通过event.keyCode 可实现对特定键的监听
+只列举常见的事件。
 
-onscroll  滚动事件
+（1）鼠标事件
+
+| click       | 单击             |
+| ----------- | -------------- |
+| dblclick    | 双击             |
+| mousedown   | 鼠标按下           |
+| mouseup     | 鼠标弹起           |
+| mounseenter | 鼠标经过，经过子盒子时不触发 |
+| mouseleave  | 鼠标离开，离开子盒子不触发  |
+| mouseover   | 鼠标经过，经过子盒子时也触发 |
+| mouseout    | 鼠标离开，离开子盒子也触发  |
+| mousemove   | 鼠标移动           |
+
+
+
+（2）键盘事件
+
+| keydown  | 按键按下，按键按着不放就一直触发，可识别所有键  |
+| -------- | ------------------------ |
+| keypress | 按键按下，按键按着不放就一直触发，不能识别功能键 |
+| keyup    | 按键弹起                     |
+
+注意事项：
+
+* 三个键盘事件不管代码顺序，执行顺序都是down-press-up
+
+* event.keyCode 可获得按键码，up，down不区分大小写，press区分。通过event.keyCode 可实现对特定键的监听
+
+（3）表单事件
+
+input事件：
+
+| focus | 获得焦点 |
+| ----- | ---- |
+| blur  | 失去焦点 |
+
+form事件：
+
+| submit | 提交  |
+| ------ | --- |
+| reset  | 重置  |
+
+通用（部分表单不能用）：
+
+| input   | 值变化时触发，在修改完并失去焦点后才触发 |
+| ------- | -------------------- |
+| change  | 值变化时触发，修改的时候实时触发     |
+| invalid | 非法输入时触发，可自定义非法输出信息   |
+
+（4）其他事件
+
+textmemu，鼠标右键菜单事件，常应用与阻止右键弹出菜单：
+
+```
+document.addEventListener("contextmenu", function (e) {
+  e.preventDefault();
+});
+```
+
+selectstart，选中文本时触发，常应用于阻止选中文本：
+
+```
+document.addEventListener("selectstart", function (e) {
+  e.preventDefault();
+});
+```
 
 ### 4.4 事件对象
 
-事件函数给个形参event，事件函数内 console.log(event) 可以看到
-事件对象保存了事件类型，事件源等信息，如event.type 事件类型
-只有事件触发事件时，事件对象才会创建。
-Ul里有若干li，给ul注册事件，li触发了事件：
-event.target //返回触发事件的元素对象，li
-this  //注册事件的元素对象，ul
-阻止默认行为，如a的跳转，button的提交
-addEventListener点击事件内：
-event.preventDefault()
-onclick事件函数内：
-event.returnValue   或  return false
+事件函数给个形参event，事件函数内 console.log(event) 可以看到，事件对象保存了事件类型，事件源等信息，如event.type 是事件类型。只有事件触发事件时，事件对象才会创建。
+
+是件函数里面的this指向真正触发该事件的元素，未使用时事件委派时this就是绑定事件的那个元素，event是它的事件对象。若使用了事件委派（ul里有若干li，给ul注册事件，li触发了事件），则this是实际触发事件的那个li，event.target是哪个li，event是ul。
+
+事件对象包含的常用属性方法：
+
+通用：
+
+| 属性/方法                   | 说明                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| event.type              | 事件类型                                                                                  |
+| .event.preventDefault() | addEventListener中阻止默认行为，如a的跳转，button的提交。如果是on...中，则改成event.returnValue 或 return false |
+| event.stopPropagation() | 阻止事件冒泡                                                                                |
+
+
+
+
+鼠标事件对象：
+
+鼠标坐标是右边下边为正。
+
+| 属性                            | 说明                      |
+| ----------------------------- | ----------------------- |
+| event.offsetX 和 event.offsetY | 当前鼠标距离触发事件的元素边缘的距离      |
+| event.clientX 和 event.clientY | 当前鼠标距浏览器视口边缘的距离         |
+| event.pageX 和 event.pageY     | 当前鼠标距页面边缘的距离，即包括滚动卷去的距离 |
+| event.screenX 和 event.screenY | 当前鼠标距电脑屏幕边缘的距离          |
 
 ### 4.5 事件流
 
@@ -984,11 +1057,15 @@ event.returnValue   或  return false
 
 | API            | 说明                                                         |
 | -------------- | ---------------------------------------------------------- |
-| e.offsetTop    | 元素e的左边缘距父元素顶部的偏移，注意没有offsetBottom                          |
-| e.offsetLeft   | 元素e的上边缘距父元素左边的偏移，注意没有offsetRight                           |
+| e.offsetTop    | 元素e的左边缘距带定位的父元素顶部的偏移，包含外边距，注意没有offsetBottom                |
+| e.offsetLeft   | 元素e的上边缘距带定位的父元素左边的偏移，包含外边距，注意没有offsetRight                 |
 | e.offsetWidth  | 获取元素e的宽（包含widtj，内边距和边框，不包含外边距），与处于什么盒子模型无关                 |
 | e.offsetHeight | 获取元素e的高（包含height，内边距和边框，不包含外边距），与处于什么盒子模型无关                |
 | e.offsetParent | 获取父元素，若父元素没有定位或没有父元素，返回body；与e.parentNode区别是parentNode不用定位 |
+
+offsetTop，ioffsetLeft中的带定位的父元素解释：
+
+* 若父元素没有设置任何定位，而是默认的话，则继续往祖先找，直到找到有定位的父元素或window为止。
 
 e.offset与e.style.xxx的区别：
 
@@ -1022,7 +1099,66 @@ e.offset与e.style.xxx的区别：
 | e.scrollWidth  | clientWidth的基础上，加上盒子内的内容超出部分的大小  |
 | e.scrollHeight | clientHeight的基础上，加上盒子内的内容超出部分的大小 |
 
-# 
+ 
+
+| API             | 说明          |
+| --------------- | ----------- |
+| window.scroillX | 浏览器水平滚动过的距离 |
+| window.scrollY  | 浏览器垂直滚动过的距离 |
+
+（4）获取元素到视口边缘的偏移
+
+```
+console.log(e.getBoundingClientRect());
+/*top，left，bottom，right*/
+```
+
+（5）获取元素到整个页面边缘的偏移
+
+如果父元素是body或者祖先都没有设置定位，那使用offsetLeft，offsetTop就可以了，但是其他情况就需要下面的方法：
+
+元素到body的距离 = 元素到视口的距离 + 浏览器滚动的距离
+
+```
+function offsetPage(el) {
+  const rect = el.getBoundingClientRect();
+  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  return {
+    left: rect.left + scrollLeft,
+    top: rect.top + scrollTop,
+  };
+}
+```
+
+
+
+（6）获取鼠标指针在元素内的相对位置
+
+```
+const box = document.querySelector(".box");
+
+ small.addEventListener("mousemove", function (e) {
+    //方法一，不推荐，只有在祖先元素都没有设置定位时才可用
+    let innerX1 = e.pageX - small.offsetLeft;
+    let innerY2 = e.pageY - small.offsetTop;
+
+    //方法二，缺点是部分低版本浏览器不支持
+    let innerX2 = e.offsetX;
+    let innerY2 = e.offsetY;
+
+    //方法三
+    let innerX3 = e.clientX - box.getBoundingClientRect().left;
+    let innerY3 = e.clientY - box.getBoundingClientRect().top;
+
+    //方法四，offsetPage()是自定义的函数，见上面笔记
+    let innerX4 = e.pageX - offsetPage(box).left;
+    let innerY4 = e.pageY - offsetPage(box).top;
+});
+
+```
+
+
 
 # 四、BOM
 
@@ -1032,21 +1168,36 @@ window是全局对象，多以全局变量和 全局函数都会鞭策window的�
 同样，调用全局变量/全局函数，window.可省略
 alert()也是window的方法
 
-## 1 事件：
+## 1 BOM事件：
+
+（1）页面事件：
+
+| onload             | 页面所有内容，包括标签文本图片样式都加载完才触发                                       |
+| ------------------ | -------------------------------------------------------------- |
+| onDOMContentLoaded | 当DOM加载完（即所有标签），就触发                                             |
+| pageshow           | 与onload基本一样，但是在火狐浏览器中，前进页面后，之前的页面会缓存，再后退不会触发onload，而pageshow可以 |
+
+onload应用：
+
+页面加载完后触发，若引入js在html页面之前（页面未加载，js就无效了），需要将所有代码放在时间函数里面。
+
+多个onload事件，只执行最后一个。
 
 ```
-//面加载事件：
-若引入js在html页面之前（页面未加载，js就无效了），需要将所有代码放在：
-window.onload() = () => {//里面的代码在html页面完全加载完，才执行}
-也可写成 window.addEventListener(‘load’,function(){})
-多个onload事件，只执行最后一个
+//也可写成 window.addEventListener(‘load’,function(){})
+window.onload() = () => {
+  //里面的代码在html页面完全加载完，才执行
+}
+```
 
-onload 页面所有内容，包括标签文本图片样式都加载完才触发
-onDOMContentLoaded 当DOM加载完（即所有标签），就触发
-pageshow 与onload基本一样，但是在火狐浏览器中，前进页面后，之前的页面会缓存，再后退不会触发onload，而pageshow可以
+窗口事件：
 
-//窗口大小事件：
-Onresize 浏览器窗口大小发生变化时触发
+| onscroll | 滚动             |
+| -------- | -------------- |
+| onresize | 浏览器窗口大小发生变化时触发 |
+
+```
+
 ```
 
 ## 2 异步和定时器：
@@ -1913,7 +2064,7 @@ Object.keys(x)  将x对象的所有key以数组形式返回
 Object.values() 将x的所有value以数组的形式返回
 Object.entries(x) 返回一个对象数组，每个对象里是一对 key和value的数组
 Object.is(a,b) 判断a，b是否完全相等，与===不同的是两个NaN比较为true
-Object.assign(a,b) 合并a，b两个类，有重复的key则b的value覆盖a的value，常用于配置的合并
+Object.assign(a,b,......) 合并a，b,....若干个对象/类到a，有重复的key则b的value覆盖a的value，这个函数也会返回结果，常用于配置的合并
 Object.setPrototypeOf(a,b)  将b设置为a的原型对象
 Object.getPrototypeOf(a)    返回a的原型对象
 

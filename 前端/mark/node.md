@@ -314,6 +314,8 @@ app.post('/logup',async (request,response,next) => {
 
 先判断账号是否存在，再匹配密码，匹配成功返回jwt（jsonwebtoken），用于鉴权
 
+① 后端代码
+
 ```
 //私钥为了安全一般是不可见的，保存在本地文件中，不存放于git，这里为了方便就直接定义为了变量
 const SECRCT = 'asf34g35s1g56erssa'
@@ -336,11 +338,7 @@ app.post('/login',async (request,response) => {
 })
 ```
 
-（2）手机验证码登录
-
-（3）微信登录
-
-前端：
+② 前端代码
 
 ```
 //账号密码登录
@@ -351,7 +349,7 @@ app.post('/login',async (request,response) => {
 wx.login();
 ```
 
-拿到token后，将token存放到storage和vuex中。
+③ 拿到token后，将token存放到storage和vuex中
 
 token作为登录凭证来保持持久登录，无需账号密码。
 
@@ -363,18 +361,7 @@ token作为登录凭证来保持持久登录，无需账号密码。
 
 * vuex存在内存中，而storage存在本地磁盘中，在内存中存取数据会快一点
 
-跳转页面，可以全局前置守卫判断是否需要登录和是否已登录：
-
-```
-// /router/index.js
-router.beforeEach((to,from,next) => {
-  if(!to.meta.token)  next();
-  else {
-    if(localStorage.getItem('token'))  next();
-    else next('/Login');  
-  }    
-})
-```
+④ 当给需要登录的接口发请求时，携带token
 
 后端的接口总体分为需要token鉴权和不需要token鉴权两种。一般后端需要token鉴权的接口会统一命名，如果是统一命名就适用下面的方法，如果不是就另找方法。
 
@@ -393,7 +380,71 @@ router.beforeEach((to,from,next) => {
 })
 ```
 
-退出登录时，需要清空storage和vuex的token
+⑤ 路由跳转注意事项
+
+跳转页面前，需要进行判断，有以下几种情况：
+
+* 未登录也可以访问的路由，登录后才可以访问的路由。同时需要实现在a页面未登录而跳转到登录页的情况下，登录成功跳回a页面。
+  
+  ```
+  // /router/index.js 配置全局前置守卫
+  router.beforeEach((to,from,next) => {
+    if(to.meta.needToken && !localStorage.getItem('token')){
+      //如果跳转后的路由需要登录，且此时未登录  
+      next({
+        path: '/Login',
+        //params: {...to.params},  //可不写，因为params参数会在to.path
+        query: { redirect: to.path, ...to.query }  
+        /*
+        或者query: { redirect: to.fullPath}，因为fullPath包括了
+        params和query，切回保存在params对象和query对象中
+        */
+      });
+    }
+    else  next();   
+  })
+  
+  // Login.vue
+  methods: {
+    login(){
+      ...发请求
+      localStorage.setItem("token", "123");
+      //如果不是从其他页面调过来登录，而是直接进入的登录页，那登录完就跳首页
+      if (!this.$route.query.redirect) router.push("/Home");
+      else {
+        this.$router.push({
+          path: this.$route.query.redirect,
+          //params: this.$route.params,  //可不写，因为params在path中
+          query: this.$route.query,
+          /*
+          不管query.redirect是path还是fullPath，都要传query参数，虽然fullPath
+          有params和query，但是只会保留params到跳转路径
+          */
+        });
+      }
+    }
+  }
+  ```
+
+* 登录后不能访问的路由，如登录后不再允许进入登录注册
+  
+  组件内守卫或独享守卫判断，进入登录注册页时是否已登录，登录了就回到首页
+
+* 特殊情况下才可以访问的路由
+  
+  比如a路由必须从b路由跳转而来，a配置组件内守卫或独享守卫，判断from是否来自b
+
+* NotFound
+  
+  配置NotFound路由
+
+（2）手机验证码登录
+
+（3）微信登录
+
+退出登录
+
+发请求，成功后需要清空storage和vuex的token
 
 ## 3 鉴权
 
@@ -829,8 +880,6 @@ file表单读取文件
 ```
 npm install --save nprogress
 ```
-
-
 
 ```
 import nprogress from 'nprogress';

@@ -941,13 +941,9 @@ getuserinfo事件，每次获取用户信息都会弹出授权窗口（取消了
 
 //登录：
 uni.login().then(res => console.log(res.code))  //将这个code发给自己的后端，后端返回token即可
-//支付
-/*
-1.创建订单：给自己的后端发请求，发过去商品信息、价格、收货地址等信息，返回订单编号
-2.预支付：给自己的后端发请求，发过去订单编号，返回微信支付需要的参数
-3.微信支付：wx.requestPayment({参数}) 参数为2得到的
-4.查看订单是否支付成功：给自己的后端发请求
-*/
+
+//微信支付
+wx.requestPayment({参数})
 
 //本地存储
 wx.setStorageSync('xxx',a)  //a必须是字符串，若不是，需要JSON.stringify()

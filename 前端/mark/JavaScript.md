@@ -69,7 +69,15 @@ consolo.log('输出文本'); 控制台输出
 
 3. var a=1,b=2,c=3;相当于用var声明了三个var变量，但是，var a=b=c=4; 相当于var声明a是局部变量，而b，c没有用var声明，变成全局变量
 
-4. 命名：还可以用$命名，变量属性，函数方法小驼峰，对象，构造函数大驼峰，其他与c一样
+4. var重复声明不会报错，重复声明的变量采用最后声明的那个
+   
+   ```
+   var a = 5;
+   var a = 555;
+   console.log(a); //555
+   ```
+
+5. 命名：还可以用$命名，变量属性，函数方法小驼峰，对象，构造函数大驼峰，其他与c一样
 
 ### 2.2 数据类型
 
@@ -151,6 +159,8 @@ onsole.log(str[0));  //a
 原型的终点，不存在的DOM都是null
 
 undefined与null区别：
+
+* undefined不是关键字，null是关键字
 
 * urndefined代表未定义，没有赋值，连null都没有；而null代表空值或空引用
 
@@ -728,7 +738,7 @@ console.log('aba'.split(/b/));  //['a','a']
 ```
 
 有些需求需要多个正则配合，将多个正则放到数组中，可以配合ES6的every()，如：
-密码由数字和字母组成，限制6到10位，且必须包含大写字母的数字
+密码由数字和字母组成，限制6到10位，且必须包含大写字母和数字
 
 ```
 var reg = [
@@ -736,7 +746,7 @@ var reg = [
  /[A-Z]/,
  /[0-9]/
 ]
-console.log(reg.every( r => r.test(密码)))
+console.log(reg.every( r => r.test(123456)))
 ```
 
 js内置对象RegExp
@@ -925,8 +935,6 @@ box.click();
 | mouseout    | 鼠标离开，离开子盒子也触发  |
 | mousemove   | 鼠标移动           |
 
-
-
 （2）键盘事件
 
 | keydown  | 按键按下，按键按着不放就一直触发，可识别所有键  |
@@ -979,6 +987,17 @@ document.addEventListener("selectstart", function (e) {
 });
 ```
 
+（4）触屏事件
+
+移动端手指触屏触发
+
+| 事件          | 说明         |
+| ----------- | ---------- |
+| touchstart  | 手指触屏       |
+| touchmove   | 手指移动       |
+| touchend    | 手指弹起       |
+| touchcancel | 触屏事件被取消时触发 |
+
 ### 4.4 事件对象
 
 事件函数给个形参event，事件函数内 console.log(event) 可以看到，事件对象保存了事件类型，事件源等信息，如event.type 是事件类型。只有事件触发事件时，事件对象才会创建。
@@ -994,9 +1013,6 @@ document.addEventListener("selectstart", function (e) {
 | event.type              | 事件类型                                                                                  |
 | .event.preventDefault() | addEventListener中阻止默认行为，如a的跳转，button的提交。如果是on...中，则改成event.returnValue 或 return false |
 | event.stopPropagation() | 阻止事件冒泡                                                                                |
-
-
-
 
 鼠标事件对象：
 
@@ -1099,8 +1115,6 @@ e.offset与e.style.xxx的区别：
 | e.scrollWidth  | clientWidth的基础上，加上盒子内的内容超出部分的大小  |
 | e.scrollHeight | clientHeight的基础上，加上盒子内的内容超出部分的大小 |
 
- 
-
 | API             | 说明          |
 | --------------- | ----------- |
 | window.scroillX | 浏览器水平滚动过的距离 |
@@ -1131,8 +1145,6 @@ function offsetPage(el) {
 }
 ```
 
-
-
 （6）获取鼠标指针在元素内的相对位置
 
 ```
@@ -1155,10 +1167,7 @@ const box = document.querySelector(".box");
     let innerX4 = e.pageX - offsetPage(box).left;
     let innerY4 = e.pageY - offsetPage(box).top;
 });
-
 ```
-
-
 
 # 四、BOM
 

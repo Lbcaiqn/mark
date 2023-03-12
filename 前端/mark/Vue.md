@@ -227,7 +227,7 @@ true生效，如button属性disabled=”disabled”，等同于v-bind:disabled=�
 
 获取过来不管类型都默认为字符串。
 
-textarea表单，password等类型的input表单用法都和这个一样。
+textarea表单，password等输入框类型的input表单用法都和这个一样。
 
 ```
 <input type="text" v-model="变量">
@@ -239,51 +239,159 @@ textarea表单，password等类型的input表单用法都和这个一样。
 
 （2）与radio类型input结合使用：
 
-需要value属性，变量是string类型而不是boolean
-若变量的值为radioName，则该radio会被选上；若不同或为空则不选。
-当选择该radio时，其value会赋值给变量。
-一组radio的v-model里的变量一样时，不用给它们相同的name属性，就能实现单选。
+\<input type="radio" /\> 属性：
+
+* value：唯一标识每一个单选，变量是string类型而不是boolean
+
+* v-model：绑定的是被选中的单选框的值，如果该值初始与某个单选的值相同，则默认悬赏该单选；当选择某单选时，其value会赋值给v-model绑定的变量
+
+* 一组radio的v-model里的变量一样时，不用给它们相同的name属性，就能实现单选。
 
 ```
-<input type="radio" value="radioName" v-model="变量">
+<script>
+export default {
+  data() {
+    return {
+      radios: {
+        value: "",
+        //value: 'a',  //默认选中a
+        items: [
+          { value: "a", text: "选项A" },
+          { value: "b", text: "选项B" },
+          { value: "c", text: "选项C" },
+          { value: "d", text: "选项D" },
+        ],
+      },
+    };
+  },
+};
+</script>
+
+<template>
+  <div>
+    <label v-for="i in radios.items" :key="i.value">
+      <input type="radio" v-model="radios.value" :value="i.value" />
+      <span>{{ i.text }}</span>
+    </label>
+    <p>我已选中 {{ checkboxs.value }}</p>
+  </div>
+</template>
 ```
 
 （3）与checkbox类型input结合使用：
 
-```
-<input type="checkbox" v-model="布尔变量">
-<!--
-单个复选框：一般用于同意协议等
-不需要value属性，变量为布尔类型。
-该布尔变量true时选上，false或其它类型则不选，以此可设置默认是否选上，选择或取消都会修改变量。
--->
+多个checkbox：
 
-<input type="checkbox" value="cbName" v-model="数组名">
-<!--
-多个复选框：
-需要value属性，变量为数组类型。
-可以根据数组内容设置默认选上。选择或取消选项都会自动插入删除数组元素。
--->
+* 与radio差不多，只是现在v-model要绑定一个数组
+
+```
+<script lang="ts">
+export default {
+  data() {
+    return {
+      checkboxs: {
+        value: [],
+        //value: ["a", "c"],  //默认选中a，c
+        items: [
+          { value: "a", text: "选项A" },
+          { value: "b", text: "选项B" },
+          { value: "c", text: "选项C" },
+          { value: "d", text: "选项D" },
+        ],
+      },
+    };
+  },
+};
+</script>
+
+<template>
+  <div>
+    <label v-for="i in checkboxs.items" :key="i.value">
+      <input type="checkbox" v-model="checkboxs.value" :value="i.value" />
+      <span>{{ i.text }}</span>
+    </label>
+    <p>我已选中 {{ checkboxs.value }}</p>
+  </div>
+</template>
+```
+
+单个checkbox：
+
+* 不需要绑定value
+
+* v-model绑定boolean
+
+```
+<script lang="ts">
+export default {
+  data() {
+    return {
+      agree: false,
+      //agree: true, //默认选上
+      text: `我同意<a href="#">xxx条款</a>`,
+    };
+  },
+};
+</script>
+
+<template>
+  <div>
+    <input type="checkbox" v-model="agree" />
+    <span v-html="text" style="display: inline-block"></span>
+  </div>
+</template>
 ```
 
 （4）select
 
+* v-model绑定的是选中的值
+
+* 第一个option的value设置为''
+
+* 单选：变量为字符串类型
+  
+  多选：变量为数组，select标签需要添加multiple=”multiple”（页面多选ctrl+拖拽）
+
 ```
-<select v-model="xxx" @change=”fun”>
-  <option value="xVal">请选择</option>  //xxx=”xVal”,双向绑定了这个op
-  <option v-for="i in mVal" :value="i">{{i}}</option>//其他op不管双向绑定
-</select>
-<!--
-v-model绑定的是值和value一样的op，用来默认选中
-每个op的id和内容作为一个对象，多个op为一个数组，id给事件获取
-@chage=”fun”,当选中时获得id
-fun(event){
-  this.mVal=event.target.value
-}
-v-model的变量：
-单选，变量为字符串类型
-多选，变量为数组，select标签需要添加multiple=”multiple”（页面多选ctrl+拖拽）
--->
+<script lang="ts">
+export default {
+  data() {
+    return {
+      select: {
+        value: "",
+        // value: "1999", //默认选中
+        items: [
+          { value: "", text: "请选择年份" },
+          { value: "1999", text: "1999年" },
+          { value: "2000", text: "2000年" },
+          { value: "2001", text: "2001年" },
+          { value: "2002", text: "2002年" },
+          { value: "2003", text: "2003年" },
+          { value: "2004", text: "2004年" },
+        ],
+      },
+    };
+  },
+  methods: {
+    selectOption(e) {
+      console.log(123);
+      console.log(e.target.value);
+    },
+  },
+};
+</script>
+
+<template>
+  <div>
+    <select v-model="select.value" @change="selectOption">
+      <!-- <option value="">{{ select.describe }}</option> -->
+      <option v-for="i in select.items" :key="i.value" :value="i.value">
+        {{ i.text }}
+      </option>
+    </select>
+    <p>我已选中 {{ select.value }}</p>
+  </div>
+</template>
 ```
 
 （5）v-model修饰符
@@ -2656,7 +2764,35 @@ pnpm config set registry https://registry.npmmirror.com    #切换淘宝源
 
 其他的像安装依赖、运行项目都和npm一样。
 
-## 2 webpack
+## 2 package
+
+node的配置文件
+
+（1）package.json
+
+创建package.json
+
+```
+npm init
+```
+
+里面记录了包的版本，进行各项配置如执行脚本，如 dev build 配置了就能通过npm run执行。
+
+（2）package.lock.js
+
+记录了当前项目中安装的每个包的精确版本、依赖关系和所在位置。它的作用是确保在不同的机器上、不同的环境下使用相同版本的包，保证了项目的稳定性和可重复性。
+
+`package-lock.json` 通常与 `package.json` 文件一起提交到代码仓库中，以便团队成员可以在其本地环境中使用相同的依赖。当其他人从代码仓库中拉取代码并运行 `npm install` 命令时，npm 会使用 `package-lock.json` 文件中的信息安装相同的依赖版本。
+
+（3）配置文件注意点
+
+* 在以后会经常遇见各种配置文件，配置文件有.js，.ts，.json等格式，都放在项目根目录下。
+
+* 只要是配置文件，一旦修改必须重启项目才会生效
+
+## 3 webpack和vue-cli
+
+（1）webpack
 
 webpack是一个模块打包工具，Vue是一定要打包的，否则页面加载会很慢，打包会进行代码压缩等等
 
@@ -2664,32 +2800,43 @@ webpack是一个模块打包工具，Vue是一定要打包的，否则页面加�
 npm install -g webpack
 ```
 
-Webpack可以热更新：代码一修改保存后页面自动刷新，但有时不靠谱，还需要自己冷更新，自
+Webpack可以热更新：代码一修改保存后页面自动刷新，但有时不靠谱，还需要自己冷更新，自己主动刷新页面。
 
-己主动刷新页面。
 可以兼容任何语法的html，css，js，管理包，并将他们压缩打包
+
 与Grunt和Gulp对比：
-Grunt和Gulp可以优化前端开发流程，而webpack是模块化的解决方案，没有可比性，大多数场合webpack都能替代Grunt和Gulp。
-Grunt和Gulp的工作方式：一个配置文件中，能明确对某些文件的编译，组合，压缩等操作的具体步骤。
-webpack优点：
 
-- 很好的应用于单页面应用
+* Grunt和Gulp可以优化前端开发流程，而webpack是模块化的解决方案，没有可比性，大多数场合webpack都能替代Grunt和Gulp。
 
-- 同时支持require和import
+* Grunt和Gulp的工作方式：一个配置文件中，能明确对某些文件的编译，组合，压缩等操作的具体步骤
 
-- 让react，vue等框架在本地开发更快
+（2）vue-cli
 
-- 目前最受欢迎的构建工具
+也叫脚手架，功能是构建项目目录和自动配置webpack繁琐的配置。
 
-（1）package.json
+注意：Vue3至少需要脚手架的版本为4.5
 
-npm init 创建package.json
+```
+npm install -g @vue/cli
+```
 
-package.json可以对项目进行各项配置，保存包的信息
+查看脚手架版本：
 
-（2）webpack.config.js和vue.config.js
+```
+vue --version
+```
 
-分贝是脚手架爱2和脚手架爱3/4的webpack配置文件，内容差不多，webpack.config.js创建项目自带，vue.config.js需要自己创建
+脚手架配置了HTML驼峰标识。
+
+脚手架配置文件：
+
+* webpack.js：脚手架爱2及以下版本使用
+
+* vue.config.js：脚手架3及以上版本使用
+
+webpack.config.js和vue.config.js
+
+内容差不多，webpack.config.js创建项目自带，vue.config.js需要自己创建
 
 ```
 module.exports = {
@@ -2718,51 +2865,9 @@ module.exports = {
 }
 ```
 
-npm run serve 是根据package.json的entry运行
+webpack.config.js 与src同级目录
 
-配置绝对路径：
-
-绝对路径的别名，若保存给变量或拼接字符串时无效
-
-配置忽略后缀：
-
-index.html
-
-loader：
-
-是webpack解析css，less，图片，es6，ts，vue等的工具
-
-（3）配置文件的注意点
-
-配置文件有.js，.ts，.json等格式，都放在项目目录下。
-
-只要是配置文件，一旦修改必须重启项目才会生效
-
-## 3 vue-cli
-
-（1）功能
-
-脚手架自动创建目录，自动安装依赖，自动配置webpack
-
-脚手架配置了HTML驼峰标识
-
-（2）es-lint
-
-es-lint是强制的代码规范，不规范会报错
-
-（3）runtime
-runtime-compiler runtime-only区别在于template的渲染上
-runtime-compiler template-ast-render-vdom-UI
-runtime-only render-vdom-UI 效率高些且代码更少，使用这种的更多
-虽然only无法解析template，但是vue-loader会把所有template编译成render函数，就能使用。
-
-（4）配置文件相关
-
-脚手架2的配置文件：webpack.config.js 与src同级目录
-
-脚手架3及以上的配置文件：
-
-被隐藏了不可见，可以在项目目录输入命令，会在项目目录创建xxx.js文件，查看webpack默认配置
+脚手架3及以上的配置文件被隐藏了不可见，可以在项目目录输入命令，会在项目目录创建xxx.js文件，查看webpack默认配置
 
 ```
 vue inspect > xxx.js
@@ -2770,9 +2875,7 @@ vue inspect > xxx.js
 
 默认配置比较重要的有：
 
-* 绝对路径 @/
-
-* 
+- 绝对路径 @/
 
 若想要自定义webpack配置，要在项目目录下创建vue.config.js文件，编写webpack配置，若默认配置也有对应的配置，则vue.config.js会覆盖默认配置
 
@@ -2782,54 +2885,52 @@ module.exports = {
 }
 ```
 
-## 4 Vite
+
+
+runtime-compiler runtime-only区别在于template的渲染上
+runtime-compiler template-ast-render-vdom-UI
+runtime-only render-vdom-UI 效率高些且代码更少，使用这种的更多
+虽然only无法解析template，但是vue-loader会把所有template编译成render函数，就能使用。
+
+## 3 Vite
 
 1 创建项目
 
 vite不需要安装，直接使用即可
 
-1.1 式一，需要自己安装路由、pinia等
-
 ```
-npm init vite@latest
+npm create vite@latest
 ```
 
-安装依赖
-
-```
-npm install less less-loader --save-dev
-```
-
-1.2 方式二，创建时可以选择是否安装路由，pinia等
-
-```
-npm init vue@latest
-```
-
-2 必要步骤
-
-设置项目名并选择框架后就创建项目，创建完成后，需要安装依赖
+安装依赖：
 
 ```
 cd projectname
 npm install
 ```
 
-3 启动，打包
-
-启动：
+启动，打包：
 
 ```
 npm run dev
+npm run build
 ```
 
-打包：
+配置文件是 vite.config.js
 
-```
-npm  run build
-```
+## 4 打包
 
-3 与webpack的区别
+前端代码需要npm run build打包，对代码、资源等进行转换、优化、压缩等，才能得到线上运行的生产环境的代码。
+
+打包会得到html，es5的js，原始的css，压缩后的图片等。
+
+还会生成.map文件，.map文件是一种源代码映射文件，包含了代码中每一行的映射关系，可以帮助开发者在调试时更方便地追踪错误，定位问题。
+
+.map文件通常会被存储在服务器上，当浏览器在调试代码时会自动请求这个文件，将其与压缩后的代码进行比对，从而让开发者更容易地找到错误所在的位置。
+
+总之，.map文件是一种辅助调试工具，能够帮助开发者在打包后的代码中更轻松地进行调试和排错。
+
+但是生产环境中用不到.map且它也很大，所以需要删除.map文件。
 
 # 三、vue-router
 
@@ -2865,47 +2966,47 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
-import aaa from '...'            //普通方式导入组件，任何时候都有该组件
-const bbb = () => import('...')  //懒加载导入组件，只有使用该组件时才导入
+import aaa from '...' //普通方式导入组件，任何时候都有该组件
+const bbb = () => import('...') //懒加载导入组件，只有使用该组件时才导入
 
 const routes = [
-  //name可不写，name在路由跳转时可替代path
-  {
-    //默认路由，一进入页面就进入该路由，写在普通路由的前面后面都行
-    //默认路由不是必须的
-    path: '',   //也可以是 '/'
-    redirect: ‘/aaa’,  //有多钟写法，但这种最常用
-  },
-  {
-    path: '/aaa',
-    name: aaa,
-    alias: ['/aaa1','/aaa2'],  //可选参数，路由路径别名
-    component: aaa
-  },
-  {
-    path: '/bbb',
-    name: bbb,
-    component: bbb
-  },
-  {
-    path: '/ccc',
-    name: ccc,
-    component: () => import(''...)
-  },
+ //name可不写，name在路由跳转时可替代path
+ {
+ //默认路由，一进入页面就进入该路由，写在普通路由的前面后面都行
+ //默认路由不是必须的
+ path: '', //也可以是 '/'
+ redirect: ‘/aaa’, //有多钟写法，但这种最常用
+ },
+ {
+ path: '/aaa',
+ name: aaa,
+ alias: ['/aaa1','/aaa2'], //可选参数，路由路径别名
+ component: aaa
+ },
+ {
+ path: '/bbb',
+ name: bbb,
+ component: bbb
+ },
+ {
+ path: '/ccc',
+ name: ccc,
+ component: () => import(''...)
+ },
 
 ]
 const router = new VueRouter({
-  routes
-}) 
+ routes
+})
 
 export default router
 
 /2.main.js中
 import router from '...'
 ... new Vue({
-  ...
-  router,
-  ,,,  
+ ...
+ router,
+ ,,,  
 })
 
 //3.要展示的组件的template中，router-view可以有多个，一个router-view展示一次路由组件
@@ -2914,29 +3015,27 @@ import router from '...'
 
 //4.组件中使用
 <template>
-  <div>
-    router是所有路由共有，route是当前激活的路由独有。
-    {{ $route }}  {{ $router }}  
-  </div>
+ <div> router是所有路由共有，route是当前激活的路由独有。
+ {{ $route }} {{ $router }} </div>
 </template>
-
 <script>
 console.log(this.$route);
 console.log(this.$router);
 </script>
+
 ```
 
-this.\$route 中 有path和fullPath，区别：
+this.$route 中 有path和fullPath，区别：
 
 - path包含url和params参数，没有query参数，如 '/Profile/shop:123'
 
 - fullPath包括query'参数，如 '/Profile/shop:123?a=2'
 
-this.\$route 和 this.\$router.currentRoute的区别：
+this.$route 和 this.$router.currentRoute的区别：
 
-* Vue2没区别
+- Vue2没区别
 
-* Vue3，route是proxy对象，router.currentRoute是ref对象
+- Vue3，route是proxy对象，router.currentRoute是ref对象
 
 若想在js文件中引入：
 
@@ -2952,12 +3051,12 @@ import router from '...'
 
 ```
 {
-  path: '...',
-  component: () => import('...')
+ path: '...',
+ component: () => import('...')
 }
 ```
 
-这个import()是webpack提供的，作用是返回一个导入组件的Promise，自己也可以用动态import实现
+这个import()是webpack/vite提供的，作用是返回一个导入组件的Promise，自己也可以用动态import实现
 
 import()还可以结合注释，将大模块的几个页面放到一起。
 
@@ -2981,32 +3080,23 @@ hash，history，memory区别：
 
 相同点：
 
-* 代码中使用的url形式都是一样的。
+- 代码中使用的url形式都是一样的。
 
-* 底层实现上都是一样的，最终都是通过监听popstate事件触发路由跳转处理。
+- 底层实现上都是一样的，最终都是通过监听popstate事件触发路由跳转处理。它们三者的区别主要是浏览器中地址栏的展示和服务器部署上。
 
-它们三者的区别主要是浏览器中地址栏的展示和服务器部署上。
-
-* hash模式，浏览器地址栏会带上 '#' ，‘#’ 以及后面的都是哈希值，兼容性是最好的。
+- hash模式，浏览器地址栏会带上 '#' ，‘#’ 以及后面的都是哈希值，兼容性是最好的。
   
   ```
   // '#/home' 就是哈希值
-  https://xxx.com/#/home
+   https://xxx.com/#/home
   ```
   
-  哈希值不会不会作为路径给服务器，所以服务器部署上比较简单。
+  哈希值不会作为路径给服务器，所以服务器部署上比较简单。
 
-* history模式没有 '#' ，显得更好看。
+- history模式没有 '#' ，显得更好看。
   
-  ```
-  http://xxx.com/home
-  ```
-  
-  但是在服务器部署上要做一些特殊的配置和处理。
-  
-  整个url都会给服务器，但url都是前端路由跳转的，整个url给服务器并没有对应的资源，所以需要做url回退处理，将url去掉后面的前端路由变为正确的域名，否则刷新页面出现404。总之，history模式需要后端去处理。
-
-* memory路由则是把url存到一个对象里，是不可见的，适合于非浏览器（小程序，app），但也不是必须的。
+  但是在服务器部署上要做一些特殊的配置和处理。整个url都会给服务器，但url都是前端路由跳转的，整个url给服务器并没有对应的资源，所以需要做url回退处理，将url去掉后面的前端路由变为正确的域名，否则刷新页面出现404。总之，history模式需要后端去处理  http://xxx.com/home
+- memory路由则是把url存到一个对象里，是不可见的，适合于非浏览器（小程序，app），但也不是必须的
 
 （4）路由跳转
 
@@ -3018,44 +3108,35 @@ hash，history，memory区别：
 
 跳转类型：
 
-分为声明式导航和编程式导航
+* 声明式导航：以标签的形式跳转
+  
+  ```
+  <!-- 若to内使用了变量，则需要v-bind，否则则不用 -->
+  <router-link to=”/…”>点击</router-link>
+  ```
+  
+  
 
-编程式导航跳转后，后面的代码还会执行。
-
-若to内使用了变量，则需要v-bind，否则则不用
-
-```
-<!-- 
-声明式导航
-显示一个a标签，点击会push跳转到/…，跳转后可以返回 
-属性：
-tag=”标签名”  修改显示的标签，默认a，如button
-replace     使用replace修改url
-点击route-lick后，会得到router-link-active类，可以在style修改样式，若想重命名该该类：
-1.router-link属性active-class=”重命名”，每个都得加或
-2.router/index.js中，增加属性linkActiveClass:’重命名’  所以router-link都适用
--->
-
-<router-link to=”/…”>点击</router-link> 
-```
-
-```
-//编程式导航，如点击事件的事件函数
-fun(0}{
-  if(this.$route.path != xxx)        //只有当前路由与跳转路由不同是才跳转，否则会报错
-    this.$router.push('/xxx')   //也可以是replace
-    /*简写形式下
-    普通路由，push()可以是path也可以是name，底层会自动区分
-    嵌套路由，push()只能是path，因为name无法区分
-    */
-}
-```
+* 编程式导航：以js的形式跳转，编程式导航跳转后，后面的代码还会执行。
+  
+  ```
+  //编程式导航，如点击事件的事件函数
+  fun(0}{
+   if(this.$route.path != xxx) //只有当前路由与跳转路由不同是才跳转，否则会报错
+   this.$router.push('/xxx') //也可以是replace
+  
+   /*简写形式下
+   普通路由，push()可以是path也可以是name，底层会自动区分
+   嵌套路由，push()只能是path，因为name无法区分
+   */
+  }
+  ```
 
 router.push()和router.replace()：
 
-* push可返回，replace不可返回
+- push可返回，replace不可返回
 
-* 都返回一个Promise，跳转完成后回调。
+- 都返回一个Promise，跳转完成后回调。
 
 router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:’…’}，只有path可简写成’/…’
 
@@ -3063,9 +3144,9 @@ router-link的to和this.$router.push里完整写法是{path:’/…’}或{name:
 
 两种跳转类型的取舍：
 
-* 声明式简单：适用于只跳转或者只携带一点参数的路由跳转，不适用于有v-for出大量的列表情况，因为会创建出大量的router-link组件，影响性能。
+- 声明式简单：适用于只跳转或者只携带一点参数的路由跳转，不适用于有v-for出大量的列表情况，因为会创建出大量的router-link组件，影响性能。
 
-* 编程式导航：扩展性强，适合需要业务逻辑或大量参数的路由跳转，以及v-for出大量列表的情况，可以配合事件委派进一步提升性能。
+- 编程式导航：扩展性强，适合需要业务逻辑或大量参数的路由跳转，以及v-for出大量列表的情况，可以配合事件委派进一步提升性能。
 
 （5）router-link和router-view的原理
 
@@ -3077,19 +3158,17 @@ router-link默认生成a标签，点击后是取消默认跳转行为，并执�
 
 ```
 / /src/router/index.js
-...
 {
-  path: '/Home',
-  components: {
-    default: () => import('../views/Home/Home.vue'),
-    aaa:() => import('../views/Home/aaa.vue')
-  }
+ path: '/Home',
+ components: {
+ default: () => import('../views/Home/Home.vue'),
+ aaa:() => import('../views/Home/aaa.vue')
+ }
 },
-...
 
 //组件中
-<router-view />   展示deafult的组件
-<router-view name="aaa" />  展示名为aaa的组件
+<router-view /> 展示deafult的组件
+<router-view name="aaa" /> 展示名为aaa的组件
 ```
 
 ## 4 动态路由
@@ -3104,10 +3183,10 @@ params是传递参数的方式之一，但一次只能传递一个参数。
 //如user组件
 //路由配置中
 {
-  //配置动态路由后，必须携带参数才能访问该路由
-  //如果动态路由想不携带参数也能访问，可以配置可选参数 path: 'user/:aaa?'
-  path:’/user/:aaa’
-  component:user
+ //配置动态路由后，必须携带参数才能访问该路由
+ //如果动态路由想不携带参数也能访问，可以配置可选参数 path: 'user/:aaa?'
+ path:’/user/:aaa’
+ component:user
 }
 
 //组件中
@@ -3120,18 +3199,14 @@ this.$router.push('/user' + xxx)
 this.$router.push({name:'...',params:{...}})
 
 //若想获得跳转过来的路由参数，可以
-this.$route.params.xxx    
+this.$route.params.xxx
 ```
 
 注意事项：
 
 一般情况下，路由跳转会销毁跳转前的组件，除非使用了keep-alive，但如果是在动态路由内跳转该动态路由，只是params不一样，该组件不会重新销毁再创建，这会带来一些问题，比如无法进入created请求数据。
 
-解决方法：给router-view一个唯一标识的key，使Vue认为上面的情况跳转前后的组件时不一样的
-
-```
-<router-view :key="$route.fullPath" />
-```
+解决方法：给router-view一个唯一标识的key，使Vue认为上面的情况跳转前后的组件时不一样的。
 
 还有两种特殊的动态路由，不需要params参数：
 
@@ -3422,7 +3497,7 @@ const router = new VueRouter({
     from：路由切换前的路由对象。
     savedPosition：记录滚动位置的对象，仅在使用浏览器的前进/后退按钮时才可用。
     */
-     
+
     /*默认不配置滚动行为的情况
     return { x: 0, y: 0 };
     */
@@ -3452,8 +3527,6 @@ const router = new VueRouter({
   }
 })
 ```
-
-
 
 ## 11 如何从零开始写一个vue-router
 
@@ -5706,10 +5779,12 @@ defineProps({
   aaa: String,
   arr: Number
 })
+
+//ts可以设置必选参数和可选参数
 //ts写法一
 defineProps<{aaa: string, arr: number[]}>()
 //ts写法二
-type props = {aaa: string, arr: number[]}
+type props = {aaa: string, arr?: number[]}
 defineProps<props>()
 /*
 defineProps接收的变量可以在<template>和<style>中直接使用，但是无法直接在setup中使用，解决：
@@ -5724,10 +5799,11 @@ defineProps接收的变量可以在<template>和<style>中直接使用，但是�
 //ts写法
 type props = {
   aaa: string
-  bbb: number[]
+  bbb?: number[]
 }
 withDefaults(defineProps<props>(),{
   //引用数据类型需要函数形式
+  //默认值不是一定要给的，可以不给
   aaa: 'asdf',
   bbb: () => [1,2,3]
 })

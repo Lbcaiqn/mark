@@ -623,14 +623,23 @@ top  bottom  left  right，分别是距离上下左右边的距离
 ## 1 精灵图：
 
 将大量小图片合到一张大图片，一次请求就能获取大量图片，能减少对服务器的请求，减少服务器压力。
-精灵图中小图片的使用：
+
+盒子的宽高，背景图为精灵图，再通过设置背景图的偏移达到裁剪精灵图的目的。
 
 ```
-选择器 {
- width:目标图片宽;
- heighr:目标图片高;
- background: url(精灵图路径) no-repeat –xpx –ypx; //x y为目标图片坐标
-}
+<style>
+  .sprite {
+    background: url("../1.png") no-repeat;
+    display: inline-block;
+  }
+</style>
+
+<body>
+  <div class="sprite" style="background-position: 0 0; width: 100px; height: 100px"></div>
+  <div class="sprite" style="background-position: -50 -50; width: 100px; height: 100px"></div>
+</body>
+
+
 ```
 
 ## 2 字体图标
@@ -639,7 +648,29 @@ top  bottom  left  right，分别是距离上下左右边的距离
 
 图标库：https://icomoon.io/            https://www.iconfont.cn/
 
-引入...
+引入使用示例：
+
+```
+<style>
+@font-face {
+    font-family: 'FontAwesome';
+    src: url('/fonts/fontawesome-webfont.eot');
+    src: url('/fonts/fontawesome-webfont.eot?#iefix') format('embedded-opentype'),
+         url('/fonts/fontawesome-webfont.woff2') format('woff2'),
+         url('/fonts/fontawesome-webfont.woff') format('woff'),
+         url('/fonts/fontawesome-webfont.ttf') format('truetype'),
+         url('/fonts/fontawesome-webfont.svg#fontawesomeregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+</style>
+    
+<body>
+    <i class="fa fa-star"></i>
+</body>
+```
+
+
 
 ## 3 CSS三角，梯形，圆形
 

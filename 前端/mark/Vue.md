@@ -2885,8 +2885,6 @@ module.exports = {
 }
 ```
 
-
-
 runtime-compiler runtime-only区别在于template的渲染上
 runtime-compiler template-ast-render-vdom-UI
 runtime-only render-vdom-UI 效率高些且代码更少，使用这种的更多
@@ -3022,7 +3020,6 @@ import router from '...'
 console.log(this.$route);
 console.log(this.$router);
 </script>
-
 ```
 
 this.$route 中 有path和fullPath，区别：
@@ -3096,6 +3093,7 @@ hash，history，memory区别：
 - history模式没有 '#' ，显得更好看。
   
   但是在服务器部署上要做一些特殊的配置和处理。整个url都会给服务器，但url都是前端路由跳转的，整个url给服务器并没有对应的资源，所以需要做url回退处理，将url去掉后面的前端路由变为正确的域名，否则刷新页面出现404。总之，history模式需要后端去处理  http://xxx.com/home
+
 - memory路由则是把url存到一个对象里，是不可见的，适合于非浏览器（小程序，app），但也不是必须的
 
 （4）路由跳转
@@ -3114,8 +3112,6 @@ hash，history，memory区别：
   <!-- 若to内使用了变量，则需要v-bind，否则则不用 -->
   <router-link to=”/…”>点击</router-link>
   ```
-  
-  
 
 * 编程式导航：以js的形式跳转，编程式导航跳转后，后面的代码还会执行。
   

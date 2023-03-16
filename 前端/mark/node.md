@@ -172,19 +172,41 @@ package.json中
 ## 2 使用
 
 先建立一个存放服务器的文件夹，在该目录下：
+
+```
 npm init
 npm install express --save
+```
+
+
+
 启动服务器：
+
+```
 node xxx.js
+```
+
+
+
 自动重启服务器：
-调试：
-127.0.0.1:8000/url  可以调试
 
 通过nodemon启动服务器，当代码修改时会自动重启（但有时不会，就需要自己重启）
 
+```
 npm install --save nodemon
+```
 
-npx nodemon xxx.js  
+启动：
+
+```
+npx nodemon xxx.js
+```
+
+调试：
+
+127.0.0.1:8000/url 可以调试
+
+express使用：
 
 ```
 const express=require('express')

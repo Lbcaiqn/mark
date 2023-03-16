@@ -474,7 +474,9 @@ axios('/abc').then(res => {
 F12—network—All--Name中是项目的所有html/js等，点开能看到请求/响应报文
 其中，QueryString 能看到GET请求的query参数和POST请求的参数
 
-# 
+
+
+
 
 # 三、跨域
 

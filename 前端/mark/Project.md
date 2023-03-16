@@ -211,10 +211,7 @@ npx eslint --init
     src/assets
     public
     dist
-    
     ```
-    
-    
 
 .eslintrc.json
 
@@ -446,7 +443,6 @@ trim_trailing_whitespace = true
 [*.md]
 insert_final_newline = false
 trim_trailing_whitespace = false
-
 ```
 
 （2）环境变量配置：
@@ -501,18 +497,13 @@ tests/**/coverage/
 *.ntvs*
 *.njsproj
 *.sln
-
 ```
-
-
 
 （4）README
 
 README.md 是项目的说明文件，在github项目的首页会显示里面的内容。
 
 README-zh.md 和 README.md 同时存在时，github会根据浏览器的语言设置使用对应的README文件。
-
-
 
 ### 7.5 初始化CSS
 
@@ -538,6 +529,12 @@ import 'normalize.css'
 ```
 
 如果想统一管理，可以public下建立一个专门的css文件，里面导入normalize并补充自己的初始化样式，再在App.vue的script中导入或者index.html导入。
+
+使用less预处理器：
+
+```
+npm install --save less-loader
+```
 
 # 二、常用布局。交互效果和业务逻辑
 
@@ -2158,56 +2155,85 @@ CSS 是阻塞渲染的资源。需要将它尽早、尽快地下载到客户端�
   
   在装包的时候需要考虑该包是否需要在项目运行时使用，弱不需要就安装开发时依赖，这也是提升性能的一个点。
 
-### 4.5 代码压缩
 
-### 4.6 服务端渲染
 
 ## 5 SEO优化
 
-TDK：都放在head标签中
+SEO（搜索引擎优化），搜索引擎本质是爬虫，SEO优化可以使得搜索引擎能更好地搜索到自己的网站。
 
-```
-<title>网站名(产品名)-介绍(不要超过30个汉字)</title>
-<meta name=”description” content=”网站详细说明，服务，特色，电话等”>
-<meta name=”keywords” content=”英文逗号隔开的6-8个关键词，方便搜索引擎搜索”>
-```
+不过像后台管理系统，小程序，app等这些不需要经过搜索引擎的项目，就不需要SEO了。
 
-2 懒加载
+前端SEO只是在代码层面上的一些优化，只是SEO的一部分，更具体的就不是代码层面了。
 
-由懒加载（必用）
+常用方法：
 
-第三方库或组件懒加载（可选）
+* 尽量优化前端性化，防止加载超时使得爬虫放弃爬取网站内容
 
-3 精灵图，字体图标
+* TDK和favicon图标：
+  
+  TDK是网站的标题、关键字、描述，每个页面都可能不相同
+  
+  ```
+  <head>
+    <title>网站名(产品名)-介绍(不要超过30个汉字)</title>
+    <meta name=”description” content=”网站详细说明，服务，特色，电话等”>
+    <meta name=”keywords” content=”英文逗号隔开的6-8个关键词，方便搜索引擎搜索”>
+  </head>
+  ```
+  
+  favicon图标：
+  
+  一般作为缩略的网站标志，显示在浏览器的地址栏或tab标签上。
+  
+  需要将png的图片转换成.ico格式的图片并放到项目根目录中 [https://www.bitbug.net/](https://www.bitbug.net/) 引入：必须在放在head标签：
+  
+  ```
+  <link rel=”shortcar icon” href=”xx.ico” type=”image/x-icon”>
+  ```
+  
+  
 
-4 防抖与节流
+* HTML标签：
+  
+  * 使用语义化标签而不是div
+  
+  * 使用合理的标签，如文本使用h1-h6，p，span
+  
+  * img：
+    
+    * alt属性：alt 属性可以在图片未成功显示时候，使用文本来代替图片的呈现，使“蜘蛛”可以抓取到这个信息。此外它还可以解决浏览器禁用图像或屏幕阅读器解析等问题。
+    
+    * 需要定义宽高，否则会引起页面重新渲染，影响加载速度
+  
+  * a：
+    
+    * a链接的rel='nofollow： 如果某个 <a>的链接不需要跟踪，那么添加 rel='nofollow' 即可通知“蜘蛛”忽略跟踪。因为“蜘蛛”分配到每个页面的权重是一定的，为了集中网页权重并将权重分给其他必要的链接，为不必跟踪的链接添加这个属性就显得很必要了。
 
-5 logo
+* HTML结构：
+  
+  * HTML、CSS，JavaScript三者分离：如果在一个 HTML 页面中，编写大量的 CSS 样式或脚本，会拖慢其加载速度。
+  
+  * 扁平化结果：尽量减少HTML结构的层次，代码简洁清晰
 
-```
-logo优化规范：h1提高重要性，a返回首页
-<div class=”logo”>
-    <h1><a href=”index.html” title=”网站名称” >网站title</a></h1>
-</div>
-a的背景图片设置为logo，a里面的文字是为了被搜索引擎收录，但是为了美观需要隐藏：
-font-size: 0; 或 text-indent: -99999px;  overflow: hidden;
-```
+* 内容：
+  
+  * 尽量独特丰富：如合理插入图片说明等，会被认为质量较高符合用户需求，从而提高 SEO 的排名。
+  
+  * 内容放到合适的位置：
+  
+  * * 重要内容的 HTML 代码放在最前面，h标签可以增加重要性
+    
+    * 重要内容不应该由 JavaScript 或 iframe 输出，爬虫没有办法读取 JavaScript ，一般不会去读取 iframe 中的内容。（SPA就会有这个问题，解决方法是SSR）
+    
+    * logo：h1提高重要性，a返回首页，a里面的文字会被搜索引擎收录（但是为了美观需要隐藏 font-size: 0; 或 text-indent: -99999px; overflow: hidden;）
+      
+      ```
+      <div class=”logo”>
+          <h1><a href=”index.html” title=”网站名称” >网站title</a></h1>
+      </div>
+      ```
 
-6 favicon图标
 
-```
-favicon图标：
-一般作为缩略的网站标志，显示在浏览器的地址栏或标签上。
-将png的图片转换成.ico格式的图片并放到项目根目录中 https://www.bitbug.net/
-引入：必须在放在head标签
-<link rel=”shortcar icon” href=”xx.ico” type=”image/x-icon”>
-```
-
-end
-
-预加载
-
-代码压缩（打包）：将代码丑化，去除空格和换行
 
 # 六、前端网络安全
 
@@ -2219,7 +2245,9 @@ Cross Ste Scripting（跨站脚本攻击），缩写就不是CSS是为了避免�
 
 ## 1 浏览器兼容性
 
-手机浏览器没有兼容性问题，常见的PC浏览器如chroime、firefox、edge等也很少兼容性问题，浏览兼容性主要是指IE浏览器。
+手机浏览器几乎没有兼容性问题，常见的PC浏览器如chroime、firefox、edge等也很少兼容性问题，浏览兼容性主要是指IE浏览器。
+
+（1）HTML
 
 首先可以将版本较新的IE浏览器的渲染模式换成edge或chrome浏览器的：
 
@@ -2227,9 +2255,80 @@ Cross Ste Scripting（跨站脚本攻击），缩写就不是CSS是为了避免�
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 ```
 
-1
+（2）CSS
 
-## 2 跨平台
+① 统一不同浏览器的标签样式
+
+不同浏览器的HTML标签样式各不相同，需要统一它们的样式：
+
+```
+npm install --save normalize.css
+```
+
+```
+// App.vue
+<script>
+import 'normalize.css'
+</script>
+```
+
+② CSS属性前缀
+
+css是会不断发布新特性的，但是把这些新特性纳入规范需要一段时间，而在这段时间中各家浏览器都可以自己实现这些新特性，但是由于没有CSS规范的约束，使得这个CSS属性在不同的浏览器中可能会出现解析不了的星狂。
+
+解决方法是添加CSS属性前缀，前缀有：
+
+* -webkit- (Chrome, Safari, Edge)
+
+* -moz- (Firefox)
+
+* -ms- (Internet Explorer, Microsoft Edge)
+
+* -o- (Opera)
+
+举个例子，如果你要使用 CSS3 动画
+
+使用：
+
+```
+/* 没有前缀 */
+.box {
+  border-radius: 10px;
+}
+
+/* 加上前缀以保证在各家浏览器都能正常解析 */
+-webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -o-border-radius: 10px;
+  border-radius: 10px;
+```
+
+但是十分的麻烦，所以需要借助postcss，postcss可以自动加前缀，且还附带转化css的功能
+
+webpack、vite等的postcsss默认配置基本够用，如果需要另外配置，则配置 .postcss.config.js
+
+③ 根本不支持的css属性
+
+低版本IE浏览器对这些新特性没有进行实现，所以加前缀没有用，解决方法有以下几种：
+
+* 使用条件注释：条件注释是一种只在特定版本的 IE 浏览器中执行的注释语句。你可以使用条件注释来针对不同版本的 IE 浏览器提供不同的 CSS 样式表。例如，你可以使用如下代码来为 IE6 提供专门的样式表：
+  
+  ```
+  <!--[if IE 6]>
+    <link rel="stylesheet" type="text/css" href="ie6.css" />
+  <![endif]-->
+  ```
+
+* 使用 CSS Hack：CSS Hack 是一种通过使用浏览器私有属性来实现不同浏览器间的兼容性。但是，使用 CSS Hack 可能会导致代码可读性变差，不利于维护，需要谨慎使用。
+
+* 使用 Polyfill 或 JavaScript 库：一些 Polyfill 或 JavaScript 库，例如 Respond.js、CSS3PIE 等，可以让低版本的 IE 浏览器支持某些新的 CSS 属性或特性。
+
+（3）JS
+
+使用babel将js转换指定版本，如es5或更低的版本，webpack、vite等的默认配置基本够用，如果需要另外配置，则配置 .babel.config.js
+
+## 2 移动端跨平台
 
 各种小程序、安卓、ios的兼容。
 

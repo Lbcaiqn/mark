@@ -638,8 +638,6 @@ top  bottom  left  right，分别是距离上下左右边的距离
   <div class="sprite" style="background-position: 0 0; width: 100px; height: 100px"></div>
   <div class="sprite" style="background-position: -50 -50; width: 100px; height: 100px"></div>
 </body>
-
-
 ```
 
 ## 2 字体图标
@@ -664,13 +662,11 @@ top  bottom  left  right，分别是距离上下左右边的距离
     font-style: normal;
 }
 </style>
-    
+
 <body>
     <i class="fa fa-star"></i>
 </body>
 ```
-
-
 
 ## 3 CSS三角，梯形，圆形
 
@@ -1813,6 +1809,8 @@ lessc xxx.less xxx.css 在xxx.less文件目录下执行，将less编译成css
 ## 2 sass
 
 与less语法基本相同。
+
+还有scss，是sass的高级版本。
 
 区别：
 

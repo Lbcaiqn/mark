@@ -474,17 +474,13 @@ axios('/abc').then(res => {
 F12—network—All--Name中是项目的所有html/js等，点开能看到请求/响应报文
 其中，QueryString 能看到GET请求的query参数和POST请求的参数
 
-
-
-
-
 # 三、跨域
 
 跨域问题只会出现PC端、移动端的浏览器，小程序/app则没有跨域问题，服务器与服务器之间也没有跨域问题。
 
 浏览器虽然有跨域问题，但是不会限制script标签，link标签，iframe标签，img标签的跨域，a标签部分情况会限制跨域。
 
-发送post，put，delete请求时若出现跨域问题，浏览器会自己先发送一个options请求进行预检查，以判断后端支不支持这类请求，后端需要对options请求做处理（详见node笔记），前端就不用管了。
+发送post，put，delete请求时若出现跨域问题，浏览器会自己先发送一个options请求进行预检查，以判断后端支不支持这类请求，后端需要对options请求做处理（详见nest笔记），前端就不用管了。
 
 ## 1 同源策略
 
@@ -604,6 +600,6 @@ CORS：
 response.setHeader('Access-Control-Allow-Origin','*')
 第一个参数是固定写法，第二个参数是允许发送请求的url，*表示所有url都允许
 
-具体详见node笔记
+具体详见nest笔记
 
 # 

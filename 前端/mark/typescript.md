@@ -1206,7 +1206,7 @@ fun(u2)
 
 * 修饰符顺序举例：private static readonly
 
-* 只有public可以修饰构造函数的形参，这样就相当于直接声明赋值了，不用再this也不用先声明属性，是一个语法糖
+* 修饰符（public，private，protected，readonly等，除了static）修饰构造函数的形参，这样就相当于直接声明赋值了，不用再this也不用先声明属性，是一个语法糖
   
   ```
   class a {
@@ -1386,60 +1386,195 @@ console.log(obj)
 
 可以给属性，方法，类等等添加默认的一些东西
 
-类装饰器：
+（1）类装饰器
 
 可以给类添加属性方法
 
 ```
-//不带参数
 const xxx: ClassDecorator = (target: Function) => {
-  console.log(target)  //使用该装饰器的class的构造函数
+  //target是使用该装饰器的那个类的构造函数
+  console.log(target)
   //可以给原型上添加属性方法
   target.prototype.aaa = (a: number) => a
 }
-//带参数
-const yyy: ClassDecorator = (canshu: string): ClassDecorator => {
-  return (target: Function) => {
-    target.prototype.aaa = (a: number) => a
-  }
-}
-
 
 @xxx
 class A {}
 let obj = new A()
-console.log(obj.aaa(123))
+/*
+ts只检查类定义中的属性和方法，而不检查在运行时添加的属性和方法
+添加到原型上的也是，所以可能会报错，看以后ts会不会解决
+*/
+// console.log(obj.aaa(123))
+console.log((obj as any).aaa(123))
 
-@yyy('asdf')
-class B {}
-
-@xxx @yyy('asdf')
+//同时使用多个装饰器
+//方式一
+@xxx @yyy
 class C {}
-
+//方式二
 @xxx
-@yyy('asdf')
+@yyy
 class D {}
 ```
 
-属性装饰器，方法噶装饰器和参数装饰器：
+@xxx这种写法其实是语法糖：
 
 ```
-const propD: PropertyDecorator = (target,propName) => {
+@xxx
+class A {};
 
+//其实原本是这样的
+class A {};
+xxx(A);
+```
+
+```
+@xxx
+export class A {};
+
+//其实原本是这样的
+class A {};
+xxx(A);
+export A;
+```
+
+（2）属性装饰器，方法噶装饰器，参数装饰器
+
+```
+const propD: PropertyDecorator = (target: any, propName: string) => {
+  /*参数
+  target：类的原型对象
+  propName：使用该装饰器的属性名
+  */
 }
-const funcD: MethodDecorator = (target,funcName,tag) => {
-
+const funcD: MethodDecorator = (target: any, funcName: string, tag: PropertyDescriptor) => {
+  /*参数
+  target：类的原型对象
+  funcName：使用该装饰器的方法名
+  tag：使用该装饰器的方法的描述信息，如public还是private
+  */
 }
-const paramsD: ParameterDecorator = (target,paramsName,paramsLoc) => {
-
+const paramsD: ParameterDecorator = (target: any, funcName: string, paramsLoc) => {
+  /*参数
+  target：类的原型对象
+  funcName：使用该装饰器的方法名
+  parmasLoc：该参数在参数列表中的索引
+  */
 }
 
 class A {
   @propD
   aaa: string
   @funcD
-  fun(@paramsD n: numebr): number{ return n }
+  fun(@paramsD n: number): number{ return n }
 }
+```
+
+（3）装饰器工厂
+
+当使用装饰器的时候需要传入参数，就可以写成以下形式，叫做装饰器工厂。
+
+下面是一个类装饰器工厂：
+
+```
+const xxx: ClassDecorator = (canshu: string): ClassDecorator => {
+  return (target: Function) => {
+    target.prototype.aaa = (a: number) => a
+  }
+}
+
+@xxx('asdf')
+class A {}
+```
+
+属性/方法/参数装饰器也能这么做。
+
+## 6 控制反转
+
+控制反转（Inversion of Control，IoC）是面向对象的一种设计原则，可以降低代码之间的耦合度，最常见的一种实现方法是依赖注入（Dependency Injection，DI）。
+
+依赖注入就是在创建对象时，将该对象所依赖的其他对象通过参数、属性等方式传递进去，而不是让该对象自己去创建这些依赖对象。这样做的好处是，使得对象之间的依赖关系更加清晰，降低代码的耦合度，同时也更容易进行单元测试和模块化设计。
+
+先看一个没有使用DI的例子：
+
+```
+//B类想使用A类的属性和方法
+class A {
+  name: string;
+  constructor(){
+    this.name = 'lgx';
+  }
+}
+class B {
+  aaa: string;
+  constructor(){
+    this.aaa = new A().name
+  }
+}
+let b = new B();
+console.log(b.aaa);
+```
+
+如果改动了A类的代码，那么依赖A类的所有类都需要修改，十分麻烦：
+
+```
+class A {
+  name: string;
+  constructor(name: string){
+    this.name = name;
+  }
+}
+class B {
+  aaa: string;
+  constructor(){
+    this.aaa = new A('xgl').name
+  }
+}
+let b = new B();
+console.log(b.aaa);
+```
+
+出现这种情况的原因正是A类和B类的耦合度太高了，这还只是简单的依赖关系，如果又有C依赖B，D依赖C...，就更麻烦了。
+
+而使用DI的方式实现后：
+
+```
+//定义一个依赖注入容器
+class Container {
+  private module: any;
+  constructor(){
+    this.module = {};
+  }
+  provide(key: string, instance: any){
+    this.module[key] = instance;
+  }
+  inject(key: string){
+    return this.module[key];
+  }
+}
+
+//实例化容器
+let container = new Container();
+
+//测试
+class A {
+  name: string;
+  constructor(name: string){
+    this.name = name;
+  }
+}
+
+container.provide('A类的实例', new A('xxx'));
+
+class B {
+  aaa: string;
+  constructor(key: string){
+    this.aaa = container.inject(key).name;
+  }
+}
+let b = new B('A类的实例');
+console.log(b.aaa);
 ```
 
 # 五、泛型

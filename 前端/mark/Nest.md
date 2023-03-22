@@ -146,6 +146,45 @@ export class UserController {
 
 * 502：Bad Gateway，上游接口有问题或上游服务器错误
 
+## 4 资源访问
+
+设置静态文件夹：
+
+```
+//express
+const app = express();
+app.use(express.static("./public"));
+
+//nest
+// main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express/interfaces';
+import {join} from 'path';
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  //指定 /dist/aaa为静态文件夹
+  app.useStaticAssets(join(__dirname, './aaa'))
+  //也可以加一个虚拟路径前缀
+  /*
+  app.useStaticAssets(join(__dirname, './aaa'),{
+    prefix: '/xxx'
+  })
+  */
+  await app.listen(3000);
+}
+bootstrap();
+```
+
+（1）数据
+
+直接以JSON格式返回数据库的数据
+
+（2）图片
+
+图片保存在静态资源文件夹，返回网络URL，若多次请求传的数据不同，且后端由这些数据产生的图片命名相同覆盖，则浏览器会缓存第一次返回的托片而无法获得新图片，解决：返回图片url时， 给url加上时间戳或随机数，使得每次返回的url都不同，就不会缓存了
+
 ## 二、模块、控制器与服务
 
 一个nest项目分为若干个module，每个module通过若干controller提供各种service。
@@ -157,6 +196,23 @@ nest项目有一个主模块app，app引入子模块，而在main.ts中用app创
 - controller：控制器，就是后端路由，以 xxx.controll;er.ts 命名
 
 - service：服务，是具体的业务逻辑，以 xxx.service.ts 命名
+
+main.ts 内容：
+
+```
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import * as cors from 'cors';
+import { NestExpressApplication } from '@nestjs/platform-express/interfaces';
+
+
+async function bootstrap() {
+  //泛型NestExpressApplication传不传都行，传了可以使app有类型提示
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  await app.listen(3000);
+}
+bootstrap();
+```
 
 ## 1 模块
 
@@ -315,7 +371,7 @@ export class aController {
 
 ## 2 控制器
 
-（1）基本使用
+### 2.1 基本使用
 
 ```
 // xxx.controller.ts
@@ -354,7 +410,7 @@ export class UserController {
   //动态路由
   @Get(":id")
   ggg2(@Request() req){
-    console.log(req.params)
+    console.log(req.params.id);
     return {
       code: 200,
       messgae: 'ok'
@@ -383,9 +439,37 @@ export class UserController {
 
 总结：req的每个属性都有自己的装饰器如@Query()，可以直接取出来这些属性，且这些装饰器还可以传入参数再结构出来内部的属性。
 
-（2）中间件
+### 2.2 CORS跨域
 
-在路由之前做一些逻辑，类似前端的半个axios拦截器和半个导航守卫。
+```
+npm install --save cors @types/cors
+```
+
+```
+// main.ts
+import ...
+import * as cors from 'cors';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.enableVersioning({
+    type: VersioningType.URI //type接收VersioningType的枚举，URI最常用
+  })
+
+  //注意，跨域一定要放在所有use的最前面
+  app.use(cors());
+  await app.listen(3000);
+}
+bootstrap();
+```
+
+### 2.3 中间件、守卫、拦截器、管道
+
+执行顺序：中间件->守卫->管道->拦截器
+
+#### 2.3.1 中间件
+
+在路由之前做一些逻辑，
 
 （1）基本使用
 
@@ -459,26 +543,356 @@ async function bootstrap() {
 bootstrap();
 ```
 
-（3）CORS跨域
+#### 2.3.2 守卫
+
+用来做权限控制，jwt验证，访问控制等
 
 ```
-npm install --save cors @types/cors
+// nest g gu xxx
+// xxx.guard.ts
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { Observable } from "rxjs";
+import { Request, Response, NextFunction } from "express";
+import { Reflector } from "@nestjs/core";
+
+@Injectable()
+export class GuardGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(
+    context: ExecutionContext
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    console.log("来了");
+    const authority = this.reflector.get<string[]>(
+      "role",
+      context.getHandler()
+    );
+    console.log(authority); //['admin']
+
+    //如果没有设置守卫，就直接通过
+    if(!authority)  return true;
+
+    const ctx = context.switchToHttp();
+    const req = ctx.getRequest<Request>(),
+          res = ctx.getResponse<Response>(),
+          next = ctx.getNext<NextFunction>();
+
+    //...token检验...
+    
+    //权限检验
+    if (authority.includes(req.body.authority as string)) return true;
+    else return false;
+  }
+}
+
+
+```
+
+局部使用：
+
+```
+// xxx.controller.ts
+import { Controller, UseGuards,SetMetadata, Post } from '@nestjs/common';
+import { GuardGuard } from './guard/guard.guard';
+
+@Controller()
+@UseGuards(GuardGuard)
+//...
+```
+
+
+
+全局使用：（目前有错）
+
+```
+// main.ts
+import ...
+import { GuardGuard } from "./guard/guard.guard";
+import { Reflector } from "@nestjs/core";
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useGlobalGuards(new GuardGuard(new Reflector()))
+  await app.listen(3000);
+}
+bootstrap();
+
+
+```
+
+
+
+无论是局部还是全局，如果某个路由要是用守卫，都要：
+
+```
+// xxx.controller.ts
+import { Controller, UseGuards,SetMetadata, Post } from '@nestjs/common';
+import { GuardGuard } from './guard/guard.guard';
+
+@Controller()
+@UseGuards(GuardGuard)   //全局就不用这一行
+export class AppController {
+  
+  @Post()
+  @SetMetadata('role',['admin'])
+  xxx() {
+    return 'ok';
+  }
+}
+```
+
+
+
+#### 2.3.3 管道
+
+（1）管道转换
+
+将前端传过来的参数进行类型转换，转换成uuid等：
+
+```
+//原来
+// user.controller.ts
+// http://localhost:3000/user/123
+@Get(":id")
+findOne(@Params('id') id: string){
+  console.log(typeof id);  //string
+  return {
+    code: 200,
+    messgae: 'ok'
+  }
+}
+
+//管道转换
+// user.controller.ts
+// http://localhost:3000/user/123
+// import { ParseIntPipe } from "@nestjs/common";
+@Get(":id")
+findOne(@Param('id', ParseIntPipe) id: number){
+  console.log(typeof id);  //number
+  return {
+    code: 200,
+    messgae: 'ok'
+  }
+}
+```
+
+（2）管道验证dto（Data  Transform Object）
+
+前端虽然做了表单验证，但是仍然会有非法的途径将非法数据传给后端，所以后端也需要做验证：
+
+```
+npm install --save class-validator class-transformer
+```
+
+```
+// login/dto/create-login.dto.ts
+import { IsNotEmpty, IsNumber } from "class-validator";
+
+export class CreateLoginDto {
+  //没有做任何验证
+  name: string;
+  
+  //使用class-validator，这里演示非空和限定类型为number
+  @IsNotEmpty()
+  @IsNumber()
+  age: number
+}
+
+
+```
+
+方式一：
+
+```
+// login.controller.ts
+import ...
+
+@Controller('login')
+export class LoginController {
+
+  @Post()
+  create(@Body(LoginPipe) createLoginDto: CreateLoginDto) {
+    return 'ok';
+  }
+}
+
+
+```
+
+```
+// nest g pi login
+// login.pipe.ts
+import {
+  ArgumentMetadata,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  PipeTransform,
+} from "@nestjs/common";
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
+
+@Injectable()
+export class LoginPipe implements PipeTransform {
+  async transform(value: any, metadata: ArgumentMetadata) {
+    //value是前端传的参数，metadata是这些参数的元信息如类型
+    const DTO = plainToInstance(metadata.metatype, value);
+
+    //fail是一个收集验证失败的数组，全部验证通过就是一个空数组
+    const fail = await validate(DTO);
+    if (fail.length) {
+      // 枚举HttpStatus.BAD_REQUEST对应的状态码是400，表示参数错误
+      throw new HttpException(fail, HttpStatus.BAD_REQUEST);
+    }
+    return value;
+  }
+}
+
+
+```
+
+
+
+方式二，不用自己写pipe文件：
+
+```
+// login.controller.ts
+@Post()
+create(@Body() createLoginDto: CreateLoginDto) {
+  return 'ok';
+}
 ```
 
 ```
 // main.ts
 import ...
-import * as cors from 'cors';
+import {ValidationPipe} from '@nestjs/common'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.enableVersioning({
-    type: VersioningType.URI //type接收VersioningType的枚举，URI最常用
-  })
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useGlobalPipes(new ValidationPipe());
+  await app.listen(3000);
+}
+bootstrap();
 
-  //注意，如果有全局中间件的话，一定要放在use全局中间件的前面
-  app.use(cors());
-  //app.use(midAll);
+
+```
+
+
+
+#### 2.3.4 拦截器
+
+（1）响应拦截器
+
+可以拦截响应，并可以对响应结果做一些操作，比如：
+
+```
+// 某个控制器  返回 "HelloWorld"
+@Get()
+getHello() {
+  return “HelloWorld”
+}
+// 现在想返回 {"data":“HelloWorld”,"status":200,"messgae":"666","sucess":true}，就需要用到响应拦截器
+```
+
+定义响应拦截器：
+
+```
+// /src/common/Response.ts
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from "@nestjs/common";
+import { map } from "rxjs/operators";
+import { Observable } from "rxjs";
+
+interface Data<T> {
+  data: T;
+}
+
+@Injectable()
+export class ResponseInterceptor<T> implements NestInterceptor {
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler<any>
+  ): Observable<Data<T>> | Promise<Observable<Data<T>>> {
+    return next.handle().pipe(
+      map((data) => {
+        return {
+          data,
+          status: 200,
+          messgae: "666",
+          sucess: true,
+        };
+      })
+    );
+  }
+}
+```
+
+使用：
+
+```
+// main.ts
+import ...
+import { ResponseInterceptor } from "./common/Response";
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  await app.listen(3000);
+}
+bootstrap();
+```
+
+（2）异常拦截器
+
+当路由异常时生效，可以自定义一些异常信息
+
+定义异常拦截器：
+
+```
+// /src/common/HttpFilter.ts
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+} from "@nestjs/common";
+import { Request, Response, NextFunction } from "express";
+
+@Catch()
+export class HttpFilter implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+
+    const req = ctx.getRequest<Request>(),
+          res = ctx.getResponse<Response>(),
+          next = ctx.getNext<NextFunction>();
+
+    res.status(exception.getStatus()).json({
+      sucess: false,
+      time: new Date(),
+      path: req.url,
+      status: exception.getStatus(),
+      data: exception.message
+    })
+  }
+}
+```
+
+使用：
+
+```
+// main.ts
+import ...
+import { HttpFilter } from "./common/HttpFilter";
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useGlobalFilters(new HttpFilter())
   await app.listen(3000);
 }
 bootstrap();
@@ -650,9 +1064,156 @@ export class UserController {
 
 注意：如果工厂函数用async修饰，虽然返回的是Promise，但nest内部做了处理简化了，使得在controller接收的时候类型直接是number而不是Promise，获取的值页直接是123。
 
-## 三、CRUD
+## 4 自定义装饰器
 
-## 四、Web Socket
+基本使用：
+
+```
+// nest g d xxx
+// xxx.decorator.ts
+import { SetMetadata } from '@nestjs/common';
+//SetMetadata注入的值可以用Reflector取出，详见守卫笔记。
+export const xxx = (...args: string[]) => SetMetadata('xxx', args);
+
+
+```
+
+
+
+```
+// xxx.conftroller.ts
+@Post()
+// @SetMetadata('role',['admin'])  //其实就等同于这一行
+@MyD('admin')
+```
+
+参数装饰器：
+
+使用就是 @xxx('id')  其实这就是@Req  @Param 等的实现原理。
+
+```
+import { createParamDecorator, ExecutionContext} from '@nestjs/common';
+import {Request, Response, NextFunction} from 'express';
+
+export const xxx = createParamDecorator((data: string, context: ExecutionContext) => {
+  const ctx = context.switchToHttp();
+  const req = ctx.getRequest<Request>(),
+          res = ctx.getResponse<Response>(),
+          next = ctx.getNext<NextFunction>();
+
+  return req;
+  
+  //聚合装饰器，可以合成多个装饰器
+  //return applyDecorators(xxx,yyy,zzz);
+})
+```
+
+
+
+## 三、CRUD和连接数据库
+
+# 四、接口文档
+
+接口文档是自动生成的。
+
+```
+npm install --save @nestjs/swagger swagger-ui-express
+```
+
+如果安装失败，就删掉node_modules，然后用pnpm安装。
+
+初始化：
+
+```
+// main.ts
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import { NestExpressApplication } from "@nestjs/platform-express/interfaces";
+
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // http://localhost:3000/api-docs#
+  const options = new DocumentBuilder()
+        .addBearerAuth()
+        .setTitle("我的接口文档")
+        .setDescription("我的描述")
+        .setVersion("1")
+        .build();
+  const docs = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup("/api-docs", app, docs);
+
+  app.use(cors());
+  await app.listen(3000);
+}
+bootstrap();
+
+
+```
+
+给接口文档添加各种描述：
+
+```
+// xxx.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { LoginService } from './login.service';
+import { CreateLoginDto } from './dto/create-login.dto';
+import { UpdateLoginDto } from './dto/update-login.dto';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+
+@Controller('login')
+@ApiTags('登录接口')
+@ApiBearerAuth()
+export class LoginController {
+  constructor(private readonly loginService: LoginService) {}
+
+  @Post()
+  @ApiOperation({summary: "某个post接口", description: '描述xxx'})
+  @ApiResponse({status: 403, description: '参数错误'})
+  create(@Body() createLoginDto: CreateLoginDto) {
+    return 'ok';
+  }
+
+  @Get()
+  @ApiOperation({summary: "某个get接口", description: '描述xxx'})
+  @ApiQuery({name: 'username', description: '用户名'})
+  @ApiQuery({name: 'password', description: '密码'})
+  @ApiResponse({status: 403, description: '参数错误'})
+  findAll() {
+    return this.loginService.findAll();
+  }
+
+  @Get(':id')
+  @ApiOperation({summary: "某个get接口", description: '描述xxx'})
+  @ApiParam({name: 'id', description: '这是一个必传的动态参数id', required: true, type: 'string'})
+  @ApiResponse({status: 403, description: '参数错误'})
+  findOne(@Param('id') id: string) {
+    return this.loginService.findOne(+id);
+  }
+}
+
+```
+
+```
+// xxx.dto.ts
+import { ApiProperty } from "@nestjs/swagger/dist";
+
+export class CreateLoginDto {
+  //没有做任何验证
+  @ApiProperty({example: 'lgx'})
+  name: string;
+}
+
+
+```
+
+还有很多Apixxx，每个Apixxx也有很多参数，详见文档，这里只列举最常用的。
+
+
+
+## 五、Web Socket
 
 HTML5的新特性，之所以不记在HTML笔记或ajax笔记里，是因为它需要结合后端。
 
@@ -666,7 +1227,9 @@ http是单向的，通过客户端发请求，服务端响应回去；而WebSock
 
 后端：
 
-## 五、常见功能实现
+##
+
+# 六、常见功能实现
 
 ## 1 注册/登录/鉴权/权限管理
 
@@ -1370,7 +1933,7 @@ function cutChunk(option: CutChunkOption): any {
 }
 ```
 
-（7）将上面的自定义方法封装成工具类
+### 2.2 自定义API封装成工具类
 
 方便使用：
 
@@ -1489,7 +2052,7 @@ export default class Upload implements UploadInterface {
 }
 ```
 
-### 2.2 文件上传前需要知道的内容
+### 2.3 文件上传前需要知道的内容
 
 （1）后端文件存储形式
 
@@ -1628,9 +2191,9 @@ onUploadProgress: (progress: any) => {
 
 此外，不仅是上传，在其他业务中也可能需要用到进度条。
 
-### 2.3 文件上传的不同实现
+### 2.4 文件上传的不同实现
 
-#### 2.3.1 单文件上传（FormData）
+#### 2.4.1 单文件上传（FormData）
 
 post请求，请求体放FormData，设置请求头为：
 
@@ -1672,7 +2235,7 @@ function upload(e: any) {
 <template>
   <div id="upload">
     <input ref="uploadRef" type="file" style="display: none" @change="upload" />
-    <button @click="uploadRef.click()">点击上传</button>
+    <button @click="uploadRef?.click()">点击上传</button>
   </div>
 </template>
 
@@ -1711,7 +2274,60 @@ app.listen(8000, () => {
 
 后端代码（nest版）：
 
-#### 2.3.2 单文件上传（base64）
+```
+npm install --save multer @types/multer
+```
+
+```
+// upload.module.ts
+import { Module } from "@nestjs/common";
+import { UploadController } from "./upload.controller";
+import { MulterModule } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
+import { extname, join } from "path";
+
+@Module({
+  imports: [
+    MulterModule.register({
+      //定义上传文件的存放目录
+      storage: diskStorage({
+        // 目录在 /dist/aaa
+        destination: join(__dirname, "../aaa"),
+        //文件名
+        filename: (_, file, callback) => {
+          //命名为时间戳，extname()可以去除后缀名
+          const fileName = `${new Date().getTime() + extname(file.originalname)}`;
+          return callback(null, fileName);
+        },
+      }),
+    }),
+  ],
+  controllers: [UploadController],
+})
+export class UploadModule { }
+```
+
+```
+// upload.controller.ts
+import { Controller, Post, UseInterceptors, UploadedFile} from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+
+@Controller('upload')
+export class UploadController {
+  @Post()
+  //fileInterceptor为单文件上传, filesInterceptor为多文件上传
+  @UseInterceptors(FileInterceptor('file'))
+  upload(@UploadedFile() file) {
+    console.log(file);
+    return {
+      code: 200,
+      message: '上传成功'
+    };
+  }
+}
+```
+
+#### 2.4.2 单文件上传（base64）
 
 适合图片，音频，视频，图片居多
 
@@ -1723,13 +2339,13 @@ post请求，请求体base64
 headers:{'Content-Type':'application/x-www-dorm-urlencoded'}
 ```
 
-### 2.3.3 多文件上传
+### 2.4.3 多文件上传
 
 选择文件，一是file表单增加属性multiple，一次选多个，在change事件中将files数组的元素全append到FormData，二是不加multiple，一次选一个，每次change将files[0]的文件append到已声明的FormData，最终都是得到含有多个file对象的FormData
 
 上传文件也有两种方式，一是一次性上传全部file（但无法获得进度），后端通过req.files得到各个file信息并改名。二是每个file单独上传（能获得每个file的进度），都断与单文件上传一样。
 
-### 2.3.4 大文件上传（切片与断点续传）
+### 2.4.4 大文件上传（切片+断点续传）
 
 前端代码：
 
@@ -1949,7 +2565,11 @@ app.listen(8000, () => [console.log("服务已启动")]);
 
 ## 3 文件下载
 
-正常情况下，部署到静态文件夹的文件，浏览器输入或a标签的href是这个文件的url，若文件是浏览器无法解析的，如exe，csv等，则会进行下载；若是浏览器可以解析的，如html，图片等，则不进行下载，而是预览。
+正常情况下，部署到静态文件夹的文件，浏览器输入或a标签的href是这个文件的url：
+
+* 若文件是浏览器无法解析的，如exe，csv等，则会进行下载
+
+* 若是浏览器可以解析的，如html，图片等，则不进行下载，而是预览。
 
 H5的a标签增加了新属性download，加上之后，html、图片等等也会进行下载，但是只在同源下有效（即使前端、后端设置了允许跨域也不行），跨域需要另外的解决方案。
 
@@ -1973,34 +2593,69 @@ H5的a标签增加了新属性download，加上之后，html、图片等等也�
 
 以下是ajax请求uri生成a标签的方案：
 
+注意，虽然a加了download，但：
+
+* 要跨域的可解析文件不下载而是打开，无法解析的才能下载，就和没加download一样
+
+* 同源的所有文件都能下载，其实这就是download的功能
+
 前端代码：
 
 ```
-axios({
- url: 'localhost:8000/download',
- method: 'get',
- params: {
- ...  
- },
- }).then(res => {
- let url = res.data.url, fileName = res.data.fileNmae  
- let ele = document.createElement("a")  
- ele.style.display = 'none'  
- ele.href = url  
- ele.download = fileName  
- document.querySelectorAll("body")[0].appendChild(ele)  
- ele.click()  
- ele.remove()
- })
+<script setup lang="ts">
+import { ref } from "vue";
+import axios from "axios";
+
+async function download() {
+  const res = await axios({
+    url: "http://localhost:8000/download",
+    method: "get",
+    params: {
+      //...
+    },
+  });
+  let url = res.data.url, fileName = res.data.fileNmae;
+  let ele = document.createElement("a");
+  ele.style.display = "none";
+  ele.href = url;
+  ele.download = fileName;
+  document.querySelectorAll("body")[0].appendChild(ele);
+  ele.click();
+  ele.remove();
+}
+</script>
+
+<template>
+  <button @click="download">下载</button>
+</template>
+
+<style lang="less" scoped></style>
 ```
 
-后端代码：
+后端代码（express版）：
 
 ```
-app.post('/download',(req,res) => {
- //根据req的参数得到要下载的文件url
- res.send(...) 
-}）
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+app.use(cors());
+
+//现在public文件夹下放要被下载的文件
+app.use(express.static("./public"));
+
+app.get("/download", (req, res) => {
+  console.log(123);
+  //根据req的参数得到要下载的文件url，这里就不管参数直接返回路径了
+  res.send({
+    url: "http://localhost:8000/lgx.html",
+    fileName: "lgx.html",
+  });
+});
+
+app.listen(8000, () => {
+  console.log("start");
+});
 ```
 
 ### 3.2 返回文件流
@@ -2014,48 +2669,164 @@ url下载最大的问题就是跨域情况下无法下载浏览器可预览的ht
 前端代码：
 
 ```
-axios({
- url: 'localhost:8000/download',
- method: 'get',
- responseType: 'blob',
- params: {
- ...
- }
- }).then(res => {
- if(!res) {
- console.log('下载失败')
- return
- }
- let blob = new Blob([res.data],{
- type: 'image/png' //可以查阅blob.type
- })
- let url = window.URL.createObjectURL(blob)  
- let ele = document.createElement("a")  
- ele.style.display = 'none'  
- ele.href = url  
- ele.download = '123' //有了blob的type后缀会自己加上  
- document.querySelectorAll("body")[0].appendChild(ele)  
- ele.click()  
- ele.remove()
- })
+<script setup lang="ts">
+import { ref } from "vue";
+import axios from "axios";
+
+async function download() {
+  let res = await axios({
+    url: "http://localhost:8000/download",
+    method: "get",
+    responseType: "arraybuffer",  //或者blob
+    params: {
+      //...
+    },
+  });
+
+  //将文件流转为url后下载
+  if (!res) {
+    console.log("下载失败");
+    return;
+  }
+  let blob = new Blob([res.data], {
+    type: "image/png", //可以网上查阅blob.type
+  });
+  let url = window.URL.createObjectURL(blob);
+  let ele = document.createElement("a");
+  ele.style.display = "none";
+  ele.href = url;
+  ele.download = "123"; //有了blob的type，如果fileName没有后缀，后缀也会会自己加上
+  document.querySelectorAll("body")[0].appendChild(ele);
+  ele.click();
+  ele.remove();
+}
+</script>
+
+<template>
+  <button @click="download">下载</button>
+</template>
+
+<style lang="less" scoped></style>
 ```
 
-后端代码：
+后端代码（express版）：
 
 ```
-app.get('/download',(req,res) => {
- res.download('./public/a.png')
- })
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+app.use(cors());
+
+//现在public文件夹下放要被下载的文件
+app.use(express.static("./public"));
+
+app.get("/download", (req, res) => {
+  //根据req的参数得到要下载的文件url，这里就不管参数直接返回路
+  /*
+  可以访问 服务器地址/download 下载
+  可以 <a href="服务器地址/download" /> 下载
+  可以 window.open('服务器地址/download') 下载
+  可以将文件流转为url后下载
+  */
+  res.download("./public/lgx.png");
+});
+
+app.listen(8000, () => {
+  console.log("start");
+});
+```
+
+后端代码（nest版）：
+
+如果有压缩后再给前端下载的话可以使用compressing
+
+```
+npm install --save compression
+```
+
+```
+// download/controller.ts
+import { Controller, Get, Res } from "@nestjs/common";
+import { Response } from "express";
+import { join } from "path";
+
+@Controller("download")
+export class DownloadController {
+  @Get()
+  download(@Res() res: Response) {
+    //下载 /dist/aaa 目录下的文件
+    /*
+    可以访问 服务器地址/download 下载
+    可以 <a href="服务器地址/download" /> 下载
+    可以 window.open('服务器地址/download') 下载
+    可以将文件流转为url后下载
+    */
+
+    /* 方式一
+    res.download(join(__dirname, "../aaa/1679373780635.png"));
+    */
+
+    /* 方式二，fs将文件转为文件流
+
+    */
+
+    /*方式三  compressing压缩并转为文件流
+    // 下载 /dist/aaa 目录下的文件
+    const tarStream = new zip.Stream();
+    await tarStream.addEntry(join(__dirname, "../aaa/lgx.png"));
+    // 设置相应头
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', 'attachment; filename=lgx.zip');
+    // 返回流
+    tarStream.pipe(res);
+    */
+  }
+}
 ```
 
 ### 3.3 大文件下载
 
-## 4 资源访问
+### 3.3 下载封装成工具类
 
-（1）数据
+方便使用：
 
-直接以JSON格式返回数据库的数据
+```
+interface DownloadInterface {
+  aDownload: (url: string, fileName: string) => void;
+  streamDownload: (stream: Blob, fileType: string, fileName: string) => void;
+  bigDownload: () => void;
+}
 
-（2）图片
+export default class Download implements DownloadInterface {
+  public static async aDownload(url: string, fileName: string): void {
+    let ele = document.createElement("a");
+    ele.style.display = "none";
+    ele.href = url;
+    ele.download = fileName;
+    document.querySelectorAll("body")[0].appendChild(ele);
+    ele.click();
+    ele.remove();
+  }
 
-图片保存在静态资源文件夹，返回网络URL，若多次请求传的数据不同，且后端由这些数据产生的图片命名相同覆盖，则浏览器会缓存第一次返回的托片而无法获得新图片，解决：返回图片url时， 给url加上时间戳或随机数，使得每次返回的url都不同，就不会缓存了
+  public static async streamDownload(stream: Blob, fileType: string, fileName: string): void {
+    let blob = new Blob([stream], {
+      type: fileType, //可以网上查阅blob.type
+    });
+    let url = window.URL.createObjectURL(blob);
+    let ele = document.createElement("a");
+    ele.style.display = "none";
+    ele.href = url;
+    ele.download = fileName; //有了blob的type，如果fileName没有后缀，后缀也会会自己加上
+    document.querySelectorAll("body")[0].appendChild(ele);
+    ele.click();
+    ele.remove();
+  }
+
+  public static bigDownload(): void {
+
+  }
+}
+```
+
+## 

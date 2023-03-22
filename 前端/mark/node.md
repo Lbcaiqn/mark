@@ -257,8 +257,11 @@ app.listen('8000',() => {
 })
 ```
 
-restfulAPI：
+跨域除了手动设置外，还可以直接使用第三方库：
 
-后端接口的设计规范，增删改查的请求分别是post，delete，put，get
-
- 
+```
+const express = require('express');
+const cors = require('cors');
+const app = express();
+app.use(cors());
+```

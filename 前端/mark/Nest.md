@@ -578,14 +578,12 @@ export class GuardGuard implements CanActivate {
           next = ctx.getNext<NextFunction>();
 
     //...token检验...
-    
+
     //权限检验
     if (authority.includes(req.body.authority as string)) return true;
     else return false;
   }
 }
-
-
 ```
 
 局部使用：
@@ -599,8 +597,6 @@ import { GuardGuard } from './guard/guard.guard';
 @UseGuards(GuardGuard)
 //...
 ```
-
-
 
 全局使用：（目前有错）
 
@@ -616,11 +612,7 @@ async function bootstrap() {
   await app.listen(3000);
 }
 bootstrap();
-
-
 ```
-
-
 
 无论是局部还是全局，如果某个路由要是用守卫，都要：
 
@@ -632,7 +624,7 @@ import { GuardGuard } from './guard/guard.guard';
 @Controller()
 @UseGuards(GuardGuard)   //全局就不用这一行
 export class AppController {
-  
+
   @Post()
   @SetMetadata('role',['admin'])
   xxx() {
@@ -640,8 +632,6 @@ export class AppController {
   }
 }
 ```
-
-
 
 #### 2.3.3 管道
 
@@ -691,14 +681,12 @@ import { IsNotEmpty, IsNumber } from "class-validator";
 export class CreateLoginDto {
   //没有做任何验证
   name: string;
-  
+
   //使用class-validator，这里演示非空和限定类型为number
   @IsNotEmpty()
   @IsNumber()
   age: number
 }
-
-
 ```
 
 方式一：
@@ -715,8 +703,6 @@ export class LoginController {
     return 'ok';
   }
 }
-
-
 ```
 
 ```
@@ -747,11 +733,7 @@ export class LoginPipe implements PipeTransform {
     return value;
   }
 }
-
-
 ```
-
-
 
 方式二，不用自己写pipe文件：
 
@@ -774,11 +756,7 @@ async function bootstrap() {
   await app.listen(3000);
 }
 bootstrap();
-
-
 ```
-
-
 
 #### 2.3.4 拦截器
 
@@ -1074,11 +1052,7 @@ export class UserController {
 import { SetMetadata } from '@nestjs/common';
 //SetMetadata注入的值可以用Reflector取出，详见守卫笔记。
 export const xxx = (...args: string[]) => SetMetadata('xxx', args);
-
-
 ```
-
-
 
 ```
 // xxx.conftroller.ts
@@ -1102,15 +1076,149 @@ export const xxx = createParamDecorator((data: string, context: ExecutionContext
           next = ctx.getNext<NextFunction>();
 
   return req;
-  
+
   //聚合装饰器，可以合成多个装饰器
   //return applyDecorators(xxx,yyy,zzz);
 })
 ```
 
+## 三、连接数据库
 
+CRUD：
 
-## 三、CRUD和连接数据库
+* C（create）：给数据库增加新数据，对应post请求
+
+* R（read）：读取数据库数据，对应get‘请求
+
+* U（update）：修改数据库数据，对应put请求或
+
+* D（delete）：删除数据库数据，对应delete请求
+
+数据库可视化工具：vscode插件Database Client，安装会会出现在左侧菜单栏。
+
+nest链接mysql的库：
+
+```
+npm install --save @nestjs/typeorm typeorm mysql2
+```
+
+初始化：
+
+```
+// App.module.ts
+import ...
+import { TypeOrmModule } from "@nestjs/typeorm";
+
+@Module({
+  imports: [
+    TypeOrmModule.forRoot({
+      type: "mysql",
+      username: "root",
+      password: "123456",
+      host: "localhost",
+      port: 3306,
+      database: "db001",         //要连接的数据库
+      //entities: [__dirname + "/**/*.entity{.ts,.js}"], //正则匹配引入实体文件
+      synchronize: true, //自动同步，生产环境不要用，开发环境可以用
+      retryDelay: 500,           //重连数据库的时间间隔
+      retryAttempts: 10,         //重连次数
+      autoLoadEntities: true,    //自动加载实体
+    }),
+    //...
+  ],
+  controllers: [/*...*/],
+  providers: [/*...*/],
+})
+export class AppModule {}
+```
+
+实体：
+
+实体就是映射某一个table的类，类里面可以定义table的字段，在每个res文件下的entites/xxx.entities.ts中定义：
+
+以下只列举最常用的装饰器和装饰器里的常用选项，更多见文档。
+
+```
+// xxx.entities.ts
+import { timestamp } from "rxjs";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Generated,
+} from "typeorm";
+
+enum sexEnum {
+  unknown = 2,
+  male = 1,
+  female = 0,
+}
+
+@Entity()
+export class Db {
+  @PrimaryGeneratedColumn()             //自动自增的主键
+  // @PrimaryGeneratedColumn('uuid')    //自动自增的uuid主键
+  id: number;
+
+  @Column() //列
+  username: string;
+
+  @Column({
+    select: true,            //select为true表示查询的时候忽略掉
+    type: "varchar",         //数据类型
+    length: 255,             //长度
+    comment: "注释xxx",      //注释
+    default: "123456",      //默认值
+    nullable: false,        //不能为空
+  })
+  password: string;
+
+  @Column({                //枚举
+    type: "enum",
+    enum: sexEnum,
+    default: 2,
+  })
+  sex: number;
+
+  @Generated("uuid")
+  uuid: string;
+
+  @CreateDateColumn({ type: "timestamp" })
+  time: Date;
+
+  @Column("simple-array")
+  hobbits: string[];
+
+  @Column("simple-json")             //自动JSON.stringify()
+  jjj: { name: string; age: number };
+}
+```
+
+引入实体：
+
+引入实体后，数据库会创建对应的table；每次修改实体代码，也会修改对应的table内容。
+
+引入的方式有三种：
+
+* App.module.ts中引入各个实体文件再塞进typeorm初始化里（不推荐）
+
+* typeorm初始化里正则匹配找entities文件（不推荐）
+
+* 自动加载：
+  
+  ```
+  // xxx.module.ts
+  import ...
+  import { TypeOrmModule } from '@nestjs/typeorm';
+  import { xxx } from './entities/xxx.entity'
+  
+  @Module({
+    imports: [TypeOrmModule.forFeature([xxx])],
+    //...
+  })
+  export class xxxModule {}
+  ```
 
 # 四、接口文档
 
@@ -1137,20 +1245,17 @@ async function bootstrap() {
 
   // http://localhost:3000/api-docs#
   const options = new DocumentBuilder()
-        .addBearerAuth()
-        .setTitle("我的接口文档")
-        .setDescription("我的描述")
-        .setVersion("1")
-        .build();
+                  .addBearerAuth()
+                  .setTitle("我的接口文档")
+                  .setDescription("我的描述")
+                  .setVersion("1")
+                  .build();
   const docs = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup("/api-docs", app, docs);
 
-  app.use(cors());
   await app.listen(3000);
 }
 bootstrap();
-
-
 ```
 
 给接口文档添加各种描述：
@@ -1193,7 +1298,6 @@ export class LoginController {
     return this.loginService.findOne(+id);
   }
 }
-
 ```
 
 ```
@@ -1201,19 +1305,14 @@ export class LoginController {
 import { ApiProperty } from "@nestjs/swagger/dist";
 
 export class CreateLoginDto {
-  //没有做任何验证
   @ApiProperty({example: 'lgx'})
   name: string;
 }
-
-
 ```
 
 还有很多Apixxx，每个Apixxx也有很多参数，详见文档，这里只列举最常用的。
 
-
-
-## 五、Web Socket
+# 五、Web Socket
 
 HTML5的新特性，之所以不记在HTML笔记或ajax笔记里，是因为它需要结合后端。
 
@@ -1226,8 +1325,6 @@ http是单向的，通过客户端发请求，服务端响应回去；而WebSock
 这是原生js的写法，
 
 后端：
-
-##
 
 # 六、常见功能实现
 
@@ -1244,7 +1341,7 @@ const jsonwebtoken = require('jsonwebtoken')
 
 后端需要定义用户的表，账号限制唯一u，密码需要bcrypt加密
 
-```//
+```
 //用户表定义
 const bcryptjs = require('bcryptjs')
 const mongoose = require('mongoose')
@@ -2828,5 +2925,3 @@ export default class Download implements DownloadInterface {
   }
 }
 ```
-
-## 

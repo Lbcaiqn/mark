@@ -371,6 +371,8 @@ export class aController {
 
 ## 2 控制器
 
+浏览器输入url访问是发送get请求，页面会直接输出get请求返回的信息。
+
 ### 2.1 基本使用
 
 ```
@@ -392,6 +394,10 @@ import {
 export class UserController {
   constructor() {}
 
+  /*
+  @Get(),@Post()等这些装饰器可以再定义路径，如 @Get('/profile/:id')
+  这样这条路由的url就是：服务器地址/user/profile/:id
+  */
   @Get()
   ggg1(@Request() req, @Query() query, @Query('age') age, @Headers() headers) {
     //三种获取参数的方式
@@ -441,6 +447,8 @@ export class UserController {
 
 ### 2.2 CORS跨域
 
+可以自己写响应头（参考node笔记），也可以用第三方库：
+
 ```
 npm install --save cors @types/cors
 ```
@@ -461,6 +469,15 @@ async function bootstrap() {
   await app.listen(3000);
 }
 bootstrap();
+```
+
+cors()也可以传递参数，比如cors这个库默认是不支持cookie跨域的，此时就需要在参数中允许cookie跨域：
+
+```
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
 ```
 
 ### 2.3 中间件、守卫、拦截器、管道
@@ -878,6 +895,12 @@ bootstrap();
 
 ## 3 服务
 
+有两点需要注意：
+
+* return什么都可以，包括Promise，return一个Promise的话nest会做处理取出res并返回。
+
+* 服务里的return或者其他地方如控制器的return最终都是解析为express的res.send()，所以也可以直接用res.send()代替return
+
 （1）基本使用：
 
 ```
@@ -1090,7 +1113,7 @@ CRUD：
 
 * R（read）：读取数据库数据，对应get‘请求
 
-* U（update）：修改数据库数据，对应put请求或
+* U（update）：修改数据库数据，对应patch请求或put请求或
 
 * D（delete）：删除数据库数据，对应delete请求
 
@@ -1101,6 +1124,8 @@ nest链接mysql的库：
 ```
 npm install --save @nestjs/typeorm typeorm mysql2
 ```
+
+## 1 初始化与定义实体
 
 初始化：
 
@@ -1139,7 +1164,7 @@ export class AppModule {}
 以下只列举最常用的装饰器和装饰器里的常用选项，更多见文档。
 
 ```
-// xxx.entities.ts
+// xxx.entity.ts
 import { timestamp } from "rxjs";
 import {
   Entity,
@@ -1165,7 +1190,7 @@ export class Db {
   username: string;
 
   @Column({
-    select: true,            //select为true表示查询的时候忽略掉
+    select: false,            //select为false表示查询的时候忽略掉
     type: "varchar",         //数据类型
     length: 255,             //长度
     comment: "注释xxx",      //注释
@@ -1219,6 +1244,169 @@ export class Db {
   })
   export class xxxModule {}
   ```
+
+## 2 关系
+
+例：一个user表，有外键tag，对应tag表的多条数据（一对多关系）：
+
+```
+// user.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Tag } from './tag.entity';
+
+@Entity()
+export class User {
+
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
+
+  @Column()
+  desc: string;
+
+  //一个user对应多个tag，外键关联tag表的字段user
+  @OneToMany(() => Tag, t => t.user)
+  tag: Tag[]
+}
+```
+
+```
+// tag.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { User } from './user.entity'
+
+@Entity()
+export class Tag {
+
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  tagName: string;
+
+  @ManyToOne(() => User)
+  user: User
+}
+```
+
+```
+// user.module.ts
+import { ...
+import { User } from './entities/user.entity';
+import { Tag } from './entities/tag.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([User, Tag])],
+  //...
+})
+export class UserModule {}
+```
+
+## 3 CRUD操作
+
+例：数据库有一个user表（字段有id、name、desc，tag）和一个tag表（字段有id，tagName，user），一个user对应多个tag。
+
+对其进行crud操作（typeorm的api返回的都是Promise）：
+
+```
+// user.service.ts
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Like } from "typeorm";
+import { User } from "./entities/user.entity";
+import { Tag } from "./entities/tag.entity";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+
+@Injectable()
+export class UserService {
+
+  constructor(
+    @InjectRepository(User) private readonly userTable: Repository<User>,
+    @InjectRepository(Tag) private readonly tagTable: Repository<Tag>
+  ) {}
+
+  create(createUserDto: CreateUserDto) {
+    const data = new User();
+    data.name = createUserDto.name;
+    data.desc = createUserDto.desc;
+    return this.userTable.save(data);
+  }
+
+  //tag也可以定义dto，这里为了方便就不弄了
+  async addTag(id: number, tags: string[]) {
+    const who = await this.userTable.findOne({ where: { id } });
+    const tagsArr: Tag[] = [];
+    for (let i of tags) {
+      const t = new Tag();
+      t.tagName = i;
+      await this.tagTable.save(t);
+      tagsArr.push(t);
+    }
+    who.tag = tagsArr;
+
+    //save()若数据库没有已存在的数据就会新添一条数据；如果已存在则是修改这条数据
+    return this.userTable.save(who);
+  }
+
+  async findAll(page, pageSize, keyword) {
+    let data: any = [];
+    let count: number = 0;
+
+    // 查找该表信息 fin()不带任何参数就是查询全部信息
+    if (!keyword) {
+      //如果没有关键词就查找全部并分页、排序
+      data = await this.userTable.find({
+        // 一并查询外键tag，不加的话是不会查外键的
+        relations: ["tag"],
+        // skip 和 take 实现分页，order 实现排序
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        order: {
+          //按id降序排序
+          id: "DESC",
+        },
+      });
+
+      //总数
+      count = await this.userTable.count();
+    }
+    else {
+      //如果有关键词，就按关键词进行模糊匹配查询，并分页、排序
+      data = await this.userTable.find({
+        where: {
+          name: Like(`%${keyword}%`),
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        order: {
+          id: "DESC",
+        },
+      });
+      count = await this.userTable.count({
+        where: {
+          name: Like(`%${keyword}%`),
+        },
+      });
+    }
+    return {
+      data,
+      total: count,
+    };
+  }
+
+  update(id: number, updateUserDto: UpdateUserDto) {
+    return this.userTable.update(id, updateUserDto);
+  }
+
+  remove(id: number) {
+    return this.userTable.delete(id);
+  }
+}
+```
 
 # 四、接口文档
 
@@ -1312,129 +1500,292 @@ export class CreateLoginDto {
 
 还有很多Apixxx，每个Apixxx也有很多参数，详见文档，这里只列举最常用的。
 
-# 五、Web Socket
+# 五、注册登录/鉴权/权限控制
 
-HTML5的新特性，之所以不记在HTML笔记或ajax笔记里，是因为它需要结合后端。
+首先需要知道cookie，WebStorage，session，token的区别于联系。
 
-WebSocket是一种网络通信协议，可以实现全双工通信，常用于实现聊天室等。
+（1）cookie与WebStorage
 
-http是单向的，通过客户端发请求，服务端响应回去；而WebSocket可以服务端主动推送给客户端。
+cookie和WebStorage都是浏览器用来存储数据的，但是目前存储数据一般都是用JTML5新出的WebStorage，比起大小只有4K的cookie空间大得多，而且更重要的一点是，cookie会放在网络请求的请求头中传输，显得臃肿。更多区别见HTML5笔记。
 
-前端：
+cookie之所以在请求时会被放在请求头中，是因为早期的Web的鉴权方式是通过session实现的，而session需要配合cookie使用。
 
-这是原生js的写法，
+（2）session与token
 
-后端：
+web应用是基于http协议的，而http协议是无状态的，前端与后端交互一次就建立一个连接，交互完就（如关掉网页或浏览器）就会断开连接。在下一次前后端交互的时候，后端就不知道这个请求是谁发过来的了，这样就使得鉴权难以实现。
 
-# 六、常见功能实现
+session是官方标准中的一种解决方案，原理是在第一次前后端交互的时候，后端为这个客户端生成一个唯一的sessionid存储到后端服务器内存中，这个sessionid在响应的时候放在cookie中返回给前端，前端就保存这个存放sessionid的cookie，在以后的请求中就把携带sessionid的cookie传给后端，后端就能识别是哪个前端了。
 
-## 1 注册/登录/鉴权/权限管理
+但是session有很多缺点，如：
 
-需要的第三方库
+* sessionid存储在后端服务器的内存中，当有大量用户进行交互，就有可能内存达到上限；而且如果这个web应用是用多台服务器假设的，sessionid只存在于一台服务器的内存中又很难在多台服务器中使用，即使用一台专门的服务器存储sessionid也有这台服务器单点故障的风险；如果是假设集群服务器成本又很高
+
+* session需要配合cookie，像小程序、app这些就无法使用了
+
+于是，民间就诞生了token，token也是目前最常用的解决方案，原理是第一次交互的时候，后端用一些能标识用户的字段（如数据库中的用户id）加上私钥通过某种算法生成一个token，将这个token返回给前端，前端可以把token存到WebStorage或者其他平台的存储载体中，以后的请求中吧token放到请求头中，后端拿到token通过私钥解析出id就可以了，这样后端服务器只需要保存一份私钥即可。
+
+jwt（jsonwebtoken）是token的一种最常用的实现。
+
+session和token的用途主要是两种：
+
+* 身份验证（登录）和鉴权
+
+* 数据传输
+
+下面的例子就以通过jwt实现注册登录鉴权，以session实现验证码的验证为例。
+
+## 1 注册与登录
+
+### 1.1 账号密码的注册登录
+
+（1）后端
+
+因为这里只是示例，所以省略了管道验证和拦截器。
+
+后端需要定义用户的表，账号限制唯一username，密码需要bcrypt加密。
+
+需要的第三方库：
 
 ```
-const bcryptjs = require('bcryptjs')
-const jsonwebtoken = require('jsonwebtoken')
+npm install --save bcryptjs
+npm install --save express-session @types/express-session
+npm install --save svg-captcha
+npm install --save jsonwebtoken
 ```
 
-### 1.1 注册
-
-后端需要定义用户的表，账号限制唯一u，密码需要bcrypt加密
+用session实现验证码的验证，需要use一下：
 
 ```
-//用户表定义
-const bcryptjs = require('bcryptjs')
-const mongoose = require('mongoose')
-mongoose.connect('mongodb://localhost:27017/vnpDB',{
-  useNewUrlParser: true
-})
+// main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import * as cors from 'cors';
+import * as session from 'express-session';
 
-const Users = mongoose.model('users',new mongoose.Schema({
-  username: {
-    type: String,
-    unique: true  //限制账号唯一，若重复会报错
-  },
-  password: {
-    type: String,
-    set(val){
-      return bcryptjs.hashSync(val,10)  //加密
-    }
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  //跨域，cookie的跨域需要参数里单独设置
+  app.use(
+    cors({
+      origin: true,
+      credentials: true,
+    }),
+  );
+  //use后，每次交互时若此前端没有sessionid则会生成sessionid
+  app.use(
+    session({
+      secret: 'asjlfhuig4145646g5sr4g65', //私钥
+      rolling: true, //true每次请求后设置session会重新计时session过期时间
+      name: 'cookiename', //session的name
+      cookie: {
+        maxAge: 3 * 60 * 1000, //过期时间，单位毫秒，如果是负数或null则是一次性的
+      },
+    }),
+  );
+  await app.listen(3000);
+}
+bootstrap();
+
+
+```
+
+
+
+实体定义：
+
+```
+// user.entity.ts
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
+
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  //用户名限制唯一且非空
+  @Column({
+    unique: true,
+    nullable: false,
+  })
+  username: string;
+
+  //密码要加密、限制非空
+  @Column({
+    nullable: false,
+  })
+  password: string;
+
+  async hashPassword(password: string) {
+    this.password = await bcrypt.hash(password, 10);
   }
-}))
 
-module.exports = {
-  Users
+  async comparePassword(password: string) {
+    return await bcrypt.compare(password, this.password);
+  }
 }
 ```
 
-注册的接口，当账号已存在时需捕获异常
+注册登录路由以及验证码验证：
+
+先判断账号是否存在，再匹配密码，匹配成功返回jwt（jsonwebtoken），用于鉴权。
+
+登录不要用get请求，因为账号密码会暴露在url，所以用post请求.
 
 ```
-const {Users} = require('./db/Users.js')
-app.post('/logup',async (request,response,next) => {
-  try {
-    await Users.create({
-      username: request.body.username,
-      password: request.body.password
-    })
-    response.send('注册成功')
+// user.controller.ts
+import {
+  Controller,
+  UseGuards,
+  Get,
+  Post,
+  Body,
+  Req,
+  Res,
+} from '@nestjs/common';
+import { UserService } from './user.service';
+import { RegisterDto } from './dto/register.dto';
+
+@Controller('user')
+export class UserController {
+
+  constructor(private readonly userService: UserService) {}
+
+  @Post('/register')
+  create(@Body() registerDto: RegisterDto) {
+    return this.userService.register(registerDto);
   }
-  catch(err) {
-    response.send('注册失败')
+
+  @Post('/login')
+  login(@Req() req, @Body() userInfo) {
+    return this.userService.login(req.session.code, userInfo);
   }
-})
-```
 
-前端代码略，就是一些表单的验证和发送请求而已
+  @Get('/code')
+  createCode(@Req() req, @Res() res) {
+    return this.userService.createCode(req, res);
+  }
+}
 
-### 1.2 登录
 
-有账号密码登录、手机验证码登录、微信登录等。
-
-状态保持：用某种方法保持登录状态，不需要重复登录。目前有cookie，session，jsonwebtoken三种，jsonwebtoken最常用。
-
-后端：
-
-（1）账号密码登录
-
-先判断账号是否存在，再匹配密码，匹配成功返回jwt（jsonwebtoken），用于鉴权
-
-① 后端代码
 
 ```
+
+```
+// user.service.ts
+import { Injectable } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { RegisterDto } from './dto/register.dto';
+import { User } from './entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Like } from 'typeorm';
+import { sign } from 'jsonwebtoken';
+import * as svgCaptcha from 'svg-captcha';
+
 //私钥为了安全一般是不可见的，保存在本地文件中，不存放于git，这里为了方便就直接定义为了变量
-const SECRCT = 'asf34g35s1g56erssa'
+const SECRCT = 'asf34g35s1g56erssa';
 
-app.post('/login',async (request,response) => {
-  let user = await Users.findOne({
-    "username": request.body.username
-  })
-  if(!user) return response.send('用户名不存在')
-  let passwordValid = bcryptjs.compareSync(request.body.password,user.password)
-  if(!passwordValid)  return response.send('密码错误')
-  //jwt用users表的id和私钥签名
-  let token = jsonwebtoken.sign({
-    id: String(user._id)
-  },SECRCT)
-  response.send({
-    user,
-    token
-  })
-})
+@Injectable()
+export class UserService {
+
+  constructor(
+    @InjectRepository(User)
+    private readonly userTable: Repository<User>,
+  ) {}
+
+  async register(registerDto: RegisterDto) {
+    const user = new User();
+    user.username = registerDto.username;
+    await user.hashPassword(registerDto.password);
+    try {
+      await this.userTable.save(user);
+    } catch (er) {
+      return '用户名已存在';
+    }
+    return '注册成功';
+  }
+
+  async login(code: string, userInfo: any) {
+    if (code !== userInfo.code) return '验证码错误';
+
+    const user = await this.userTable.findOne({
+      where: { username: userInfo.username },
+    });
+    if (!user) return '用户名不存在';
+
+    const valid = await user.comparePassword(userInfo.password);
+    if (!valid) return '密码错误';
+
+    const token = sign(
+      {
+        id: user.id,
+      },
+      SECRCT,
+    );
+
+    //过滤掉密码，把其他信息返回
+    const { password, ...userDetail } = user;
+
+    return {
+      message: '登录成功',
+      token,
+      userDetail,
+    };
+  }
+
+  //req的类型不能限定为Request，否则session注入不进去
+  createCode(req: any, res: Response) {
+    const code = svgCaptcha.create({
+      size: 4,
+      fontSize: 50,
+      width: 100,
+      height: 34,
+      background: '#cc9966',
+    });
+
+    // 将这个code放到session中，下次请求就可以 req.session 解析出来
+    req.session.code = code.text;
+
+    /* 
+    直接返回svg标签，前端可以v-html
+    或直接直接 <img src="http://localhost:3000/user/code + 时间戳" 加上时间戳是为了防止浏览器缓存而不重新发请求 
+    */
+    // 也可以返回其他形式，如url等
+    res.type('image/svg+xml');
+    res.send(code.data);
+  }
+}
+
+
 ```
 
-② 前端代码
+（2）前端
+
+注册的表单验证和请求略。
+
+拿验证码请求略。
+
+登录拿token，因为后端用session实现了验证码的验证，所以这里就需要在请求头上戴上cookie：
 
 ```
 //账号密码登录
-请求.then(res => {
+axios({
+  url: "http://localhost:3000/user/login",
+  method: "post",
+  data: {
+    //账号，密码，验证码
+  },
+  //带上cookie
+  withCredentials: true,
+}).then(res => {
   console.log(res.data.token);
-})
+}).catch(//...);
+
 //微信登录
 wx.login();
 ```
 
-③ 拿到token后，将token存放到storage和vuex中
+拿到token后，将token存放到storage和vuex中
 
 token作为登录凭证来保持持久登录，无需账号密码。
 
@@ -1446,26 +1797,7 @@ token作为登录凭证来保持持久登录，无需账号密码。
 
 - vuex存在内存中，而storage存在本地磁盘中，在内存中存取数据会快一点
 
-④ 当给需要登录的接口发请求时，携带token
-
-后端的接口总体分为需要token鉴权和不需要token鉴权两种。一般后端需要token鉴权的接口会统一命名，如果是统一命名就适用下面的方法，如果不是就另找方法。
-
-```
-//可以在请求拦截器上根据url判断是否需要token，给请求头加上token
-//比如需要token的接口的url都包含一个'/v2/''
-请求拦截器(config => {
-  if(/\/v2\//.test(config.url)){
-    let token: string = JSON.parse(localStorage.getItem('mainStore') as string) ? JSON.parse(localStorage.getItem('mainStore') as string)?.token : '';
-    config.headers!.Authorization = token;
-
-    //如果是ts，headers可能为空而报错，需要非空断言
-    //config.headers!.Authorization = token;
-  }
-  return config;
-})
-```
-
-⑤ 路由跳转注意事项
+前端路由跳转注意事项
 
 跳转页面前，需要进行判断，有以下几种情况：
 
@@ -1523,19 +1855,91 @@ token作为登录凭证来保持持久登录，无需账号密码。
   
   配置NotFound路由
 
-（2）手机验证码登录
+### 1.2 手机验证码登录
 
-（3）微信登录
+### 1.3 第三方登录
 
-退出登录
-
-发请求，成功后需要清空storage和vuex的token
-
-### 1.3 鉴权
+## 2 鉴权
 
 在进行数据的增删改查的时候，需要鉴权，将token发送给后端，鉴权成功才能进行增删改查，以查询数据为例：
 
-前端代码：
+（1）后端
+
+在守卫中鉴权：
+
+```
+// token.guard.ts
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { Observable } from "rxjs";
+import { Request, Response, NextFunction } from "express";
+import { Reflector } from "@nestjs/core";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from 'typeorm';
+import { User } from '../user/entities/user.entity';
+import { verify } from 'jsonwebtoken';
+
+//私钥为了安全一般是不可见的，保存在本地文件中，不存放于git，这里为了方便就直接定义为了变量
+const SECRCT = 'asf34g35s1g56erssa'
+
+@Injectable()
+export class TokenGuard implements CanActivate {
+
+  constructor(
+    private reflector: Reflector,
+    @InjectRepository(User)
+    private readonly userTable: Repository<User>,
+  ) {}
+
+  canActivate(
+    context: ExecutionContext
+  ): boolean | Promise<boolean> | Observable<boolean> {
+
+    const authority = this.reflector.get<string[]>(
+      "token",
+      context.getHandler()
+    );
+
+    //如果是不需要token鉴权的路由，就直接通过
+    if(!authority)  return true;
+
+    //token鉴权
+    const req = context.switchToHttp().getRequest<Request>();
+    const token = req.headers.authorization;
+    if(!token)  return false;
+
+    let res: any = null;
+    try{
+      res = verify(token,SECRCT)
+    }catch(err){
+      return false;
+    }
+
+    console.log(res);
+    return true;
+  }
+}
+```
+
+```
+// xxx.controller.ts
+import ...
+
+@Controller('xxx')
+@UseGuards(TokenGuard)
+export class UserController {
+
+  @Get()
+  @SetMetadata('token', true)  //不加这一行或为false就是不需要鉴权
+  findAll() {
+    return 123;
+  }
+
+}
+```
+
+（3）前端
+
+鉴权时，请求头需携带token：
 
 ```
 //拿数据
@@ -1550,29 +1954,26 @@ axios({
 })
 ```
 
-后端代码：
+当然，也可以在请求拦截器中，统一加上token请求头：
 
-响应头需要加上Authorization
-
-为了简化代码，将鉴权逻辑定义为express中间件，每个需要鉴权的url调用这个中间件即可。
+后端的接口总体分为需要token鉴权和不需要token鉴权两种。一般后端需要token鉴权的接口会统一命名，如果是统一命名就适用下面的方法，如果不是就另找方法。
 
 ```
-async function auth(req,res,next){
-  let token = req.headers.authorization
-  //解析jwt中的user的id
-  let {id} = jsonwebtoken.verify(token,SECRCT)
-  let user = await Users.findById(id)
-  res.user = user
-  next()
-}
+//可以在请求拦截器上根据url判断是否需要token，给请求头加上token
+//比如需要token的接口的url都包含一个'/v2/''
+请求拦截器(config => {
+  if(/\/v2\//.test(config.url)){
+    let token: string = JSON.parse(localStorage.getItem('mainStore') as string) ? JSON.parse(localStorage.getItem('mainStore') as string)?.token : '';
+    config.headers!.Authorization = token;
 
-//在执行回调之前，会先执行auth中间件
-app.get('/getProfile',auth,(req,res) => {
-  res.send(res.user)
+    //如果是ts，headers可能为空而报错，需要非空断言
+    //config.headers!.Authorization = token;
+  }
+  return config;
 })
 ```
 
-### 1.4 权限管理
+## 3 权限控制
 
 权限管理分为前端权限管理和后端权限管理，前后端未分离的时代权限都是由后端管理的，但是在前后端分离的时代，前端也需要权限管理。
 
@@ -1580,11 +1981,11 @@ app.get('/getProfile',auth,(req,res) => {
 
 后台管理系统一般admin需要有对用户、角色、权限、菜单的增删改查
 
-#### 1.4.1 后端权限管理
+### 3.1 后端权限管理
 
 后端权限通过token来鉴权增删改查的操作，是权限管理的最后一道关口
 
-#### 1.4.2 前端权限管理
+### 3.2 前端权限管理
 
 前端权限管理仅仅是针对于视图层展示和请求的发送，并不能管理数据库的增删改查。
 
@@ -1612,7 +2013,7 @@ RBAC（基于角色的权限控制）：权限并不是针对于某个用户，�
 
 可以看出这四个方面是循序渐进的。由前端进行的一系列权限控制之后若用户还是能够非法的操作对数据进行增删改查，后端通过token鉴权也能规避。
 
-#### 1.4.3 前端权限管理代码实现
+### 3.3 前端权限管理代码实现
 
 （1）场景模拟
 
@@ -1867,9 +2268,11 @@ token鉴权不再赘述
 
 后端接口如果设计比较规范的，如restfulAPI，可能会返回增删改查的权限，前端根据请求类型的设置权限
 
-## 2 文件上传
+# 六、文件上传与下载
 
-### 2.1 文件上传可能需要的自定义方法
+## 1 文件上传
+
+### 1.1 文件上传在前端需要的自定义方法
 
 （1）分离文件名的后缀
 
@@ -2030,7 +2433,7 @@ function cutChunk(option: CutChunkOption): any {
 }
 ```
 
-### 2.2 自定义API封装成工具类
+### 1.2 自定义API封装成工具类
 
 方便使用：
 
@@ -2149,7 +2552,7 @@ export default class Upload implements UploadInterface {
 }
 ```
 
-### 2.3 文件上传前需要知道的内容
+### 1.3 文件上传前需要知道的内容
 
 （1）后端文件存储形式
 
@@ -2288,9 +2691,9 @@ onUploadProgress: (progress: any) => {
 
 此外，不仅是上传，在其他业务中也可能需要用到进度条。
 
-### 2.4 文件上传的不同实现
+### 1.4 文件上传的不同实现
 
-#### 2.4.1 单文件上传（FormData）
+#### 1.4.1 单文件上传（FormData）
 
 post请求，请求体放FormData，设置请求头为：
 
@@ -2300,7 +2703,7 @@ headers: {"Content-Type": "multipart/form-data"}
 
 但是这样设置有时候会报错，说找不到边界，可以换成：headers: false
 
-前端代码：
+（1）前端
 
 ```
 <script setup lang="ts">
@@ -2339,37 +2742,7 @@ function upload(e: any) {
 <style scoped lang="less"></style>
 ```
 
-后端代码（express版）：
-
-```
-const express = require("express");
-const fs = require("fs");
-const multer = require("multer");
-const cors = require("cors");
-
-const app = express();
-app.use(cors());
-
-//解析FormData并放到对应目录的中间件
-const UploadMiddle = multer({
-  dest: "./upload/",
-});
-
-//multer为了防止重名覆盖原有文件，会将文件名命名为随机序列并且没有后缀名，需要自己重新命名
-app.post("/upload", UploadMiddle.any(), (req, res) => {
-  const newName = "./upload/" + req.files[0].originalname;
-  fs.rename(req.files[0].path, newName, (err) => {
-    if (err) res.send("上传失败");
-    else res.send("上传成功");
-  });
-});
-
-app.listen(8000, () => {
-  console.log("server");
-});
-```
-
-后端代码（nest版）：
+（2）后端
 
 ```
 npm install --save multer @types/multer
@@ -2424,7 +2797,7 @@ export class UploadController {
 }
 ```
 
-#### 2.4.2 单文件上传（base64）
+#### 1.4.2 单文件上传（base64）
 
 适合图片，音频，视频，图片居多
 
@@ -2436,15 +2809,15 @@ post请求，请求体base64
 headers:{'Content-Type':'application/x-www-dorm-urlencoded'}
 ```
 
-### 2.4.3 多文件上传
+### 1.4.3 多文件上传
 
 选择文件，一是file表单增加属性multiple，一次选多个，在change事件中将files数组的元素全append到FormData，二是不加multiple，一次选一个，每次change将files[0]的文件append到已声明的FormData，最终都是得到含有多个file对象的FormData
 
 上传文件也有两种方式，一是一次性上传全部file（但无法获得进度），后端通过req.files得到各个file信息并改名。二是每个file单独上传（能获得每个file的进度），都断与单文件上传一样。
 
-### 2.4.4 大文件上传（切片+断点续传）
+### 1.4.4 大文件上传（切片+断点续传）
 
-前端代码：
+（1）前端
 
 ```
 <script setup lang="ts">
@@ -2555,7 +2928,7 @@ async function upload(e: any) {
 <style scoped lang="less"></style>
 ```
 
-后端代码（express版）：
+（2）后端（express版）
 
 ```
 const express = require("express");
@@ -2660,7 +3033,7 @@ app.post("/merge", (req, res) => {
 app.listen(8000, () => [console.log("服务已启动")]);
 ```
 
-## 3 文件下载
+## 2 文件下载
 
 正常情况下，部署到静态文件夹的文件，浏览器输入或a标签的href是这个文件的url：
 
@@ -2672,7 +3045,7 @@ H5的a标签增加了新属性download，加上之后，html、图片等等也�
 
 前端发送下载请求，后端一般会返回url或文件流。
 
-### 3.1 返回下载url
+### 2.1 返回下载url
 
 几种解决方案；
 
@@ -2696,7 +3069,7 @@ H5的a标签增加了新属性download，加上之后，html、图片等等也�
 
 * 同源的所有文件都能下载，其实这就是download的功能
 
-前端代码：
+（1）前端
 
 ```
 <script setup lang="ts">
@@ -2729,7 +3102,7 @@ async function download() {
 <style lang="less" scoped></style>
 ```
 
-后端代码（express版）：
+（2）后端（express版）：
 
 ```
 const express = require("express");
@@ -2755,7 +3128,7 @@ app.listen(8000, () => {
 });
 ```
 
-### 3.2 返回文件流
+### 2.2 返回文件流
 
 url下载最大的问题就是跨域情况下无法下载浏览器可预览的html，图片等文件，文件流式一种解决方案，一般返回blob或base64。
 
@@ -2763,7 +3136,7 @@ url下载最大的问题就是跨域情况下无法下载浏览器可预览的ht
 
 以下是文件流为blob的代码：
 
-前端代码：
+（1）前端
 
 ```
 <script setup lang="ts">
@@ -2806,35 +3179,7 @@ async function download() {
 <style lang="less" scoped></style>
 ```
 
-后端代码（express版）：
-
-```
-const express = require("express");
-const cors = require("cors");
-
-const app = express();
-app.use(cors());
-
-//现在public文件夹下放要被下载的文件
-app.use(express.static("./public"));
-
-app.get("/download", (req, res) => {
-  //根据req的参数得到要下载的文件url，这里就不管参数直接返回路
-  /*
-  可以访问 服务器地址/download 下载
-  可以 <a href="服务器地址/download" /> 下载
-  可以 window.open('服务器地址/download') 下载
-  可以将文件流转为url后下载
-  */
-  res.download("./public/lgx.png");
-});
-
-app.listen(8000, () => {
-  console.log("start");
-});
-```
-
-后端代码（nest版）：
+（2）后端
 
 如果有压缩后再给前端下载的话可以使用compressing
 
@@ -2882,9 +3227,9 @@ export class DownloadController {
 }
 ```
 
-### 3.3 大文件下载
+### 2.3 大文件下载
 
-### 3.3 下载封装成工具类
+### 2.4 下载封装成工具类
 
 方便使用：
 
@@ -2925,3 +3270,17 @@ export default class Download implements DownloadInterface {
   }
 }
 ```
+
+# 七、Web Socket
+
+HTML5的新特性，之所以不记在HTML笔记或ajax笔记里，是因为它需要结合后端。
+
+WebSocket是一种网络通信协议，可以实现全双工通信，常用于实现聊天室等。
+
+http是单向的，通过客户端发请求，服务端响应回去；而WebSocket可以服务端主动推送给客户端。
+
+前端：
+
+这是原生js的写法，
+
+后端：

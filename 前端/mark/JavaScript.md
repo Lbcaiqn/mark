@@ -2356,10 +2356,10 @@ async function a(){
 a()
 ```
 
-await失败的另一种写法，返回数组
+await失败的另一种写法，虽然比try...catch简洁，但是只能获取Promise的成功失败，获取不到Promise内部代码的错误：
 
 ```
-const [err,res] = await xxx.catch(err => err)
+const [res, err] = await p(value).then(res => [res, null]).catch(err => [null, err]);
 ```
 
 如果await得到的数据有子项，需要注意：
@@ -2479,6 +2479,15 @@ a({
 })
 ```
 
+可以做对象属性得到过滤：
+
+```
+const obj = {a: 1, b: 2};
+const {b, ...xxx} = obj;
+console.log(b);    // 2
+console.log(xxx);  // {a: 1}
+```
+
 ② 对象的扩展运算符：
 
 对象也可以使用扩展运算符了。
@@ -2551,7 +2560,7 @@ console.log(/\p{Script_Extensions=Greek}/.test('π'));
 
 （5）异步迭代器（异步循环，for...await...of）
 
-要理解一步循环，先要理解包含异步操作的正常for循环是如何执行的：
+要理解异步循环，先要理解包含异步操作的正常for循环是如何执行的：
 
 下一段代码符合js执行机制，先执行完全部的同步操作，再执行异步操作
 
@@ -2565,7 +2574,7 @@ function func(i) {
   });
 }
 
-
+console.log('start');
 for (let i = 0; i < 3; i++) {
   console.log(`同步${i}`);
   func(i).then((res) => {
@@ -2573,7 +2582,8 @@ for (let i = 0; i < 3; i++) {
   });
 }
 console.log("end");
-/*输出
+/*
+start
 同步0
 同步1
 同步2
@@ -2584,49 +2594,56 @@ end
 */
 ```
 
-如何此时结合了async/await，会使得前一部分是同步for循环，后一部分是异步for循环，原因是await后面的代码相当于.then里面的代码造成的，await后面的await相当于嵌套的.then，因此造成了两个结果
+如何此时结合了async/await，会使得前一部分是同步for循环，后一部分是异步for循环，原因是await后面的代码相当于.then里面的代码造成的，await后面的await相当于嵌套.then。
 
-* 使得后一部分for循环变为异步
+结合这些特性，就非常适合用于发送一系列请求且一个请求的发送需要上一个请求的结果的场景。
 
-* 一个异步操作完成后，才能再执行下一个异步操作
-
-结合这些特性，就非常适合用于发送一系列请求且一个请求的发送需要上一个请求的结果的场景
+注意：async函数里面的代码本质是async函数返回的那个Promise内的代码，参考async笔记和js执行机制笔记。
 
 ```
 async function run1() {
+  console.log('start');
   for (let i = 0; i < 3; i++) {
-    console.log(`同步${i}`);
+    console.log(`${i}`);
     let res = await func(i);
     console.log(`异步${res}`);
   }
+  console.log('for执行完我才执行');  //这是最后一次await后的then
 }
 run1();
 console.log("end");
-/*输出
-同步0
+/*
+start
+0
 end
 异步0
-同步1
+1
 异步1
-同步2
+2
 异步2
+for执行完我才执行
 */
 ```
 
-而此次新增的异步迭代器则是让整个for循环都变成异步，相当于上一段代码展示的for循环里面只有异步代码没有同步代码的情况
+而此次新增的异步迭代器则是让整个for循环都变成异步，相当于上一段代码展示的for循环里面只有异步代码没有同步代码的情况。
+
+注意：async函数里面的代码本质是async函数返回的那个Promise内的代码，参考async笔记和js执行机制笔记。
 
 ```
 //for...await...of必须连用，且必须在async函数内
 async function run2() {
-  for await (i of [0, 1, 2]) {
+  console.log('start');
+  for await (let i of [0, 1, 2]) {
     console.log(i);
     let res = await func(i);
     console.log(`异步${res}`);
   }
+  console.log('for执行完我才执行');  //这是最后一次await后的then
 }
 run2();
 console.log("end");
 /*
+start
 end
 0
 异步0
@@ -2634,6 +2651,7 @@ end
 异步1
 2
 异步2
+for执行完我才执行
 */
 ```
 

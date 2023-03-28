@@ -265,3 +265,14 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 ```
+
+cors()也可以传递参数，比如cors这个库默认是不支持cookie跨域的，此时就需要在参数中允许cookie跨域：
+
+```
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+```
+
+# 

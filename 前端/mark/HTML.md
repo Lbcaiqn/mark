@@ -232,8 +232,6 @@ option的属性，selected=”selected”则默认被选上。
 | article | 文章   |
 | section | 某段内容 |
 
-
-
 ## 2 多媒体标签
 
 ### 2.1 视频

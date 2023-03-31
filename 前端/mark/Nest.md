@@ -55,8 +55,18 @@ nest g mo demo
 快速生成crud模板：
 
 ```
-nest g resource xxx
+# resource 或 res
+nest g resource xxx   
 ```
+
+生成到指定目录下；
+
+```
+# --directory 或 -d
+nest g res xxx --directory src/module
+```
+
+
 
 ## 3 RESTful风格设计
 
@@ -1585,11 +1595,7 @@ async function bootstrap() {
   await app.listen(3000);
 }
 bootstrap();
-
-
 ```
-
-
 
 实体定义：
 
@@ -1666,9 +1672,6 @@ export class UserController {
     return this.userService.createCode(req, res);
   }
 }
-
-
-
 ```
 
 ```
@@ -1755,8 +1758,6 @@ export class UserService {
     res.send(code.data);
   }
 }
-
-
 ```
 
 （2）前端
@@ -3279,8 +3280,235 @@ WebSocket是一种网络通信协议，可以实现全双工通信，常用于�
 
 http是单向的，通过客户端发请求，服务端响应回去；而WebSocket可以服务端主动推送给客户端。
 
-前端：
+（1）后端
 
-这是原生js的写法，
+安装依赖：
 
-后端：
+```
+npm install --save @nestjs/websockets @nestjs/platform-socket.io
+```
+
+创建res，选择WebSockets：
+
+```
+nest g res xxx
+```
+
+```
+// xxx.gateway.ts
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
+} from '@nestjs/websockets';
+import { WebSocketServer } from '@nestjs/websockets/decorators';
+import { Server, Socket } from 'socket.io';
+import { SocketService } from './socket.service';
+
+@WebSocketGateway({
+  cors: true, //允许跨域
+})
+export class SocketGateway {
+  @WebSocketServer()
+  private server: Server;
+
+  private count: number = 0;
+
+  constructor(private readonly socketService: SocketService) {}
+
+  //监听连接
+  async handleConnection(client: Socket): Promise<string> {
+    console.log(`用户${client.handshake.query.userId}已连接`);
+    /*client.join()
+     * 类似于哈希表
+     * 用户连接后，将此用户加入到自己独立的房间（Room）中；this.server.to('RoomName').emit()可以给该房间中的用户发送消息
+     * client可以加入多个房间；给单独一人的房间emit就是私聊，多人房间emit就是群聊
+     * 广播可以设置一个所有用户的房间emit实现，也可以client.broadcast()实现；下面两种方式都有演示
+     * 虽然join的信息是存于内存中，但socket.io内部做了优化，即使是大型应用页很难出现内存不够的情况
+     */
+    client.join(client.handshake.query.userId);
+
+    const clients = await this.server.fetchSockets();
+    this.count = clients.length;
+
+    //public为所有人的公告房间，用来广播
+    //群聊也是一样的，就不演示了
+    client.join('public');
+    this.server.to('public').emit('broadcastRes', {
+      message: `用户${client.handshake.query.userId}已连接`,
+      count: `总人数：${this.count}人`,
+    });
+    return '连接成功';
+  }
+
+  //监听断开
+  async handleDisconnect() {
+    this.count--;
+    this.server.to('public').emit('broadcastRes', {
+      count: `总人数：${this.count}人`,
+    });
+  }
+
+  @SubscribeMessage('socketTest1')
+  socketTest1(@MessageBody() data: any) {
+    return this.socketService.socketTest1(data);
+  }
+
+  @SubscribeMessage('socketTest2')
+  socketTest2(@MessageBody() data: any) {
+    return this.socketService.socketTest2(data);
+  }
+
+  @SubscribeMessage('broadcast')
+  broadcast(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
+    return this.socketService.broadcast(client, data);
+  }
+
+  @SubscribeMessage('privatechat')
+  privatechat(@MessageBody() data: any) {
+    return this.socketService.privatechat(this.server, data);
+  }
+}
+```
+
+```
+// xxx.service.ts
+import { Injectable } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
+
+@Injectable()
+export class SocketService {
+
+  //前后端交互测试1, 接收与返回数据
+  socketTest1(data: any) {
+    console.log('前端发来的数据', data);
+    return {
+      msg1: '测试1',
+      msg2: '测试2',
+    };
+  }
+
+  //前后端交互测试2, 接收与返回数据，不同的是返回的数据前端需要另外监听
+  socketTest2(data: any) {
+    console.log('前端发来的数据', data);
+    return {
+      event: 'socketTest2Res',
+      data,
+    };
+  }
+
+  //广播
+  broadcast(client: Socket, data: any) {
+    //给除了发送者的所有人广播
+    client.broadcast.emit('broadcastRes', data);
+    //给发送者自己返回消息
+    return data;
+  }
+
+  //私聊
+  privatechat(server: Server, data: any) {
+    server.to(data.userId).emit('privatechatRes', data.text);
+    //也给发送者返回
+    return data.text;
+  }
+}
+```
+
+（2）前端
+
+安装依赖，版本要与后端的一样，防止出错：
+
+```
+npm install --save socket.io-client
+```
+
+```
+// xxx.vue
+<script setup lang="ts">
+import { ref, reactive, onMounted, inject } from "vue";
+import { io, Socket } from "socket.io-client";
+
+//这里就用时间戳暂时代替数据库的userId
+const userId = ref(new Date().getTime());
+const usersId = ref<string[]>([]);
+
+//socket配置
+const socket: Socket = io("http://localhost:3000", {
+  autoConnect: false, //关闭自动连接
+  // 后端通过 client.handshake.query 获取
+  query: {
+    userId: userId.value,
+  },
+});
+
+//基本的数据交互---------------------------------------------------------------------
+socket.emit("socketTest1", { test: "前端发来的测试数据" }, (data: any) => {
+  console.log("后端返回的测试数据", data);
+});
+
+socket.emit("socketTest2", { msg1: "前端发来的测试数据" });
+socket.on("socketTest2Res", (data: any) => {
+  console.log(data);
+});
+//------------------------------------------------------------------------------------
+
+//广播--------------------------------------------------------------------------------
+function sendBroadcast() {
+  socket.emit("broadcast", { msg1: "这是一条广播信息" }, (data: any) => {
+    console.log(data);
+  });
+}
+socket.on("broadcastRes", (data: any) => {
+  console.log(data);
+});
+//------------------------------------------------------------------------------------
+
+//私聊---------------------------------------------------------------------------------
+const privatechat = reactive({
+  userId: "",
+  text: "",
+});
+function sendPrivatechat() {
+  if (!privatechat.userId || !privatechat.text) return;
+  socket.emit("privatechat", privatechat, (data: any) => {
+    console.log(data);
+  });
+}
+socket.on("privatechatRes", (data: any) => {
+  console.log(data);
+});
+//-------------------------------------------------------------------------------------
+
+//连接服务器
+onMounted(() => {
+  socket.connect({}); //连接socket服务器
+});
+</script>
+
+<template>
+  <div>
+    <button @click="sendBroadcast">发送广播</button>
+  </div>
+  <table>
+    <tr>
+      <td>私发给：</td>
+      <td><input type="text" v-model="privatechat.userId" /></td>
+    </tr>
+    <tr>
+      <td>内容：</td>
+      <td><input type="text" v-model="privatechat.text" /></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><button @click="sendPrivatechat">发送</button></td>
+    </tr>
+  </table>
+</template>
+
+<style lang="less" scoped></style>
+```
+
+以上，只是演示了websocket最核心用法，像一些基本的空值判断都没弄。
+
+知道了这些websocket核心用法，可以在此基础上，配合数据库增加注册登录、好友，群组等等功能。

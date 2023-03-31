@@ -453,28 +453,48 @@ trim_trailing_whitespace = false
 
 * 某个表单在测试环境测试时需要有一个一键补全表单的内容，方便测试，而生产环境不需要，就可以根据环境变量v-if
 
-配置环境变量的文件是一个 .env 统一配置 或者多个 .env-development .env-production等单独配置，以 .env 为例：
+配置环境变量的文件有两种形式：
 
-```
-VUE_APP_BASE_API_DEVELOPMENT = '/xxx/dev'
-VUE_APP_BASE_API_PRODUCTION = '/xxx/prod'
-```
+* 一个 .env 统一配置 
+  
+  ```
+  VITE_XXX = 123
+  ```
+  
+  
+
+* 多个 .env.xxx单独配置
+  
+  这种情况下，xxx必须是developmemnt，production等才能解析
+  
+  
+
+不同的环境，变量命名规则不同：
+
+* webpack环境，变量命名必须以VUE开头
+
+* vite环境，变量命名必须以VITE开头
+
+* node环境
 
 在代码中调用：
 
-```
-// 如果是统一的在 .env 配置的变量，需要判断当前环境
-if (process.env.NODE_ENV === 'development') {
-  console.log(process.env.VUE_APP_BASE_API_DEVELOPMENT);
-}
-} else if (process.env.NODE_ENV === 'production') {
-  console.log(process.env.VUE_APP_BASE_API_PRODUCTION);
-}
+* webpack环境
+  
+  
 
-//如果是单独配置的env-xxx文件，则对应的环境会使用对应的.env-xxx文件
-//只需要在不同的.env-xxx文件定义相同的变量即可
-console.log(process.env.xxx);
-```
+* vite环境
+  
+  ```
+  console.log(import.meta.env);
+  if (import.meta.env.DEV) console.log(import.meta.env.VITE_XXX);
+  ```
+  
+  
+
+* node环境
+
+
 
 （3）git配置
 
@@ -534,6 +554,40 @@ import 'normalize.css'
 
 ```
 npm install --save less-loader
+```
+
+如果开发移动端，可以使用px转vw，vh的库：
+
+```
+npm install --save-dev postcss-px-to-viewport
+```
+
+```
+// vite.config.ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import PostcssPxToViewport from 'postcss-px-to-viewport';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [vue()],
+  css: {
+    postcss: {
+      plugins: [
+        PostcssPxToViewport({
+          unitToComvert: 'px',
+          viewportWidth: 750    //设计稿宽度
+        })
+      ]
+    }
+  },
+})
+```
+
+```
+.a {
+  width: 750px; /* 自动解析为100vw */
+}
 ```
 
 # 二、常用布局。交互效果和业务逻辑
@@ -1470,9 +1524,21 @@ github上有模板，可以基于模板进行二次开发：
 
 # 四、常用第三方库
 
-## 动画库
+## 1 CSS库
 
-animate.css
+（1）tailWindCss
+
+```
+npm install --save-dev tailwindcss postcss autoprefixer
+```
+
+初始化配置文件：
+
+```
+npx tailwindcss init
+```
+
+（2）动画库animate.css
 
 动画库
 
@@ -1530,7 +1596,11 @@ enterActive(el,done){
 }
 ```
 
-## 数据可视化
+（3）unoCss
+
+css原子化，集成了tailwindcss，bootstarp等css框架
+
+## 2 数据可视化
 
 echarts
 
@@ -1589,7 +1659,7 @@ onMounted(() => {
 <style lang="less" scoped></style>
 ```
 
-## 组件库
+## 3 组件库
 
 Vue的template和uniapp的block，由于只作包裹作用而不渲染，无论是否使用组件库，在某些情况（如需要一个不渲染的盒子来用v-if，v-for等）都可以使用。
 

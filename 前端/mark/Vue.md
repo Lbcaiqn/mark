@@ -5410,7 +5410,7 @@ createApp(App).use(Loading).mount('#app')
 
 ```
 <script>
-//vUE2中可以直接 this.$loading 使用，而Vue3由于setup的this指向undefine，所以需要以下操作
+//Vue2中可以直接 this.$loading 使用，而Vue3由于setup的this指向undefine，所以需要以下操作
 import {getCurrentInstance} from 'vue'
 export default {
   setup(){

@@ -131,13 +131,21 @@ SQL规则：
 
 * 单引号，双引号都行，但规范是单引号
 
-* 字段命名：多个单词用 \_ 连接_
+* 命名规范：
+  
+  * 库名、表不超过30个字符，字段不超过29个字符
+  
+  * 库，表只能用数字，字母，下划线命名，多个单词用 _ 连接而不是空格，并确保不与关键字冲突
+  
+  * 库不能同名；同一个库中表不能同名；同一个表中字段不能同名
+  
+  * 确保不同表的相同字段的数据类型要相同
 
 * 查询条件两个空格缩进
 
 * 注释，\# 和 /\*\*/
 
-## 1 查询
+## 1 DML之查询
 
 ## 1.1 基本查询
 
@@ -953,8 +961,6 @@ SELECT * FROM xxx
 WHERE age >= IN (SELECT age FROM xxx WHERE age = 22);
 ```
 
-
-
 （2）all
 
 与多行子查询的所有行进行比较，找到比所有行如更大更小的数据：
@@ -981,8 +987,6 @@ WHERE age < ALL (
   WHERE (name = 'Una' OR age IS NULL) AND age IS NOT NULL
 );
 ```
-
-
 
 （3）any和some：
 
@@ -1073,8 +1077,6 @@ FROM (
 GROUP BY name, year;
 ```
 
-
-
 方式四：优化成不需要子查询
 
 注意：虽然avg会忽略NULL，但如果avg的内容全是NULL的话就返回NULL，而排序时NULL有事最小值，所以需要过滤NULL：
@@ -1093,8 +1095,6 @@ ORDER BY avg_temperature ASC
 limit 1;
 ```
 
-
-
 #### 1.7.3 相关子查询
 
 直接看例子：
@@ -1110,11 +1110,7 @@ WHERE salary > (
   WHERE department.name = employee.department_name 
   GROUP BY department.name
 )
-
-
 ```
-
-
 
 其实也可以写成多表查询+非相关子查询：
 
@@ -1128,8 +1124,6 @@ JOIN (
 ) dept_avg 
 ON e.department_name = dept_avg.name 
 WHERE e.salary > dept_avg.avg_salary; 
-
-
 ```
 
 exists和not exists：
@@ -1144,11 +1138,7 @@ WHERE EXISTS (
   FROM orders 
   WHERE customers.customer_id = orders.customer_id
 );
-
-
 ```
-
-
 
 ## 1.8 12种查询关键字的编写和执行顺序
 
@@ -1170,14 +1160,645 @@ from-on-join-where-group by-函数-having-select-distinct-order by-limit-union
 
 * union，union all在所有的查询结束后才最后执行，合并所有结果集
 
-## 2 创建
+## 2 DDL和DCL
 
-## 3 修改
+### 2.1 DDL
 
-## 4 删除
+#### 2.1.1 基本DDL操作
 
-## 5 DDL和DCL
+（1）创建数据库与表
 
-# 三、
+创建数据库：
+
+DEFAULT CHARACTER SET 和 DEFAULT COLLATE 是可选的，但是推荐加上，因为5.7默认是latin1，而8.0之后默认才是utf-8。
+
+下面是创建一个utf-8，简体中文的数据库：
+
+```
+CREATE DATABASE IF NOT EXISTS dbname 
+DEFAULT CHARACTER SET utf8 
+DEFAULT COLLATE utf8_chinese_ci;
+```
+
+注意，如果创建已存在的数据库是会报错，但是若此时指定了不同的charset，是不会报错的，但是也不会创建成功。
+
+使用表相关的命令时，需要进入到对应的数据库：
+
+```
+USE dbname;
+```
+
+查看当前use的数据库：
+
+```
+SELECT DATABASE();
+```
+
+创建表：
+
+```
+/* 创建表 */
+CREATE TABLE tbname(
+  id int,
+  name varchar(20)
+);
+/* 用查询结果创建表，数据是深拷贝的 */
+CREATE TABLE tbname1(select * from xxx);
+
+/* 用空的查询结果创建表 */
+CREATE TABLE tbname2(select * from xxx where NULL);
+```
+
+
+
+（2）展示数据库与表
+
+展示存在的数据库、表
+
+```
+SHOW DATABASES;
+SHOW TABLES;
+SHOW TABLES FROM dbname;
+```
+
+展示数据库、表的创建信息：
+
+```
+SHOW CREATE DATABASE dbname;
+SHOW CREATE TABLE tbname;
+SHOW CREATE DATABASE dbname\G;
+SHOW CREATE TABLE tbname\G;
+```
+
+展示结构：
+
+```
+DESC tbname;
+```
+
+展示数据库默认的字符集：
+
+```
+SHOW VARIABLES LIKE 'character_%';
+```
+
+（3）修改
+
+修改库：
+
+一般不会修改，修改也只是修改字符集。
+
+数据库重命名会将该数据库所有表复制到新库，再删除原库，所有效率非常低。
+
+修改表：
+
+修改表名：
+
+有几种方式，但用下面这个就好了：
+
+```
+ALTER TABLE tbname RENAME TO new_name;
+```
+
+
+
+增加字段，默情况下值都是NULL，插入到列最后面。
+
+如增加一个new_column_name字段，类型为int：
+
+```
+/* 默认情况 */
+ALTER TABLE tbname ADD COLUMN new_column_name  INT;
+
+/* 设置默认值 */
+ALTER TABLE tbname ADD COLUMN new_column_name INT DEFAULT 0;
+
+/* 插入到最前面,first在8.0以后才支持，5.7只能创建新表并拷贝数据实现 */
+ALTER TABLE tbname ADD COLUMN new_column_name  INT FIRST;
+
+/* 插入到xxx字段前面前面或后面 */
+ALTER TABLE tbname ADD COLUMN new_column_name  INT BEFORE xxx;
+ALTER TABLE tbname ADD COLUMN new_column_name  INT AFTER xxx;
+```
+
+
+
+修改字段名：
+
+注意数据类型要带上。
+
+```
+ALTER TABLE tbname CHANGE COLUMN old_name new_name INT;
+```
+
+
+
+修改字段的数据类型；
+
+涉及到类型转换，这个操作非常危险，所以一般只是用来加长字符串的长度。
+
+```
+ALTER TABLE tbname MODIFY COLUMN column_name VARCHAR(50);
+```
+
+计算列：
+
+8.0新特性，一个列的数据是由其他若干列计算得出的，它的值依赖于其他列所以添加数据的时候不用管它：
+
+```
+ALTER TABLE tbname 
+ADD COLUMN total_amount DECIMAL(10,2) AS (quantity * price);
+```
+
+也可以在创建表的时候就指定计算列：
+
+```
+CREATE TABLE orders (
+  order_id INT PRIMARY KEY,
+  customer_name VARCHAR(50),
+  quantity INT,
+  price DECIMAL(10,2),
+  total_amount DECIMAL(10,2) AS (quantity * price)
+);
+
+
+```
+
+
+
+（4）删除
+
+删除整个库，整个表：
+
+```
+DROP DATABASE dbname;
+DROP DATABASE tbname;
+```
+
+删除字段：
+
+```
+ALTER TABLE tbname DROP COLUMN column_name;
+```
+
+清空表的数据：
+
+```
+TRUNCATE TABLE tbname;
+```
+
+（5）if exists
+
+在执行DDL操作时，如果对象不存在会报错，但是在一些场景下是不想让他刨槽的而是直接不处理就好了，这时候可以使用if exists：
+
+```
+/* DDL */
+DROP TABLE IF EXISTS asdf;
+
+/* DML，之所以放在这里是为了整齐 */
+DELETE FROM tbname;
+```
+
+drop 的性能会比 delete from 高，因为delte from需要占用更多的资源，但是由于drop无法rollback，所以建议用delete from
+
+#### 2.1.2 数据类型
+
+数据库因为是专门存储数据的，所以数据类型非常丰富。
+
+（1）整数
+
+每一个都可以在后面加 unsign 变成无符号
+
+```
+age INT UNSIGN
+```
+
+| 数据类型      | 字节数 | 范围                               |
+| --------- | --- | -------------------------------- |
+| tinyint   | 1   | -2^7 到 2^7-1 或 0 到 2^8-1（无符号）    |
+| smallint  | 2   | -2^15 到 2^15-1 或 0 到 2^16-1（无符号） |
+| mediumint | 3   | -2^23 到 2^23-1 或 0 到 2^24-1（无符号） |
+| int       | 4   | -2^31 到 2^31-1 或 0 到 2^32-1（无符号） |
+| bigint    | 8   | -2^63 到 2^63-1 或 0 到 2^64-1（无符号） |
+
+整数的最大显示宽度：
+
+8.0 建议没必要弄了，因为用处不大。
+
+每个整数类型都可以设置，使用 ZEROFILL 后，一律变为 无符号数。
+
+如下，如宽度不足3位的5，会变成 005，添加5位的 65432 则还是 65432：
+
+```
+CREATE TABLE tbname (
+  my_column INT(3) ZEROFILL
+);
+
+
+```
+
+desc tbname也能看到 INT(3)。
+
+（2）小数
+
+每一个都可以在后面加 unsign 变成无符号
+
+```
+tall DOUBLE UNSIGN
+```
+
+由于二进制存储就浮点数的格式，无符号的小数的符号位并不会拿来使用，表示范围不会变大，所以不用刻意的去使用unsign
+
+| 数据类型          | 字节数                 | 说明                                                      |
+| ------------- | ------------------- | ------------------------------------------------------- |
+| float         | 4                   | 单精度浮点数                                                  |
+| double        | 8                   | 双精度浮点数                                                  |
+| decimal(m, d) | m+2，如果没有m和n就是（10,0） | 定点数，精度很高因为底层是字符串，用于像金钱这种需要非常高精度的字段，m为总位数（整数位+小数位），d为小数位 |
+
+
+
+float和double也可以写成如 doble(5,2)，范围从-999.99带999.99，整数位超了就报错，小数位超了四舍五入，四舍五入使得整数位超了也报错。
+
+非常不推荐使用，既非标准浪费了表示范围，又难用，其他数据库可能也不支持，在数据库迁移的时候不好办。
+
+double和decimal如何选择：
+
+* 精度要求不高，就可以使用表示范围比较大的double
+
+* 精度要求高就decimal
+
+（3）字符串
+
+可以存储普通的字符串，文本（如评论，文章），文件流，枚举和set
+
+每一个都可以设置字符集，但没必要：
+
+```
+name VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+```
+
+
+
+| 数据类型         | 描述                                         | 最大长度          |
+| ------------ | ------------------------------------------ | ------------- |
+| char(n)      | 定长字符串，n为字符数，最多255个字符，无论多长，都始终是占用固定的字节      | 255           |
+| varchar(n)   | 变长字符串，n为字符数，最多16383个字符，字节由字符数决定，会用1个字节保存长度 | 65,535        |
+| tinytext     | 可变长度，最多255个字符                              | 255           |
+| text         | 可变长度，最多65,535个字符                           | 65,535        |
+| mediumtext   | 可变长度，最多16,777,215个字符                       | 16,777,215    |
+| longtext     | 可变长度，最多4,294,967,295个字符                    | 4,294,967,295 |
+| binary(n)    | 定长二进制字符串，n为字节数，最多255个字节                    | 255           |
+| varbinary(n) | 变长二进制字符串，n为字节数，会多用一个字节保存n，最多65,535个字节      | 65,535        |
+| tinyblob     | 可变长度，最多255个字节                              | 255           |
+| blob         | 可变长度，最多65,535个字节                           | 65,535        |
+| mediumblob   | 可变长度，最多16,777,215个字节                       | 16,777,215    |
+| longblob     | 可变长度，最多4,294,967,295个字节                    | 4,294,967,295 |
+| enum         | 枚举类型，最多65,535个值                            | 65,535        |
+| set          | 集合类型，最多64个成员                               | 64            |
+
+char和varchar的选择：
+
+* 如果存储得到字符串长度是固定的（如身份证），或者字符串的长度经常会变化的，那就直接用char就好了，频繁的修改长度也是很消耗性能的
+
+* 其他情况就varchar
+
+text和文件如果很大的话，删除会产生较多的碎片，使得查询效率变低，因此有text的字段最好放到独立的表。就算没有删除，查询的时候也会因为值太长而效率低下，是在有需求的话就使用前缀索引。
+
+当然，实际开发中也不会把文件存到数据库中，一般都是存到服务器硬盘中或者云服务器，数据库中只保存url。
+
+
+
+（4）日期时间
+
+datetime最常用。
+
+也可以用bigint存储时间戳。
+
+| 数据类型      | 描述                        | 格式                                                                                         | 字节数 | 范围                                      |
+| --------- | ------------------------- | ------------------------------------------------------------------------------------------ | --- | --------------------------------------- |
+| date      | 日期                        | 'YYYY-MM-DD'                                                                               | 3   | 1000/1/1 到 9999/12/03                   |
+| time      | 时间或时间间隔                   | 'HH:MM:SS'                                                                                 | 3   | -838:59:59 到 838:59:59                  |
+| datetime  | 日期和时间，有时区的区别              | 'YYYY-MM-DD HH:MM:SS'                                                                      | 8   | 1000/1/1 00:00:00 到 9999/12/31 23:59:59 |
+| timestamp | 日期和时间，与时区无关，底仓是时间戳所以排序比较快 | 'YYYY-MM-DD HH:MM:SS'                                                                      | 4   | 1970/1/1 00:00:00 到 2038/12/31 23:59:59 |
+| year      | 年份                        | 'YYYY' 或 'YY' ，注意如果是 'YY'，则 '00'-'69'是20xx，'70'-'99'是19xx，如果是整数0是0000，字符串'0'是2000，所以不推荐用2位 | 1   | 1901 到 2155                             |
+
+（5）布尔
+
+| 数据类型       | 描述             | 值范围   |
+| ---------- | -------------- | ----- |
+| boolean    | 可存储 0 或 1 的布尔值 | 0 或 1 |
+| bool       | 可存储 0 或 1 的布尔值 | 0 或 1 |
+| tinyint(1) | 可存储 0 或 1 的布尔值 | 0 或 1 |
+
+（6）其他
+
+| 数据类型     | 描述                                         |
+| -------- | ------------------------------------------ |
+| bit(n)   | 指定长度的二进制值，n为位数，1 <= n <= 64，不指定默认为1        |
+| fulltext | 用于全文搜索                                     |
+| JSON     | 存储 JSON (JavaScript Object Notation) 格式的数据 |
+
+（7）空间
+
+地图等
+
+#### 2.1.4 约束
+
+（1）单列约束
+
+也叫列级约束，约束只作用于一列：
+
+```
+CREATE TABLE tbname (
+  id INT NOT NULL UNIQUE
+);
+
+
+```
+
+单列约束有：
+
+* NOT NULL：非空
+
+* DEFAULT value：默认值
+
+（2）多列约束
+
+也叫表级约束，同事作用于多列。
+
+除了外键也可以作为单列约束，写成列级约束的写法。
+
+如果表级约束的某个约束只写了一列，那么就是单列约束；此外，多列约束都有一个可自定义的名字标识。
+
+如下定义的效果是，如果id和phone的值同事与表中的id和phone相同，就无法插入。
+
+如表中有了 id=1 phone=001，就不能再插入id=1 phone=001，但是可以插入id=2 phone=001和id=1 phone=002
+
+```
+CREATE TABLE tbname (
+  id INT, 
+  phone VARCHAR(15),
+
+  /* 自定义约束名，可不写，不写就会以该约束的第一个字段为名。最好还是写上 */
+  CONSTRAINT uk_tbname_id_phone  
+  UNIQUE (id, phone)
+);
+
+INSET INTO tbname values (1,001);
+/* 插入失败
+INSET INTO tbname values (1,001);
+ */
+
+/* 插入成功 */
+INSET INTO tbname values (1,002);
+INSET INTO tbname values (2,001);
+INSET INTO tbname values (2,002);
+```
+
+多列约束有：
+
+* unique：为以约束，NULL除外，会自动生成唯一索引
+
+* primary key：主键约束，用于区分每一行数据，自带NOT NULL和 UNIQUE，会自动生成一个主键索引，每个表只能有一个主键。
+  
+  如果是多列约束的主键，和unique一样，但是每一列都不能为NULL。
+  
+  * 自增主键：
+    
+    插入数据时不需要给主键，主键会自己自增，数据类型必须是整数那些：
+    
+    ```
+    CREATE TABLE users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+    );
+    ```
+    
+    不止主键，其他unique约束的字段也可使用，但是一个表只能有一个自增的字段，所以都用在主键上了。
+  
+  * 5.7 与 8.0 的区别
+    
+    设现在表的种主键有1,2,3,4
+    
+    删掉3后，5.7和8.0下一次自增的都是5
+    
+    删掉3,4和，5.7和8.0下一次自增的也是5
+    
+    不一样的来了，删掉3,4后，重启数据库后，5.7下一次自增的是3，而8.0是5，这是因为5.7中会有一个保存当前自增值的变量，而8.0中把这个变量存到硬盘中了。
+  
+  * 填补空缺主键：
+    
+    若删除了某个主键，自增主键是不会填补删掉的那个空缺的，只会总最后面自增。
+    
+    但是一般不会填补空缺
+  
+  
+
+* foreign key：外键，从表的外键关联主表的主键，效果是从表添加数据时，外检的值必须是主表主键已存在的。外键可以有多个，会自动生成外键索引。
+  
+  注意：外键的性能开销很大，在高并发的场景下会造成阻塞，所以在实际开发中外键一般不用，至于外键的功能由后端语言自己实现，比如判断主表中数据存不存在。
+  
+  使用：员工表为从表，两个外键分别对应两个主表，部门表和岗位表：
+  
+  ```
+  CREATE TABLE department (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+  );
+  
+  CREATE TABLE job_position (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    salary DECIMAL(10, 2) NOT NULL
+  );
+  
+  CREATE TABLE employee (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    department_id INT NOT NULL,
+    job_position_id INT NOT NULL,
+    FOREIGN KEY (department_id) REFERENCES department(id),
+    FOREIGN KEY (job_position_id) REFERENCES job_position(id)
+  );
+  
+  
+  
+  ```
+  
+  
+  
+  规则：
+  
+  * 外键关联的必须是主表的主键，或unique约束的字段，一般都是关联主键
+  
+  * 从表的外键和主表的主键，名字可以不一样，但是数据类型必须一样
+  
+  * 先创建主表，才能在从表中指定外键
+  
+  * 修改/删除主表的数据时，必须先修改/删除从表中对应外键的所有数据，否则删除主表的某个数据使得外键关联不了，就报错
+  
+  * 主表和从表可以是同一个表，即自连接
+  
+  修改/删除主表从表数据的模式；
+  
+  * No Action（误操作） 或  Restrict（限制删除）：默认，可理解为严格模式，即先删除从表的数据，才能删除主表的数据
+  
+  * Cascade（级联删除）：在主表删除一条记录时，从表中与该记录相关的所有记录也会被删除
+  
+  * Set Null（设置为 NULL）：在主表删除一条记录时，从表中与该记录相关的所有记录的外键字段将被设置为 NULL
+  
+  模式设置方式：
+  
+  一般删除用set null，修改用cascade
+  
+  ```
+  CREATE TABLE related_table_null (
+    id INT NOT NULL PRIMARY KEY,
+    main_table_id INT,
+    FOREIGN KEY (main_table_id) 
+      REFERENCES main_table(id) 
+      ON DELETE SET NULL 
+      ON UPDATE CASCADE 
+  );
+  ```
+  
+  
+
+（3）查看表的约束情况
+
+```
+/* 不全，且没有显示自定义约束名 */
+DESC tbname;
+
+/* 常用 */
+SHOW CREATE TABLE tbname;
+```
+
+（4）增加/删除约束
+
+除了在create table的时候添加约束，也可以 alter table时添加、删除约束，在增加约束时，待约束的字段原油的数据应该满足约束，否则增加失败；
+
+没哟动的约束依然在
+
+```
+/* 增加单列约束 */
+ALTER TABLE tbname ALTER COLUMN id SET NOT NULL;
+
+/* 增加多列约束 */
+ALTER TABLE tbname 
+ADD CONSTRAINT id_and_phone   /* 自定义约束名 */
+UNIQUE (id, phone);
+
+
+/* 删除约束 */
+ALTER TABLE tbname ALTER COLUMN id DROP NOT DEFAULT;
+/* 删除唯一约束，主键，外键只能通过删除索引实现 */
+ALTER TABLE tbname DROP INDEX id_and_phone;
+
+
+```
+
+
+
+
+
+* check：8.0新特性，检查约束，用于检查字段的值是否符合自己的要求
+  
+  ```
+  CREATE TABLE student (
+    age INT,
+    CHECK (age >= 18 AND age <= 60)
+  );
+  
+  /* 成功 */
+  INSERT INTO student VALUES (20);
+  
+  /* 失败
+  INSERT INTO student VALUES (5);
+  */
+  ```
+  
+  
+
+### 2.2 DCL
+
+commit 和 roolback：
+
+在MySQL中，`COMMIT`和`ROLLBACK`是用于事务处理的关键字。一个事务是指一组数据库操作，这些操作作为一个单元执行，要么全部执行成功，要么全部不执行，因此可以确保数据的一致性和完整性。
+
+* OMMIT用于提交一个事务，将事务中的所有操作永久性地保存到数据库中。如果在提交之前发生了错误，那么所有的操作都将被回滚，数据库将回到操作之前的状态。
+  
+  ```
+  START TRANSACTION:
+  /* sql */
+  COMMIT;
+  ```
+  
+  
+
+* ROLLBACK用于回滚一个事务，即撤销事务中所有的操作，将数据库恢复到事务开始之前的状态，其实就是回滚到上一次commit的状态
+  
+  ```
+  START TRANSACTION;
+  insert into tbname1 values(6,'asd',25);
+  rollback;
+  ```
+  
+  
+
+## 3 DML之增改删
+
+如果字段有约束的话，可能会增改删失败而报错，注意一下就行。
+
+（1）增
+
+values 也可以写成 value，但是不规范。
+
+```
+/* 不指定字段名，那就必须按照表的字段的顺序来写 */
+INSERT INTO tbname VALUES(1, 'asd', 22);
+
+/* 指定字段，就不用按照顺序了 */
+INSERT INTO tbname (age, id) VALUES(22,1);
+
+/* 插入多条 */
+INSERT INTO tbname (age, id) VALUES 
+(22,1), 
+(23,2);
+
+
+/* 用查询结果来添加，不过要考虑查询结果集的字段和数据类型匹不匹配 */
+INSERT INTO tbname (SELECT * FROM xxx);
+```
+
+
+
+（2）改
+
+如果没有where过滤的话，会修改所有数据。
+
+```
+UPDATE tbname1 SET age = 123, sex = 'male' WHERE name = 'asd';
+```
+
+
+
+（3）删
+
+```
+/* 删除数据 */
+DELETE FROM tbname WHERE name = 'John';
+
+/* 清空所有数据 */
+DELETE FROM tbname;
+```
+
+
+
+
+
+
+
+# 三、数据库对象
 
 缺：字符串部分函数，日期时间全部函数，聚合函数除了count的外连接，操作系统细微差异，mysql版本细微差异，不同数据库细微差异。
+
+commit/rollback，事务，阿里规范，原子化

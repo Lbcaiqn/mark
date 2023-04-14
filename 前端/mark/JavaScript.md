@@ -2362,6 +2362,65 @@ await失败的另一种写法，虽然比try...catch简洁，但是只能获取P
 const [res, err] = await p(value).then(res => [res, null]).catch(err => [null, err]);
 ```
 
+try...catch...捕获await失败时，按道理await下面的代码应该是try没问题才执行，但是实际上不是这样的，具体原因不明：
+
+```
+async function aaa(a) {
+  let p = new Promise((resolve, reject) => {
+    if (a) resolve("ok");
+    else reject("err");
+  });
+
+  let res;
+  try {
+    res = await p;
+  } catch (err) {
+    console.log(err);
+  }
+  console.log("你看catch了还会不会执行");
+}
+
+aaa(0);
+```
+
+解决方法是把await下面的代码放到try里，但这样就不够直观了。也可以用await获取失败的第二种方法：
+
+```
+//方法一
+async function aaa(a) {
+  let p = new Promise((resolve, reject) => {
+    if (a) resolve("ok");
+    else reject("err");
+  });
+
+  let res;
+  try {
+    res = await p;
+    console.log("你看catch了还会不会执行");
+  } catch (err) {
+    console.log(err);
+  }
+}
+aaa(0);
+
+//方法二
+async function aaa(a) {
+  let p = new Promise((resolve, reject) => {
+    if (a) resolve("ok");
+    else reject("err");
+  });
+
+  let [res, err] = await p.then((res) => [res, null]).catch((err) => [null, err]);
+  if (res) console.log("ok");
+  else console.log("err");
+}
+aaa(0);
+
+//方法三，也可以在方法一判断res，但是这样还不如方法二呢
+```
+
+
+
 如果await得到的数据有子项，需要注意：
 
 ```

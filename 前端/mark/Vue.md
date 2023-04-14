@@ -6407,7 +6407,7 @@ webpack环境中的tsconfig.json：
 }
 ```
 
-vite环境中的tsconfig.json：
+vite环境和nestjs中的tsconfig.json：
 
 ```
 //需要 npm install -D @types/node

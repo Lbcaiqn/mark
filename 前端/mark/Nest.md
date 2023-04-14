@@ -66,8 +66,6 @@ nest g resource xxx
 nest g res xxx --directory src/module
 ```
 
-
-
 ## 3 RESTful风格设计
 
 RESTful不是什么硬性规定，只是一种api设计的风格。
@@ -1135,6 +1133,8 @@ nest链接mysql的库：
 npm install --save @nestjs/typeorm typeorm mysql2
 ```
 
+这里typeorm要操作什么数据库，就装对应的数据库操作的库，这里操作mysql就装了mysql2，之所以不是mysql，是因为mysql这个库是因为mysql8.0以上版本默认无法在代码里操作数据库，配置比较麻烦，所以直接装musql2。
+
 ## 1 初始化与定义实体
 
 初始化：
@@ -1154,7 +1154,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
       port: 3306,
       database: "db001",         //要连接的数据库
       //entities: [__dirname + "/**/*.entity{.ts,.js}"], //正则匹配引入实体文件
-      synchronize: true, //自动同步，生产环境不要用，开发环境可以用
+      synchronize: true, //自动将实体同步成mysql表，生产环境不要用，开发环境可以用
       retryDelay: 500,           //重连数据库的时间间隔
       retryAttempts: 10,         //重连次数
       autoLoadEntities: true,    //自动加载实体
@@ -1232,7 +1232,9 @@ export class Db {
 
 引入实体：
 
-引入实体后，数据库会创建对应的table；每次修改实体代码，也会修改对应的table内容。
+引入实体后，数据库会创建对应的table；
+
+typeorm初始化的配置synchronize设为true后，每次修改实体代码，也会修改对应的table内容，没有表则会根据实体来创建，所以在开发环境为了方便可以开启，但是成产环境一定要把它关了。
 
 引入的方式有三种：
 
@@ -1240,7 +1242,7 @@ export class Db {
 
 * typeorm初始化里正则匹配找entities文件（不推荐）
 
-* 自动加载：
+* 如果不是nest项目而是普通的node项目，那只能用上面两种方法，但如果是nest项目就可以有更好的方式，即自动加载：
   
   ```
   // xxx.module.ts
@@ -1256,6 +1258,10 @@ export class Db {
   ```
 
 ## 2 关系
+
+创建关系后，会自动创建外键，如果不适用外键，可以不创建关系。
+
+关系：OneToOne，OneToMany，ManyToOne，ManyToMany
 
 例：一个user表，有外键tag，对应tag表的多条数据（一对多关系）：
 
@@ -1417,6 +1423,12 @@ export class UserService {
   }
 }
 ```
+
+注意事项：
+
+* 自增列在save时如果没有给值，会自动自增，但是必须注意每一次save的对象的引用必须是不同的，比如一次需要save多次则需要特别注意每次都要new一次，不然的话每次引用都是同一个，列就不会自增，就使得自增列相同，进而使得插入变成修改
+
+* 如果需要一次save大量的数据如成千上万条，那么一条一条save是非常慢的，此时可以将数据放到数组里，将数组save进去；不过要注意如果数组的数据量太大是会save失败报错的，所以如果报错的话，就将数组分为几个小数组，再一次save
 
 # 四、接口文档
 

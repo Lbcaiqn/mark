@@ -242,7 +242,6 @@ HEAD是指向当前版本的指针，{n}表示从当前版本到此版本的移�
 ```
 # --hard 一定不要漏了
 git reset --hard 16进制索引
-
 ```
 
 第二种，只能后退版本：
@@ -255,8 +254,6 @@ git reset --hard HEAD^^
 
 # 后退n个版本
 git reset --hard HEAD~n
-
-
 ```
 
 参数：
@@ -293,8 +290,6 @@ sort,mixed后git status的显示：
 git cherry-pick c3的hash
 ```
 
-
-
 （4）文件删除后，可找回：
 
 提交到本地库后，工作区删除的文件可找回
@@ -309,7 +304,6 @@ git cherry-pick c3的hash
 
 git diff ... 或 git diff 与暂存区比较
 git diff HEAD ... 或 git diff HEAD 与本地库比较
-
 ```
 
 ## 3 分支
@@ -426,11 +420,7 @@ git push xxx 分支名
   git branch –m main
   ```
   
-  
-  
   其他的远程库就还是master
-
-
 
 ### 4.2 配置免密登录
 
@@ -475,8 +465,6 @@ git push xxx 分支名
    # 提交到远程库
    git push origin main
    ```
-
-
 
 ### 4.3 拉取远程库的项目
 
@@ -622,13 +610,11 @@ release过程：
    
    ```
    [submodule "src/xxx"]
-   	path = src/xxx
-   	url = https://github.com/ligengxin549/xxx.git
+       path = src/xxx
+       url = https://github.com/ligengxin549/xxx.git
    ```
    
    上面代码的意思是将这个xxx.git仓库的内容放到挡墙项目的src下的xxx
-   
-   
 
 （2）git rebase
 
@@ -660,8 +646,6 @@ release过程：
   #master分支中
   git merge dev
   ```
-  
-  
 
 * git pull由于半只是git fetch和git merge和结合，所以也会产生分叉，可以合并为一个：
   
@@ -678,15 +662,11 @@ git add 解决完冲突的文件
 git rebase --continue
 ```
 
-
-
 （3）快速解决冲突
 
 使用软件 beyond compare
 
 （4）github上开源项目贡献
-
-
 
 # 四、markdown
 

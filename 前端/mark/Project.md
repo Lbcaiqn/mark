@@ -324,6 +324,45 @@ npx prettier --write xxx.js
 
 prettier插件有默认的格式化规则，vsocde也可以配置规则，但自定义的配置文件会覆盖默认的规则或vscode配置的规则。
 
+④ 换行符问题
+
+在unix，linux，mac等系统换行符是LF，而windows换行符是LF和CRLF，在windows使用eslint的时候就会有一个 ‘Delete `␍` eslint(prettier/prettier)’ 的警告，虽然实际使用上可能没有问题，但是为了消除eslint的警告和严谨的编码，就需要处理这个问题：
+
+1. vscode下方菜单栏中点击 'CRLF' 选择 “LF‘，就可以把当前文件的所有换行符换成 ”LF’，但是治标不治本
+
+2. git中全局配置：
+   
+   ```
+   git config --global core.autocrlf false
+   ```
+   
+   
+
+3. vscode-首选项-设置-搜索 'files.eol' -选择 “\n‘。（ \n 就是 LF，\r\n 就是 CRLF）
+
+4. .prettierrc
+   
+   ```
+   {
+     "endOfLine": "lf"
+   }
+   ```
+   
+   
+
+5. .editor
+   
+   ```
+   [*]
+   end_of_line = lf
+   ```
+   
+   
+
+执行以上步骤后就基本能解决问题，每次新建文件时只要保存，就会根据prettierrc将换行符换成LF。
+
+不过注意vscode是一定要设置的，否则pretttierrc怎么配置都不行。
+
 ### 7.2 git提交规范
 
 自己写git钩子比较麻烦，有现成的库：
@@ -460,14 +499,10 @@ trim_trailing_whitespace = false
   ```
   VITE_XXX = 123
   ```
-  
-  
 
 * 多个 .env.xxx单独配置
   
   这种情况下，xxx必须是developmemnt，production等才能解析
-  
-  
 
 不同的环境，变量命名规则不同：
 
@@ -480,8 +515,6 @@ trim_trailing_whitespace = false
 在代码中调用：
 
 * webpack环境
-  
-  
 
 * vite环境
   
@@ -489,12 +522,8 @@ trim_trailing_whitespace = false
   console.log(import.meta.env);
   if (import.meta.env.DEV) console.log(import.meta.env.VITE_XXX);
   ```
-  
-  
 
 * node环境
-
-
 
 （3）git配置
 

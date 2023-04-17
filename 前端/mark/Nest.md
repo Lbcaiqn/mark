@@ -116,6 +116,7 @@ bootstrap();
 @Controller({
   path: 'user',
   version: '1'
+})
 ```
 
 单个开启：
@@ -1230,6 +1231,14 @@ export class Db {
 }
 ```
 
+注意，数据库中的数据类型和ts中的类型对应关系：
+
+* bigint，decimal在ts中定义为string（查询出来这两个其实也是string），其他的整数，小数在ts定义为number
+
+* char，text等都是string
+
+* 日期时间是Date，json是JSON，二进制类型是Buffer
+
 引入实体：
 
 引入实体后，数据库会创建对应的table；
@@ -1259,14 +1268,16 @@ typeorm初始化的配置synchronize设为true后，每次修改实体代码，�
 
 ## 2 关系
 
-创建关系后，会自动创建外键，如果不适用外键，可以不创建关系。
+在进行多表查询时，除非是原生sql，否则表之间必须要有关联关系，如果没有关联关系的话多表查询不知道为什么查不出来。
 
 关系：OneToOne，OneToMany，ManyToOne，ManyToMany
+
+创建关系后，从表表明关系的字段会同步主表主键的数据类型和unsigned，但是约束不会，所以约束需要定义。
 
 例：一个user表，有外键tag，对应tag表的多条数据（一对多关系）：
 
 ```
-// user.entity.ts
+// user.entity.ts  主表
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Tag } from './tag.entity';
 
@@ -1289,7 +1300,7 @@ export class User {
 ```
 
 ```
-// tag.entity.ts
+// tag.entity.ts  从表
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { User } from './user.entity'
 
@@ -1302,8 +1313,21 @@ export class Tag {
   @Column()
   tagName: string;
 
+  //创建外键，外键的字段没有指定，会根据typeorm默认的规则起字段名，这里字段名应该会是user_id
   @ManyToOne(() => User)
   user: User
+
+  /* //创建外键，同时自定义外检字段名
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User
+  */
+
+  /* 不创建外键，同时自定义外检字段名
+  @ManyToOne(() => User, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'user_id' })
+  user: User
+  */
 }
 ```
 
@@ -1326,6 +1350,10 @@ export class UserModule {}
 例：数据库有一个user表（字段有id、name、desc，tag）和一个tag表（字段有id，tagName，user），一个user对应多个tag。
 
 对其进行crud操作（typeorm的api返回的都是Promise）：
+
+find()需要注意，多表查询的各表之间的实体必须有关联关系。
+
+where需要注意，字段数据类型必须和实体定义的数据类型的一样。
 
 ```
 // user.service.ts
@@ -1359,6 +1387,7 @@ export class UserService {
     for (let i of tags) {
       const t = new Tag();
       t.tagName = i;
+      t.user = who;
       await this.tagTable.save(t);
       tagsArr.push(t);
     }
@@ -1377,6 +1406,10 @@ export class UserService {
       //如果没有关键词就查找全部并分页、排序
       data = await this.userTable.find({
         // 一并查询外键tag，不加的话是不会查外键的
+        /*
+        如果关联的表内还关联这其他表，也可以查出来，如：
+        relations: ["tag", "tag.xxx"],
+        */
         relations: ["tag"],
         // skip 和 take 实现分页，order 实现排序
         skip: (page - 1) * pageSize,
@@ -1421,6 +1454,41 @@ export class UserService {
   remove(id: number) {
     return this.userTable.delete(id);
   }
+}
+```
+
+也可以直接写sql语句，但是不太方便，就不用了：
+
+```
+let res = await this.GoodsAttributeRepository.query(
+      `
+    SELECT *
+    FROM goods_attribute
+    INNER JOIN attribute ON attribute._id = goods_attribute.attr_id
+    WHERE goods_attribute.goods_spu_id = ?
+  `,
+  [12345]
+);
+```
+
+也可以写成类似sql形式的函数调用，不过缺陷是和 find() 一样无法进行没有关联关系的多表查询（有关联关系的好像也不行，待解决）：
+
+```
+async searchGoods() {
+  const data = await this.GoodsSpuRepository.createQueryBuilder('goods_spu')
+    .select([
+      'goods_spu._id',
+      'goods_spu.goods_spu_name',
+      'goods_spu.goods_spu_main_img',
+      'goods_spu.goods_first_sku_price',
+    ])
+
+    .orderBy('goods_spu.add_time', 'DESC')
+    .limit(30)
+    .getMany();
+
+  console.log(data[0]);
+  return data;
 }
 ```
 
@@ -1493,8 +1561,8 @@ export class LoginController {
 
   @Get()
   @ApiOperation({summary: "某个get接口", description: '描述xxx'})
-  @ApiQuery({name: 'username', description: '用户名'})
-  @ApiQuery({name: 'password', description: '密码'})
+  @ApiQuery({name: 'username', type: String, description: '用户名'})
+  @ApiQuery({name: 'password', type: String, description: '密码'})
   @ApiResponse({status: 403, description: '参数错误'})
   findAll() {
     return this.loginService.findAll();
@@ -1515,8 +1583,11 @@ export class LoginController {
 import { ApiProperty } from "@nestjs/swagger/dist";
 
 export class CreateLoginDto {
-  @ApiProperty({example: 'lgx'})
+  @ApiProperty({ type: String, example: 'lgx' })
   name: string;
+
+  @ApiProperty({ type: Number, example: 24 })
+  age: number;
 }
 ```
 

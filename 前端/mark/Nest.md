@@ -702,7 +702,7 @@ npm install --save class-validator class-transformer
 
 ```
 // login/dto/create-login.dto.ts
-import { IsNotEmpty, IsNumber } from "class-validator";
+import { IsNotEmpty, IsNumber， Matches } from "class-validator";
 
 export class CreateLoginDto {
   //没有做任何验证
@@ -711,6 +711,7 @@ export class CreateLoginDto {
   //使用class-validator，这里演示非空和限定类型为number
   @IsNotEmpty()
   @IsNumber()
+  @Matches(/^.{3,20}$/, { message: '3到20个字符' })
   age: number
 }
 ```
@@ -1254,6 +1255,11 @@ typeorm初始化的配置synchronize设为true后，每次修改实体代码，�
 * 如果不是nest项目而是普通的node项目，那只能用上面两种方法，但如果是nest项目就可以有更好的方式，即自动加载：
   
   ```
+  /* 注意
+  * 本模块的所有实体都需要引入
+  * 若本模块需要关联查询时，关联的其他模块的实体不需要引入
+  * 若本模块需要对其他模块的实体CRUD时，或不能通过关联查询查出来时，就需要引入其他模块的实体
+  */
   // xxx.module.ts
   import ...
   import { TypeOrmModule } from '@nestjs/typeorm';
@@ -1271,6 +1277,18 @@ typeorm初始化的配置synchronize设为true后，每次修改实体代码，�
 在进行多表查询时，除非是原生sql，否则表之间必须要有关联关系，如果没有关联关系的话多表查询不知道为什么查不出来。
 
 关系：OneToOne，OneToMany，ManyToOne，ManyToMany
+
+创建实体时如果不知道用什么关系，可以参考一下例子：
+
+* 一对一：一个表的外键对应这个表的主键，如学生表中，学生的外键组长id对应组长的id，而组长也是学生，所以对应学生表的主键
+
+* 一对多，多对一：一个表的外键对应另一个表的主键，如学生表-班级表中，学生表的外键对应班级表的主键。一个班级对应多个学生，且学生只能在一个班级
+
+* 多对多：a表的外键对应b表的主键，且b表的外键也对应a表的主键，如学生表-课程表，学生表的外键课程id对应课程表的主键，课程表的外键学生id对应学生的主键，一个学生可以有多个课程，一个课程也可以有多个不同的学生
+
+总之，判断关系就以它们的主键外键为依据就好了，而不要以对应关系去判断，这样容易误判，比如一对一关系的学生表是不是也可以理解为一个组长对应多个学生，然后就误判了。
+
+或者也可以用归属关系来判断，比如a一对多b，b多对一a，那么一个a就可以有多个b，但一个b只属于一个a；又比如a多对多b，那么一个a有多个b，一个b也可以属于多个a的。
 
 创建关系后，从表表明关系的字段会同步主表主键的数据类型和unsigned，但是约束不会，所以约束需要定义。
 
@@ -1301,7 +1319,7 @@ export class User {
 
 ```
 // tag.entity.ts  从表
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from "typeorm";
 import { User } from './user.entity'
 
 @Entity()
@@ -1328,6 +1346,13 @@ export class Tag {
   @JoinColumn({ name: 'user_id' })
   user: User
   */
+
+  /* 不创建外键，同时自定义外检字段名,并创建索引
+  @Index()
+  @ManyToOne(() => User, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'user_id' })
+  user: User
+  */
 }
 ```
 
@@ -1345,15 +1370,45 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 export class UserModule {}
 ```
 
+注意，若没有创建外键
+
+* 从表插入数据，或修改关联字段时，就需要自行判断主表主键是否存在该id
+
+* 主表删除数据时，要一并删除从表对应的数据
+
+如果是多对多关系，则在两个实体是：
+
+JoinTable()会生成一个中间表，如果要用repository，则JoinTable是必须的
+
+```
+@ManyToOne(() => Shopcart, { createForeignKeyConstraints: false })
+@JoinTable({name: 'user_mtm_shopcart'})  
+shopcart: Shopcart[]
+```
+
+```
+@ManyToOne(() => User, { createForeignKeyConstraints: false })
+@JoinTable({name: 'user_mtm_shopcart'})  
+user: User[]
+```
+
+一对一关系只要在当前实体中：
+
+```
+@OneToOne(() => Category, { createForeignKeyConstraints: false })
+@JoinColumn({ name: 'cat_pid' })
+parent: Category;
+```
+
 ## 3 CRUD操作
-
-例：数据库有一个user表（字段有id、name、desc，tag）和一个tag表（字段有id，tagName，user），一个user对应多个tag。
-
-对其进行crud操作（typeorm的api返回的都是Promise）：
 
 find()需要注意，多表查询的各表之间的实体必须有关联关系。
 
 where需要注意，字段数据类型必须和实体定义的数据类型的一样。
+
+save()若数据库没有已存在的数据就会新添一条数据；如果已存在则是修改这条数据.
+
+例：数据库有一个user表（字段有id、name、desc，tag）和一个tag表（字段有id，tagName，user），一个user对应多个tag。对其进行crud操作（typeorm的api返回的都是Promise）：
 
 ```
 // user.service.ts
@@ -1383,18 +1438,29 @@ export class UserService {
   //tag也可以定义dto，这里为了方便就不弄了
   async addTag(id: number, tags: string[]) {
     const who = await this.userTable.findOne({ where: { id } });
-    const tagsArr: Tag[] = [];
+
+    //无论是方式一还是方式二，由于表之间有关联关系，一个表插入数据会使得另一个表对应的也插入数据
+    // 推荐用方式一，简单，同事修改，删除也只能用方式一
+    // 方式一
     for (let i of tags) {
       const t = new Tag();
       t.tagName = i;
       t.user = who;
       await this.tagTable.save(t);
+    }
+
+   /* 方式二，不推荐
+   const tagsArr: Tag[] = [];
+   for (let i of tags) {
+      const t = new Tag();
+      t.tagName = i;
       tagsArr.push(t);
     }
     who.tag = tagsArr;
+    this.userTable.save(who);
+   */
 
-    //save()若数据库没有已存在的数据就会新添一条数据；如果已存在则是修改这条数据
-    return this.userTable.save(who);
+    return 'ok';
   }
 
   async findAll(page, pageSize, keyword) {
@@ -1471,23 +1537,20 @@ let res = await this.GoodsAttributeRepository.query(
 );
 ```
 
-也可以写成类似sql形式的函数调用，不过缺陷是和 find() 一样无法进行没有关联关系的多表查询（有关联关系的好像也不行，待解决）：
+也可以写成类似sql形式的函数调用，不过缺陷是和 find() 一样无法进行没有关联关系的多表查询，必须有关联关系的才行：
+
+getOne，getMany返回Promise，其他不是。
 
 ```
-async searchGoods() {
-  const data = await this.GoodsSpuRepository.createQueryBuilder('goods_spu')
-    .select([
-      'goods_spu._id',
-      'goods_spu.goods_spu_name',
-      'goods_spu.goods_spu_main_img',
-      'goods_spu.goods_first_sku_price',
-    ])
-
-    .orderBy('goods_spu.add_time', 'DESC')
-    .limit(30)
+async getTags() {
+  const data = await this.userRepository
+    .createQueryBuilder('user')  // user表别名
+    .innerJoinAndSelect('user.tag', 'tag表别名')
+    .where('user._id = :id', { id: 12345 })
+    .offset(0)
+    .limit(30)   // 相当于 limit 0 30
     .getMany();
-
-  console.log(data[0]);
+  console.log(data);
   return data;
 }
 ```
@@ -1646,7 +1709,7 @@ npm install --save svg-captcha
 npm install --save jsonwebtoken
 ```
 
-用session实现验证码的验证，需要use一下：
+用session实现验证码的验证前，需要use一下：
 
 ```
 // main.ts
@@ -1699,9 +1762,13 @@ export class User {
   })
   username: string;
 
-  //密码要加密、限制非空
+  //密码要加密、限制非空，查询时禁止查出密码
+  //bcryptjs加密的密文长度是60，所以varchar必须 >= 60
   @Column({
+    type: 'varchar',
+    length: 100,
     nullable: false,
+    select: false
   })
   password: string;
 
@@ -1809,13 +1876,10 @@ export class UserService {
       SECRCT,
     );
 
-    //过滤掉密码，把其他信息返回
-    const { password, ...userDetail } = user;
-
     return {
       message: '登录成功',
       token,
-      userDetail,
+      user,
     };
   }
 
@@ -1955,7 +2019,7 @@ token作为登录凭证来保持持久登录，无需账号密码。
 // token.guard.ts
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { Request, Response, NextFunction } from "express";
+import { Request } from "express";
 import { Reflector } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from 'typeorm';
@@ -1991,14 +2055,12 @@ export class TokenGuard implements CanActivate {
     const token = req.headers.authorization;
     if(!token)  return false;
 
-    let res: any = null;
     try{
-      res = verify(token,SECRCT)
+      verify(token,SECRCT)
     }catch(err){
       return false;
     }
 
-    console.log(res);
     return true;
   }
 }

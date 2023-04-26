@@ -335,8 +335,6 @@ prettier插件有默认的格式化规则，vsocde也可以配置规则，但自
    ```
    git config --global core.autocrlf false
    ```
-   
-   
 
 3. vscode-首选项-设置-搜索 'files.eol' -选择 “\n‘。（ \n 就是 LF，\r\n 就是 CRLF）
 
@@ -347,8 +345,6 @@ prettier插件有默认的格式化规则，vsocde也可以配置规则，但自
      "endOfLine": "lf"
    }
    ```
-   
-   
 
 5. .editor
    
@@ -356,8 +352,6 @@ prettier插件有默认的格式化规则，vsocde也可以配置规则，但自
    [*]
    end_of_line = lf
    ```
-   
-   
 
 执行以上步骤后就基本能解决问题，每次新建文件时只要保存，就会根据prettierrc将换行符换成LF。
 

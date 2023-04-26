@@ -1,5 +1,3 @@
-该笔记主要是node后端，以及常用的前后端交互功能实现（如登录，websocket）
-
 # 一、node
 
 NodeJS是运行在服务端的JavaScript的开发平台，实质是对chrome V8引擎的封装。

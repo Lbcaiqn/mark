@@ -2419,8 +2419,6 @@ aaa(0);
 //方法三，也可以在方法一判断res，但是这样还不如方法二呢
 ```
 
-
-
 如果await得到的数据有子项，需要注意：
 
 ```
@@ -4149,12 +4147,12 @@ npm install --save lodash
     function debunce(fn,delay=1000){
       //这里使用了闭包，使得t不会被销毁
       let t = null
-      return function(){
+      return function(...args){
         if(t != null)  clearTimeout(t)
         t = setTimeout(() => {
           //此处为内嵌函数的独立调用，this指向window，需要call()改变指向
           let That = this
-          fn.call(That) 
+          fn.call(That, ...args) 
         },delay)
       }
     }
@@ -4175,11 +4173,11 @@ window.onscroll = throttle(function(){
 },1000)
 function throttle(fn,delay=1000){
   let flag = true
-  return function(){
+  return function(...args){
     if(flag){
       setTimeout(() => {
         let That = this
-        fn.call(That)
+        fn.call(That, ...args)
         flag = true
       },delay)
       flag = false
@@ -4197,7 +4195,7 @@ Vue2：
 ```
 method: {
   //func1，func2是事件监听函数
-  //这样试错的，因为这样根本就不是同一个闭包，参考闭包笔记
+  //这样是错的，因为这样根本就不是同一个闭包，参考闭包笔记
   func1: function(){
     debunce(() => {
       console.log(123)
@@ -4209,6 +4207,8 @@ method: {
     },1000)  
 }
 ```
+
+也不能先定义事件函数，再 @click="debunce(事件函数,100)"，因为这样也不是同一个闭包
 
 Vue3：
 
@@ -4254,22 +4254,24 @@ npm install --save @types/node
 闭包版：
 
 ```
+// lodash.ts
+
 export function debunce(fn: Function, delay: number = 1000) {
   let t: NodeJS.Timeout | null = null;
-  return function () {
+  return function (...args: any[]) {
     if (t != null) clearTimeout(t)
     t = setTimeout(() => {
-      fn();
+      fn(...args);
     }, delay)
   }
 }
 
 export function throttle(fn: Function,delay: number = 1000){
   let flag: boolean = true;
-  return function(){
+  return function(...args: any[]) {
     if(flag){
       setTimeout(() => {
-        fn();
+        fn(...args);
         flag = true;
       },delay);
       flag = false;
@@ -4288,16 +4290,16 @@ export class Debunce {
   private immediate: boolean = false
   public debunce(func: Function,delay: number, immediate: boolean = false){
     let that = this
-    return function(){
+    return function(...args: any[]){
       if(!that.immediate && immediate){
         that.immediate = true
-        func()
+        func(...args)
       }
       else {
         if(that.timer != null) clearTimeout(Number(that.timer))
         that.timer = setTimeout(() => {
           that.immediate = false
-          func()
+          func(...args)
         },delay)
       }
     }
@@ -4309,14 +4311,14 @@ export class Throttle {
   private immediate: boolean = false
   public throttle(func: Function, delay: number, immediate: boolean = false){
     let that = this
-    return function(){
+    return function(...args: any[]){
       if(!that.immediate && immediate){
-        func()
+        func(...args)
         that.immediate = true
       }
       else if(that.flag){
         setTimeout(() => {
-          func()
+          func(...args)
           that.flag = true
           that.immediate = true
         },delay)

@@ -188,6 +188,17 @@ before,after都是作为E的孩子，它们必须要有content属性，值可以
 
 * 清除浮动，原理：在父盒子最后面生成一个伪元素卡住，若再加上before更严谨的闭合浮动。
 
+使用示例：
+
+```
+xxx::after {
+  content: '';   /* 这个是必须的，是文本内容，不想要就为空字符串 */
+  width: 20px;
+  height: 20px;
+  background-color: black;
+}
+```
+
 （7）伪类选择器：
 
 用于在特定的状态下展示特定的样式。
@@ -318,6 +329,12 @@ overflow: visible | hidden | auto,scroll;
 ```
 
 overflow: hidden; 还可以清除浮动和解决包含关系盒子的垂直margin的塌陷。
+
+隐藏滚动条：
+
+```
+
+```
 
 # 四、CSS三大特性
 
@@ -506,7 +523,7 @@ float: value; left | right;
 
 4. :after伪元素法（额外标签法的升级）：在父元素后面添加伪元素，一般给父元素一个类名clearfix。
    
-   ```
+   ```ag-0-1gv3066vgag-1-1gv3066vg
    父元素:after {
     content: “”;
     display: block;
@@ -569,8 +586,6 @@ position: static | relative | absolute | fixed | sticky;
    * 若父元素position: relative，子元素z-index失效，父元素其他postion则正常。
    
    * 若祖级元素设置了z-index，则祖级的z-index优先级最高
-   
-   * 
 
 2. 设置定位后，不能再用margrin设置水平居中，可以采用：
    水平居中：left: 50%;   margin-left: -盒子宽;

@@ -166,10 +166,9 @@ app.use(express.static("./public"));
 
 //nest
 // main.ts
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import ...
 import { NestExpressApplication } from '@nestjs/platform-express/interfaces';
-import {join} from 'path';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -1206,17 +1205,27 @@ export class Db {
     type: "varchar",         //数据类型
     length: 255,             //长度
     comment: "注释xxx",      //注释
-    default: "123456",      //默认值
-    nullable: false,        //不能为空
+    default: "123456",      //默认值，默认没有默认值
+    nullable: false,        //不能为空，默认为false
   })
   password: string;
+
+  @Column({
+    unsigned: true       // 无符号，默认为false
+  })
+  age: number;
+
+  @Column({
+    unique: true       // 唯一约束，默认为false
+  })
+  email: string;
 
   @Column({                //枚举
     type: "enum",
     enum: sexEnum,
     default: 2,
   })
-  sex: number;
+  sex: sexEnum;
 
   @Generated("uuid")
   uuid: string;
@@ -1224,11 +1233,17 @@ export class Db {
   @CreateDateColumn({ type: "timestamp" })
   time: Date;
 
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  add_time: Date;
+
   @Column("simple-array")
   hobbits: string[];
 
   @Column("simple-json")             //自动JSON.stringify()
-  jjj: { name: string; age: number };
+  jjj: { name: string; age: number };    // 或者类型为 JSON
 }
 ```
 
@@ -1353,6 +1368,16 @@ export class Tag {
   @JoinColumn({ name: 'user_id' })
   user: User
   */
+
+  /* 不创建外键，同时自定义外检字段名,并创建索引，同时满足想在查询的时候有只要user_id，不要user表数据的需求
+  @Column()
+  user_id: number;
+
+  @Index()
+  @ManyToOne(() => User, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'user_id' })
+  user: User
+  */
 }
 ```
 
@@ -1376,9 +1401,22 @@ export class UserModule {}
 
 * 主表删除数据时，要一并删除从表对应的数据
 
-如果是多对多关系，则在两个实体是：
+自连接也可以是一对多-多对一关系：
 
-JoinTable()会生成一个中间表，如果要用repository，则JoinTable是必须的
+```
+@ManyToOne(() => Category, { createForeignKeyConstraints: false })
+@JoinColumn({ name: 'cat_pid' })
+parent: Category;
+
+@OneToMany(() => Category, cat => cat.parent)
+children: Category[];
+```
+
+多对多关系，则在两个实体是：
+
+JoinTable()会生成一个中间表，如果要用repository，则JoinTable是必须的。
+
+a多对多b关系其实就是a一对多c和c多对一b的结合
 
 ```
 @ManyToOne(() => Shopcart, { createForeignKeyConstraints: false })
@@ -1392,12 +1430,17 @@ shopcart: Shopcart[]
 user: User[]
 ```
 
-一对一关系只要在当前实体中：
+一对一关系，则在两个表中：
 
 ```
-@OneToOne(() => Category, { createForeignKeyConstraints: false })
-@JoinColumn({ name: 'cat_pid' })
-parent: Category;
+@OneToOne(() => User, { createForeignKeyConstraints: false })
+@JoinColumn({ name: 'user_id' })
+user: User;
+```
+
+```
+@OneToOne(() => UserDetailInfo, udi => udi.user)
+userDetailInfo: UserDetailInfo;
 ```
 
 ## 3 CRUD操作

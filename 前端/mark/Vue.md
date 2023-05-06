@@ -3416,6 +3416,8 @@ console.log(this.$router.getRouters())
 
 - next 在函数内部调用 next() 才能继续跳转路由
 
+注意：前置守卫的时间点是还没有进入到to的路由，比如a跳转b，如果在b的前置守卫中跳转到了c，那么c的from还是a，因为路由其实都没有到过b。
+
 全局导航守卫
 
 ```
@@ -3458,6 +3460,49 @@ document.title = to.match[0].meta.title
 //只有通过路由方式进入该组件时才会回调这两个钩子
 beforeRouteEnter((to,from,next)=>{})
 afterRouteLeave((to,from)=>{})
+```
+
+若从a路由跳转到a，比如从商品详情页中点击某个商品再次跳转到商品详情页中，url虽然会变，但是数据时不会更新的，要想实现这个需求，可以通过刷新页面或者守卫实现，一下是守卫的实现方法（跳转到中间路由）：
+
+```
+//,,,
+const routes = [
+   //,,,
+  {
+    path: '/goods:id',
+    name: 'goods',
+    component: () => import('@/views/Goods/Goods.vue'),
+  },
+  {
+    path: '/search',
+    name: 'search',
+    component: () => import('@/views/Search/Search.vue'),
+  },
+  {
+    path: '/empty',
+    name: 'empty',
+    component: () => import('@/views/Empty/Empty.vue'),
+  },
+];
+
+const router = new Router({
+  routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if ((to.name === 'goods' && from.name === 'goods') || (to.name === 'search' && from.name === 'search')) {
+    next({ name: 'empty', query: { toPath: to.path, ...to.query } });
+  } else next();
+});
+
+router.afterEach(to => {
+  if (to.name === 'empty') {
+    router.push({
+      path: to.query.toPath as string,
+      query: to.query,
+    });
+  }
+});
 ```
 
 ## 9 keep-alive
@@ -5693,7 +5738,7 @@ Vue2中的Vue中的属性方法有些删除了，有些转移到了app
 
 6. 过渡类名变更：v-enter v-leave 变为 v-enter-from v-leave-from
 
-7. 删除了按键编码作为事件修饰符，因为兼容性差。删除了案件编码，只能用DOM的addEventListen拿到事件对象中的按键码来监听了
+7. 删除了按键编码作为事件修饰符，因为兼容性差。删除了案件编码，只能用DOM的addEventListen拿到事件对象中的按键码来监听了，或者在input中 @keydown.enter="xxx"
 
 8. 删除了事件修饰符.native，如果自定义组件想要绑定原生事件，只能在子组件对应的DOM发射自定义事件来模拟原生事件。
    
@@ -6387,7 +6432,7 @@ vite可以再vite.config.json中将 "dev": "vite" 修改伪 "dev": "vite && vue-
 
 （2）路径别名
 
-若果在webpack.config.json或vite.config.json配置了路径别名，那么必须在tsconfig.json经一部配置，否则会报错
+如果在webpack.config.json或vite.config.json配置了路径别名，那么必须在tsconfig.json经一部配置，否则会报错
 
 webpack环境中的tsconfig.json：
 
@@ -6504,4 +6549,16 @@ let a = reactive<lgxType>({  //或者reactive<LgxInt>()也行
 })
 
 </script>
+```
+
+事件函数：
+
+事件对象的类型根据事件类型决定，如click事件的事件对象就是 MouseEvent
+
+```
+function aaa(e: MouseEvent){
+  // 如果使用了事件委托，用到了 e.target 获取自定义属性, 需要将其断言为 HTMLElement
+  // 如果还不行，就断言为更具体的类型，如 
+  const index = (e.target as HTMLElement).dataset.index;
+}
 ```

@@ -761,7 +761,9 @@ npm install --save swiper
 npm install -D @types/swiper
 ```
 
-注意，一定要v-if判断是否有值，否则不会轮播：
+注意，一定要v-if判断img是否有值，否则不会轮播：
+
+封装成MySwiper组件：
 
 ```
 <script setup lang="ts">
@@ -833,7 +835,7 @@ interface swiperPropsInterface {
   navigation?: boolean; // 前进后退按钮
   slidesPerView?: number; // 每页的图片数
   spaceBetween?: number; // 每页多个图片时，每个图片之间的间距
-  effect?: 'slide' | 'fade'; // 切换的动画效果
+  effect?: 'slide' | 'fade' | string; // 切换的动画效果
   speed?: number; // 切换时间
   useZoom?: boolean; // 是否使用放大镜
   thumbs?: boolean; // 是否使用缩略图
@@ -888,7 +890,7 @@ function initSwiper(swiperInstance: any, thumbs: boolean = false) {
       nextEl: '.swiper-button-next',
       prevEl: '.swiper-button-prev',
     },
-    effect: options?.effect,
+    effect: options?.effect as any,
     speed: options?.speed,
     slidesPerView: options?.slidesPerView,
     spaceBetween: options?.spaceBetween,
@@ -1069,10 +1071,7 @@ function mouseLeave(index: number) {
   }
 }
 </style>
-
 ```
-
-
 
 ② 自己实现
 
@@ -1210,7 +1209,83 @@ box.addEventListener('mousedown',function(mouseDown){
 </script>
 ```
 
-（4）移动端搜索框：
+（4）计数器
+
+封装成Counter组件：
+
+```
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+
+const props = withDefaults(
+  defineProps<{
+    count: number;
+  }>(),
+  {
+    count: 1,
+  }
+);
+
+const count = ref<number>(props.count);
+
+function countInput(e: Event) {
+  if ((e.target as HTMLInputElement).value === '') return;
+
+  let value = Number((e.target as HTMLInputElement).value);
+  if (!Number.isInteger(value) || value < 1) value = 1;
+  count.value = value;
+}
+
+const emit = defineEmits(['countUpdate']);
+watch(count, newVal => {
+  if (!Number.isInteger(newVal)) return;
+  emit('countUpdate', count.value);
+});
+</script>
+
+<template>
+  <div id="counter">
+    <button class="counter-btn" @click="count = count > 1 ? count - 1 : count">-</button>
+    <div>
+      <input
+        class="counter-inp"
+        type="text"
+        v-model="count"
+        @input="countInput"
+        @blur="count = !count || count > 999999999 ? 1 : count"
+      />
+    </div>
+    <button class="counter-btn" @click="count = count < 999999999 ? count + 1 : count">+</button>
+  </div>
+</template>
+
+<style lang="less" scoped>
+#counter {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  .counter-inp {
+    width: 80px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+  }
+
+  .counter-btn {
+    width: 40px;
+    height: 40px;
+    line-height: 30px;
+    font-size: 25px;
+    cursor: pointer;
+  }
+}
+</style>
+
+```
+
+
+
+（5）移动端搜索框：
 
 点击假的搜索盒子进入搜索页面，进入时候自动获得焦点
 
@@ -1230,18 +1305,19 @@ box.addEventListener('mousedown',function(mouseDown){
 
 * 原理差不多，只是变成了按页数切换数据
 
-* 分页器组件
+* 分页器组件Pagination：
   
   ```
   <script setup lang="ts">
   import { computed } from 'vue';
   
   const props = defineProps<{
-    total: number,
-    pageSize: number,
-    pageNo: number,
-    pagerCount: number
-  }>();;
+    // 分别是总数，每页的数量，当前页码，显示几个页码按钮
+    total: number;
+    pageSize: number;
+    pageNo: number;
+    pagerCount: number;
+  }>();
   
   const emits = defineEmits(['currentPage']);
   
@@ -1249,8 +1325,9 @@ box.addEventListener('mousedown',function(mouseDown){
     return Math.ceil(props.total / props.pageSize);
   });
   
-  let startAndEnd = computed(() => {
-    let start = 0, end = 0;
+  const startAndEnd = computed(() => {
+    let start = 0,
+      end = 0;
     if (totalPage.value < props.pagerCount) {
       start = 1;
       end = totalPage.value;
@@ -1276,8 +1353,15 @@ box.addEventListener('mousedown',function(mouseDown){
       <button v-if="startAndEnd.start > 1" @click="emits('currentPage', 1)">1</button>
       <button v-if="startAndEnd.start > 2">.....</button>
   
-      <button v-for="page in startAndEnd.end" :key="page" v-show="page >= startAndEnd.start"
-        @click="emits('currentPage', page)" :class="{ active: pageNo == page }">{{ page }}</button>
+      <button
+        v-for="page in startAndEnd.end"
+        :key="page"
+        v-show="page >= startAndEnd.start"
+        @click="emits('currentPage', page)"
+        :class="{ active: pageNo == page }"
+      >
+        {{ page }}
+      </button>
   
       <button v-if="startAndEnd.end < totalPage - 1">......</button>
       <button v-if="startAndEnd.end < totalPage" @click="emits('currentPage', totalPage)">{{ totalPage }}</button>
@@ -1290,6 +1374,10 @@ box.addEventListener('mousedown',function(mouseDown){
   
   <style lang="less" scoped>
   .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  
     button {
       margin: 0 5px;
       background-color: #f4f4f5;
@@ -1337,176 +1425,309 @@ npm install --save vee-validate@next @vee-validate/rules @vee-validate/i18n@next
 
 * \<Field /\> 通过 name 使用自定义的校验规则
 
-```
-/<script setup lang="ts">
-import { reactive } from "vue";
-import { Form, Field } from "vee-validate";
+封装成FormValidate组件：
 
-//数据
-const formData = reactive([
+```
+<script setup lang="ts">
+import { ref } from 'vue';
+import { Form, Field } from 'vee-validate';
+
+interface formInterface {
+  name: string;
+  type: 'text' | 'password' | 'radio' | 'checkbox' | string;
+  value: string | string[] | boolean;
+  describe?: string;
+  placeholder?: string;
+  text?: string;
+  withImg?: string;
+  items?: {
+    value: string | boolean;
+    text?: string;
+  }[];
+  schema?: {
+    type: 'notEmpty' | 'reg' | 'same' | string;
+    reg?: RegExp[];
+    sameName?: string;
+    errorMessage: string;
+  }[];
+}
+
+const props = withDefaults(
+  defineProps<{
+    formData: formInterface[];
+    submitText?: string;
+  }>(),
   {
-    name: "account",
-    type: "text",
-    describe: "用户名",
-    placeholder: "请输入用户名",
-    value: "",
-  },
-  {
-    name: "password",
-    type: "password",
-    describe: "密码",
-    placeholder: "请输入密码",
-    value: "",
-  },
-  {
-    name: "passwordConfirm",
-    type: "password",
-    describe: "确认密码",
-    placeholder: "请输入确认密码",
-    value: "",
-  },
-  {
-    name: "sex",
-    type: "radio",
-    describe: "性别",
-    value: "female",
-    items: [
-      { value: "male", text: "男" },
-      { value: "female", text: "女" },
-    ],
-  },
-  {
-    name: "hobbit",
-    type: "checkbox",
-    describe: "爱好",
-    value: ["opt1"],
-    items: [
-      { value: "opt1", text: "多选1" },
-      { value: "opt2", text: "多选2" },
-      { value: "opt3", text: "多选3" },
-      { value: "opt4", text: "多选4" },
-    ],
-  },
-  {
-    name: "both",
-    type: "select",
-    describe: "出生年月",
-    value: "",
-  },
-  {
-    name: "code",
-    type: "text",
-    describe: "验证码",
-    placeholder: "",
-    value: "",
-  },
-  {
-    name: "agree",
-    type: "checkbox",
-    text: `我同意<a href="#">xxx协议</a>`,
-    value: false,
-    items: [{ value: true, text: `我同意<a href="#"a>xxx选项</a>` }],
-  },
-]);
+    formData: () => [],
+    submitText: '提交',
+  }
+);
+
+const emit = defineEmits(['codeImgChange', 'submit']);
+
+// // formData 例子
+// const data: formInterface[] = ref([
+//   {
+//     name: 'account',
+//     type: 'text',
+//     describe: '用户名',
+//     placeholder: '请输入用户名',
+//     value: '',
+//     schema: [{ type: 'notEmpty', errorMessage: '用户名不能为空' }],
+//   },
+//   {
+//     name: 'password',
+//     type: 'password',
+//     describe: '密码',
+//     placeholder: '请输入密码',
+//     value: '',
+//     schema: [
+//       { type: 'notEmpty', errorMessage: '密码不能为空' },
+//       {
+//         type: 'reg',
+//         reg: [/[a-zA-Z0-9]{6,24}/, /[A-Z]/, /[0-9]/],
+//         errorMessage: '密码必须是6-24位，由数字和英文字母组成，且必须包含数字和大写字母',
+//       },
+//     ],
+//   },
+//   {
+//     name: 'passwordConfirm',
+//     type: 'password',
+//     describe: '确认密码',
+//     placeholder: '请输入确认密码',
+//     value: '',
+//     schema: [
+//       { type: 'notEmpty', errorMessage: '确认密码不能为空' },
+//       {
+//         type: 'reg',
+//         reg: [/[a-zA-Z0-9]{6,24}/, /[A-Z]/, /[0-9]/],
+//         errorMessage: '密码必须是6-24位，由数字和英文字母组成，且必须包含数字和大写字母',
+//       },
+//       { type: 'same', sameName: 'password', errorMessage: '密码和确认密码不一致' },
+//     ],
+//   },
+//   {
+//     name: 'sex',
+//     type: 'radio',
+//     describe: '性别',
+//     value: 'female',
+//     items: [
+//       { value: 'male', text: '男' },
+//       { value: 'female', text: '女' },
+//     ],
+//     schema: [{ type: 'notEmpty', errorMessage: '请勾选性别' }],
+//   },
+//   {
+//     name: 'hobbit',
+//     type: 'checkbox',
+//     describe: '爱好',
+//     value: ['opt1'],
+//     items: [
+//       { value: 'opt1', text: '多选1' },
+//       { value: 'opt2', text: '多选2' },
+//       { value: 'opt3', text: '多选3' },
+//       { value: 'opt4', text: '多选4' },
+//     ],
+//     schema: [{ type: 'notEmpty', errorMessage: '请勾选兴趣' }],
+//   },
+//   {
+//     name: 'code',
+//     type: 'text',
+//     describe: '验证码',
+//     placeholder: '',
+//     value: '',
+//     withImg: 'imgurl',
+//     schema: [{ type: 'notEmpty', errorMessage: '验证码不能为空' }],
+//   },
+//   {
+//     name: 'agree',
+//     type: 'checkbox',
+//     text: `我同意<a href="#">xxx协议</a>`,
+//     value: false,
+//     items: [{ value: true, text: `我同意<a href="#"a>xxx选项</a>` }],
+//     schema: [{ type: 'notEmpty', errorMessage: '请同意协议' }],
+//   },
+// ]);
 
 //校验规则
 function schema(value: string, form: any) {
-  switch (form.field) {
-    case "account":
-      if (!value) return "用户名不能为空";
-      break;
-    case "password":
-      if (!value) return "密码不能为空";
-      if (![/[a-zA-Z0-9]{6,24}/, /[A-Z]/, /[0-9]/].every((r) => r.test(value)))
-        return "密码必须是6-24位，由数字和英文字母组成，且必须包含数字和大写字母";
-      break;
-    case "passwordConfirm":
-      if (!value) return "密码不能为空";
-      if (![/[a-zA-Z0-9]{6,24}/, /[A-Z]/, /[0-9]/].every((r) => r.test(value)))
-        return "密码必须是6-24位，由数字和英文字母组成，且必须包含数字和大写字母";
-      break;
-    case "sex":
-    case "hobbit":
-    case "agree":
-      if (!value || value?.length === 0)
-        return form.field === "agree"
-          ? "请勾选同意用户协议"
-          : "请勾至少选择一项";
-      break;
-    case "code":
-      if (!value) return "请输入验证码";
-      if (!/^\d{6}$/.test(value)) return "验证码是6个数字";
-      break;
-    default:
-      break;
+  const formItem = props.formData.find(i => i.name === form.field);
+  if (!formItem || !formItem.schema) return true;
+
+  for (let i of formItem.schema) {
+    switch (i.type) {
+      case 'notEmpty':
+        if (!value || value?.length === 0) return i.errorMessage;
+        break;
+      case 'reg':
+        if (!i.reg!.every(r => r.test(value))) return i.errorMessage;
+        break;
+      case 'same':
+        if (value !== props.formData.find((item: formInterface) => item.name === i.sameName)?.value)
+          return i.errorMessage;
+        break;
+      default:
+        break;
+    }
   }
+
   return true;
 }
 
-//使用校验规则
-const mySchema = {
-  account: schema,
-  password: schema,
-  passwordConfirm: schema,
-  sex: schema,
-  hobbit: schema,
-  code: schema,
-  agree: schema,
-};
+// 使用校验规则
+const mySchema = ref<any>({});
+for (let i of props.formData) mySchema.value[i.name] = schema;
+
+// 提交
+function submit(data: any) {
+  emit('submit', data);
+}
 </script>
 
 <template>
-  <Form :validation-schema="mySchema" v-slot="{ errors }" autocomplete="off">
+  <Form
+    id="form-validate"
+    v-if="formData.length !== 0"
+    :validation-schema="mySchema"
+    v-slot="{ errors }"
+    @submit="submit"
+  >
     <div v-for="i in formData" :key="i.name">
-      <!-- 表头 -->-->
-      <span class="describe"
-        >{{ i.describe }}{{ i.describe ? "：" : " " }}
-      </span>
+      <div class="form-item" :style="{ 'margin-bottom': errors[i.name] ? 0 : '35px' }">
+        <!-- 表头 -->
+        <div class="describe">
+          <span>{{ i.describe }}</span>
+          <span>{{ i.describe ? '：' : ' ' }}</span>
+        </div>
 
-      <!-- 输入框 -->
-      <template v-if="['text', 'password', 'email'].includes(i.type)">
-        <Field
-          v-model="i.value"
-          :name="i.name"
-          :type="i.type"
-          :placeholder="i.placeholder"
-        />
-      </template>
-
-      <!-- 单选、多选 -->
-      <template v-else-if="['radio', 'checkbox'].includes(i.type)">
-        <label
-          v-for="item in i.items"
-          :key="item.value"
-          style="display: inline-block"
+        <!-- 输入框 -->
+        <div
+          class="form-item-type form-item-type-text"
+          :class="{ 'with-img': i.withImg }"
+          v-if="['text', 'password', 'email'].includes(i.type)"
         >
-          <Field
-            v-model="i.value"
-            :value="item.value"
-            :name="i.name"
-            :type="i.type"
-          />
-          <span v-html="item.text"></span>
-        </label>
-      </template>
+          <Field v-model="i.value" :name="i.name" :type="i.type" :placeholder="i.placeholder" :validateOnInput="true" />
+          <img class="code" v-if="i.withImg" :src="i.withImg" @click="$emit('codeImgChange')" />
+        </div>
+
+        <!-- 单选、多选 -->
+        <div class="form-item-type form-item-type-options" v-else-if="['radio', 'checkbox'].includes(i.type)">
+          <label v-for="(item, itemIndex) in i.items" :key="itemIndex">
+            <div class="options-box">
+              <div>
+                <Field v-model="i.value" :value="item.value" :name="i.name" :type="i.type" :validateOnInput="true" />
+              </div>
+              <div v-html="item.text"></div>
+            </div>
+          </label>
+        </div>
+      </div>
 
       <!-- 错误提示 -->
       <div class="error-message" v-if="errors[i.name]">
-        <span class="describe"></span>{{ errors[i.name] }}
+        <span class="describe"></span>
+        <span>{{ errors[i.name] }}</span>
       </div>
     </div>
-    <div>
-      <span class="describe"></span>
-      <button type="submit">注册</button>
+
+    <div class="form-item">
+      <div class="form-submit">
+        <button type="submit">{{ submitText }}</button>
+      </div>
     </div>
   </Form>
 </template>
 
 <style lang="less" scoped>
-.describe {
-  display: inline-block;
-  width: 150px;
-  text-align: right;
+@common-height: 30px;
+
+#form-validate {
+  .form-item {
+    display: flex;
+    height: @common-height;
+
+    .describe {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: @common-height;
+      line-height: @common-height;
+
+      span {
+        width: 20px;
+        text-align: right;
+        font-size: 17px;
+      }
+
+      span:first-child {
+        width: 80px;
+      }
+    }
+
+    .form-item-type {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .form-item-type-text {
+      input {
+        padding: 0 10px;
+        width: 250px;
+        height: @common-height;
+        font-size: 17px;
+      }
+    }
+
+    .with-img {
+      input {
+        width: 100px;
+      }
+
+      .code {
+        margin-left: 30px;
+        height: @common-height;
+      }
+    }
+
+    .form-item-type-options {
+      display: flex;
+      align-items: center;
+      .options-box {
+        display: flex;
+        align-items: center;
+        margin-right: 30px;
+
+        > div {
+          margin-right: 8px;
+          height: @common-height;
+          line-height: @common-height;
+          font-size: 17px;
+        }
+      }
+    }
+  }
+
+  .error-message {
+    margin: 5px 0 10px 110px;
+    height: 20px;
+    line-height: 20px;
+    color: red;
+    font-size: 12px;
+  }
+
+  .form-submit {
+    margin-left: 100px;
+    width: 270px;
+    height: 33px;
+
+    button {
+      width: 100%;
+      height: 100%;
+      font-size: 18px;
+      border-radius: 10px;
+    }
+  }
 }
 </style>
 ```
@@ -1517,7 +1738,15 @@ const mySchema = {
 
 （4）支付
 
-1. 创建订单：给自己的后端发请求，发过去商品信息、价格、收货地址等信息。若成功则返回订单编号，若失败（如库存不足）则返回错误信息。
+1. 防止恶意下单减少库存
+   
+   * 每个商品由商家设置单次最大购买数量
+   
+   * 如果有重复商品的订单，就不再允许下单，不过为了用户体验可以允许有几个重复商品的订单
+   
+   * 长时间（如2小时内）未支付的订单需要系统取消交易，释放库存，可以在创建订单时设置定时器实现
+
+2. 创建订单：前端确认订单后，发过去商品信息、价格、收货地址等信息。若成功则扣减库存，创建订单，返回订单编号；若失败（如库存不足）则返回错误信息。
 
 2.预支付：给自己的后端发请求，发过去订单编号，返回支付需要的参数
 

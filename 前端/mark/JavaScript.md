@@ -2920,11 +2920,13 @@ npm install @babel/plugin-proposal-optional-chaining --save-dev
 
 ??操作符是一个判断是否为空然后赋值的操作，如果没有这个操作符，类似于短路运算符 ||，左边为null或undeiined时就使用右边的值。
 
-区别在于，||的依据是判断左边是否为布尔值，所以0，''等都会隐式类型转换为false，而??的依据是判断左边是否为null或undefined。
+区别在于，||的依据是判断左边是否为布尔值，所以0，''等都会隐式类型转换为false，而??的依据是判断左边是否为null或undefined，而0，'' 这些不管。
 
 ```
 let a = 0 || 12;  //12
+
 let b = 0 ?? 12;  //0
+let c = null ?? 12;  //12
 ```
 
 （4）动态import

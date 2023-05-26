@@ -170,11 +170,7 @@ data(){
   //vite
   import imgURL from '...'
   ...
-  data(){
-    return {
-      imgURL
-    }
-  }
+  <img :src="imgURL">
   ```
 
 此外，Vue为了安全，静态的src的url也必须是相对路径或webpack配置的路径，无法使用绝对路径
@@ -3512,7 +3508,7 @@ keep-alive：缓存路由
 
 ```
 <!--
-属性：
+属性：  注意include和exclude用的name是组件的name，而不是路由的name
 include="aaa,bbb"   只有name为aaa或bbb的路由才生效
 exclude="ccc"       除了name为ccc的路由无效，其他都生效
 -->
@@ -3522,6 +3518,8 @@ exclude="ccc"       除了name为ccc的路由无效，其他都生效
 ```
 
 一般会配合路由钩子activated和deactivated使用。
+
+如果某组件使用了keep-alive，想其中的某个子组件不缓存，可以在父组件中watch路由的变化再用变量v-if控制子组件重新加载；如果只是重新请求数据，那也可以直接在子组件watch路由的变化，重新请求即可。
 
 ## 10 滚动行为
 
@@ -6161,6 +6159,30 @@ Vue3要对router-view使用transition和keep-alive，必须是这种写法
   </router-view>
 ```
 
+在使用setup语法时，由于无法给组件命名，所以include和exclude会有问题，解决方法是使用vite插件：
+
+```
+npm install --save vite-plugin-vue-setup-extend
+```
+
+```
+// vite.config.js
+import vueSetupExtend from 'vite-plugin-vue-setup-extend';
+
+//...
+plugins: [
+    //... ,
+    vueSetupExtend(),
+  ],
+//...
+```
+
+然后就可以命名了：
+
+```
+<script setup name="home"></script>
+```
+
 （4）修复了vue2路由的两个bug
 
 bug1：当跳转的路由就是当前路由时，不再像vue2会有警告
@@ -6196,7 +6218,7 @@ Pinia支持Vue2和Vue3，下面只记录Vue3的写法
 import {createPinia,defineStore} from 'pinia'
 const pinia = createPinia()
 
-const MainStore = defineStore('Main',{
+export const MainStore = defineStore('Main',{
   state(){
     return {
       aaa: 100,
@@ -6220,15 +6242,12 @@ const MainStore = defineStore('Main',{
   }
 })
 
-export {
-  pinia,
-  MainStore
-}
+export default pinia;
 
 //main.js
-import {pinia} from './store'
+import pinia from './store';
 ...
-app.use(pinia)
+app.use(pinia);
 
 //用到的组件中
 import {MainStore} from '...'
@@ -6334,7 +6353,7 @@ store.$subscrib((args,state) => {
 store.$onAction((args) => {})
 ```
 
-pinia持久化：
+pinia持久化存储：
 
 （1）第三方插件
 
@@ -6348,6 +6367,7 @@ npm install --save pinia-plugin-persistedstate
 // /store/index.js
 import {createPinia,defineStore} from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 

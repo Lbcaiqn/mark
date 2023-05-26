@@ -19,8 +19,6 @@ npm install --save-dev jest-environment-jsdom
     // "test": "jest --watchAll"  //每次保存会自动执行
   },
 }
-
-
 ```
 
 最基本的测试案例：
@@ -36,7 +34,6 @@ function func1(money) {
 module.exports = {
   func1,
 };
-
 ```
 
 ```
@@ -48,10 +45,7 @@ test("测试func1", () => {
   expect(func1(300)).toBe("多");        //测试通过
   // expect(func1(300)).toBe("多1");    //测试不通过
 });
-
 ```
-
-
 
 # 二、配置和代码覆盖率
 
@@ -98,8 +92,6 @@ test("tobe测试效果", () => {
   expect(a).toBe(5);                      //测试通过
   // expect(obj).toBe({ number: 123 });   //测试不通过，因为引用不同
 });
-
-
 ```
 
 toEqual匹配器，值相等：
@@ -110,8 +102,6 @@ test("toEqual测试效果", () => {
   expect(obj).toEqual({ number: 123 });   //测试通过
   // expect(obj).toBe({ number: 123 });   //测试不通过，因为引用不同
 });
-
-
 ```
 
 toBeNull匹配器，toBeUndefined匹配器：
@@ -124,7 +114,6 @@ test("toBeNull,toBeUndefined测试效果", () => {
   // expect(b).toBeNull();    //测试不通过
   expect(b).toBeUndefined();  //测试通过
 });
-
 ```
 
 toBeDefined匹配器，只要不是undefined都能通过：
@@ -136,7 +125,6 @@ test("toBeDefined测试效果", () => {
   // expect(b).toBeDefined(); //测试不通过
   expect(c).toBeDefined();    //测试通过
 });
-
 ```
 
 toBeTruthy佩佩琦，toBeFalsy匹配器，判断真假：
@@ -150,8 +138,6 @@ test("toBeTruthy,toBeFalsy测试效果", () => {
   expect(b).toBeTruthy();    //测试通过
   // expect(b).toBeFalsy(); //测试不通过
 });
-
-
 ```
 
 ## 2 大小
@@ -166,7 +152,6 @@ test("x大小测试效果", () => {
   expect(a).toBeGreaterThanOrEqual(10);     // >=
   expect(a).toBeLessThanOrEqual(10);        // <=
 });
-
 ```
 
 toBeCloseTo匹配器，解决js浮点数精度问题：
@@ -178,7 +163,6 @@ test("xtoBeCloseTo测试效果", () => {
   expect(a + b).toBeCloseTo(0.3);   //测试通过
   // expect(a + b).toBeEqual(0.3);  //测试不通过
 });
-
 ```
 
 ## 3 存在
@@ -191,7 +175,6 @@ test("toMatch测试效果", () => {
   expect(str).toMatch("红色");
   expect(str).toMatch(/红色/);
 });
-
 ```
 
 toContain匹配器，匹配数组/Set是否存在某个元素：
@@ -203,7 +186,6 @@ test("toContain测试效果", () => {
   expect(arr).toContain(7);
   expect(set).toContain(7);
 });
-
 ```
 
 toThrow匹配器，测试是否存在异常：
@@ -219,7 +201,6 @@ test("toThrow测试效果", () => {
   //但是，有异常才测试通过不合常理，可以用.not匹配器
   // expect(func).not.toThrow();   //有异常，测试不通过
 });
-
 ```
 
 其中，not也是一种匹配器，也可以配合其他匹配器使用。

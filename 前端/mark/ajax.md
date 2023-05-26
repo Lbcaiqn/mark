@@ -204,7 +204,7 @@ let xhr=null  //必须是let，因为xhr涉及改变
 后端接口返回的时间数据一般都是时间戳，这是为了能够多样化的显示时间，所以前端需要将时间戳格式化为自定义的时间格式才能展示
 
 ```
-function formatDatetime(datetime,fmt){
+export function formatDate(datetime: Date | string | number, fmt: string): string {
   /*使用说明
   参数： datetime(数值或字符串类型，时间戳)，fmt(字符串类型，正则)
   示例：
@@ -221,24 +221,31 @@ function formatDatetime(datetime,fmt){
   所以传入的时间戳若是10位，需要*1000才能获得正确的时间
   该函数若传入精确到毫秒的时间戳也能正常使用，只是没有写获取毫秒数的代码
   */
-  let date = new Date(String(datetime).length == 10 ? Number(datetime)*1000 : Number(datetime))
-  let o = {
+
+  let date = new Date(String(datetime).length == 10 ? Number(datetime) * 1000 : Number(datetime));
+
+  const o: any = {
     'M+': date.getMonth() + 1,
     'd+': date.getDate(),
     'h+': date.getHours(),
     'm+': date.getMinutes(),
-    's+': date.getSeconds()
+    's+': date.getSeconds(),
+  };
+
+  if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, date.getFullYear() + '');
+
+  for (const i in o) {
+    let str = o[i] + '';
+    if (new RegExp(`(0${i})`).test(fmt) && str.length >= 2) fmt = fmt.replace(RegExp.$1, str);
+    else if (new RegExp(`(${i})`).test(fmt)) fmt = fmt.replace(RegExp.$1, str);
   }
 
-  if(/(y+)/.test(fmt))  fmt = fmt.replace(RegExp.$1,(date.getFullYear() + ''))
-  for(let i in o){
-    let str = o[i] + ''
-    if(new RegExp(`(0${i})`).test(fmt) && str.length >= 2) fmt = fmt.replace(RegExp.$1,str)
-    else if(new RegExp(`(${i})`).test(fmt)) fmt = fmt.replace(RegExp.$1,str)
-  }
-  return fmt
+  return fmt;
 }
+
 ```
+
+
 
 ## 4 fetch
 

@@ -701,7 +701,7 @@ npm install --save class-validator class-transformer
 
 ```
 // login/dto/create-login.dto.ts
-import { IsNotEmpty, IsNumber， Matches } from "class-validator";
+import { IsNotEmpty, IsOptional, IsNumber， Matches } from "class-validator";
 
 export class CreateLoginDto {
   //没有做任何验证
@@ -712,6 +712,12 @@ export class CreateLoginDto {
   @IsNumber()
   @Matches(/^.{3,20}$/, { message: '3到20个字符' })
   age: number
+
+  // 定义可选参数
+  @IsOptional()
+  @IsNumber()
+  @ApiProperty({ type: Number, example: 1 })
+  quantity?: number;
 }
 ```
 
@@ -784,7 +790,7 @@ async function bootstrap() {
 bootstrap();
 ```
 
-#### 2.3.4 拦截器
+#### 2.3.4 响应拦截器，异常过滤器
 
 （1）响应拦截器
 
@@ -802,7 +808,7 @@ getHello() {
 定义响应拦截器：
 
 ```
-// /src/common/Response.ts
+// /src/common/ResponseInterceptor.ts
 import {
   Injectable,
   NestInterceptor,
@@ -827,7 +833,7 @@ export class ResponseInterceptor<T> implements NestInterceptor {
         return {
           data,
           status: 200,
-          messgae: "666",
+          messgae: "请求成功",
           sucess: true,
         };
       })
@@ -851,11 +857,27 @@ async function bootstrap() {
 bootstrap();
 ```
 
-（2）异常拦截器
+（2）异常过滤器
 
 当路由异常时生效，可以自定义一些异常信息
 
-定义异常拦截器：
+当发生错误时（站好不存在，密码错误，严惩吗错误等），后端需要返回异常，前端请求时try...catch...处理，先看看如何返回异常：
+
+```
+// xxx.service.ts
+//import...
+import { HttpException, HttpStatus } from '@nestjs/common';
+
+export class XxxService {
+  func(){
+    //...  HttpStatus 是一个枚举，内容为状态码，下面的 BAD_REQUEST 状态码就是400
+    if(密码错误)  throw new HttpException('密码错误', HttpStatus.BAD_REQUEST);
+    //...
+  }
+}
+```
+
+然后就可以定义异常拦截器：
 
 ```
 // /src/common/HttpFilter.ts
@@ -881,7 +903,7 @@ export class HttpFilter implements ExceptionFilter {
       time: new Date(),
       path: req.url,
       status: exception.getStatus(),
-      data: exception.message
+      errorMessage: exception.message
     })
   }
 }
@@ -900,6 +922,18 @@ async function bootstrap() {
   await app.listen(3000);
 }
 bootstrap();
+```
+
+前端：
+
+```
+async func(){
+  try {
+    await 请求();
+  } catch(err){
+    console.log(err.response?.data?.errorMessage);  // 密码错误
+  }
+}
 ```
 
 ## 3 服务
@@ -1112,6 +1146,56 @@ export const xxx = createParamDecorator((data: string, context: ExecutionContext
   //聚合装饰器，可以合成多个装饰器
   //return applyDecorators(xxx,yyy,zzz);
 })
+```
+
+## 5 定时任务
+
+在项目启动的时候可以启动定时任务。
+
+如果是在服务中，直接使用setTimeout和setInterval即可。
+
+```
+npm install --save @nestjs/schedule
+```
+
+使用：
+
+```
+// app.task.service.ts
+
+import { Injectable } from '@nestjs/common';
+import { Cron, Interval, Timeout } from '@nestjs/schedule';
+
+@Injectable()
+export class AppTaskService {
+  @Interval(5000) // 每隔 5 秒执行一次
+  handleIntervalFunc() {
+    console.log('定时任务正在执行...');
+  }
+
+  @Timeout(3000) // 3 秒后执行一次
+  handleTimeoutFunc() {
+    console.log('定时任务已触发！');
+  }
+
+  @Cron('0 0 * * *') // 每天 0 点触发
+  handleCronFunc() {
+    console.log('每天 0 点触发的定时任务正在执行...');
+  }
+}
+```
+
+```
+// app.module.ts
+import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AppTaskService } from './app.task.service';
+
+@Module({
+  imports: [ScheduleModule.forRoot()],
+  providers: [AppTaskService],
+})
+export class AppModule {}
 ```
 
 ## 三、连接数据库
@@ -1475,7 +1559,14 @@ export class UserService {
     const data = new User();
     data.name = createUserDto.name;
     data.desc = createUserDto.desc;
-    return this.userTable.save(data);
+
+  await this.userTable.save(data)
+
+  /* save也会返回新数据，通常是获取自增的新id
+  const newUser = await this.userTable.save(data)
+  console.log(newUser.id)
+  */
+    return ‘ok’;
   }
 
   //tag也可以定义dto，这里为了方便就不弄了
@@ -1503,17 +1594,31 @@ export class UserService {
     this.userTable.save(who);
    */
 
+  /* 注意，如果两张表大都是要插入新new的数据，则方式一和方式二都要用，save两张表
+     而且必须先save主表，主表只需要先save一次即可，后续主表就不用save了，只需要tags
+     把user关联上就好
+   const user = new User();
+   user.name = 'xxx';
+   user.desc = 'yyy';
+   await this.userTable.save(user);
+
+   for (let i of tags) {
+      const t = new Tag();
+      t.tagName = i;
+      t.user = user;     // 关联上user
+      this.tagTable.save(t); 
+    }
+   */
     return 'ok';
   }
 
   async findAll(page, pageSize, keyword) {
     let data: any = [];
-    let count: number = 0;
 
     // 查找该表信息 fin()不带任何参数就是查询全部信息
     if (!keyword) {
       //如果没有关键词就查找全部并分页、排序
-      data = await this.userTable.find({
+      data = await this.userTable.findAndCount({
         // 一并查询外键tag，不加的话是不会查外键的
         /*
         如果关联的表内还关联这其他表，也可以查出来，如：
@@ -1529,12 +1634,10 @@ export class UserService {
         },
       });
 
-      //总数
-      count = await this.userTable.count();
     }
     else {
       //如果有关键词，就按关键词进行模糊匹配查询，并分页、排序
-      data = await this.userTable.find({
+      data = await this.userTable.findAndCount({
         where: {
           name: Like(`%${keyword}%`),
         },
@@ -1544,19 +1647,20 @@ export class UserService {
           id: "DESC",
         },
       });
-      count = await this.userTable.count({
-        where: {
-          name: Like(`%${keyword}%`),
-        },
-      });
+
     }
     return {
-      data,
-      total: count,
+      data: data[0],
+      total: data[1],
     };
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
+    /* 注意，update的第二个参数不能包含关系的数据，如果有先要delete掉
+    比如下面的data瑞国包含了关系数据
+    const newUser = await this.userTable.save(data)
+    delete newUser.xxx
+    */
     return this.userTable.update(id, updateUserDto);
   }
 
@@ -1590,6 +1694,13 @@ async getTags() {
     .createQueryBuilder('user')  // user表别名
     .innerJoinAndSelect('user.tag', 'tag表别名')
     .where('user._id = :id', { id: 12345 })
+    /* 也可以用模板字符串
+    .where(`user._id = ${变量}`)
+    */
+    /* 如果有多个where条件，可以写在一个where里，也可以使用andWhere，
+    但不管是那种，冒号后面的变量都不能重复
+    .andWhere()
+    */
     .offset(0)
     .limit(30)   // 相当于 limit 0 30
     .getMany();
@@ -1749,7 +1860,7 @@ session和token的用途主要是两种：
 npm install --save bcryptjs
 npm install --save express-session @types/express-session
 npm install --save svg-captcha
-npm install --save jsonwebtoken
+npm install --save jsonwebtoken @types/jsonwebtoken
 ```
 
 用session实现验证码的验证前，需要use一下：
@@ -1791,7 +1902,6 @@ bootstrap();
 ```
 // user.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 
 @Entity()
 export class User {
@@ -1814,14 +1924,6 @@ export class User {
     select: false
   })
   password: string;
-
-  async hashPassword(password: string) {
-    this.password = await bcrypt.hash(password, 10);
-  }
-
-  async comparePassword(password: string) {
-    return await bcrypt.compare(password, this.password);
-  }
 }
 ```
 
@@ -1851,8 +1953,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('/register')
-  create(@Body() registerDto: RegisterDto) {
-    return this.userService.register(registerDto);
+  create(@Req() req, @Body() registerDto: RegisterDto) {
+    return this.userService.register(req.session.code,registerDto);
   }
 
   @Post('/login')
@@ -1877,6 +1979,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { sign } from 'jsonwebtoken';
 import * as svgCaptcha from 'svg-captcha';
+import * as bcrypt from 'bcryptjs';
 
 //私钥为了安全一般是不可见的，保存在本地文件中，不存放于git，这里为了方便就直接定义为了变量
 const SECRCT = 'asf34g35s1g56erssa';
@@ -1889,35 +1992,63 @@ export class UserService {
     private readonly userTable: Repository<User>,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(code: string, registerInfo: RegisterDto) {
+    if (code !== registerInfo.code) return '验证码错误';
+
     const user = new User();
-    user.username = registerDto.username;
-    await user.hashPassword(registerDto.password);
+    user.user_name = registerInfo.user_name;
+    user.user_icon = '';
+    user.user_account = registerInfo.user_account;
+    user.user_password = await bcrypt.hash(registerInfo.user_password, 10);
+
+    let newUser: User | null = null;
     try {
-      await this.userTable.save(user);
-    } catch (er) {
-      return '用户名已存在';
+      newUser = await this.userRepository.save(user);
+    } catch (err) {
+      return '账号已存在';
     }
-    return '注册成功';
+
+    const jwt = sign(
+      {
+        _id: newUser._id,
+      },
+      SECRCT,
+      { expiresIn: 60 * 60 * 24 }    // 过期时间， 单位（秒）
+    );
+
+    delete newUser.user_password;
+
+    return {
+      message: '注册成功',
+      jwt,
+      newUser,
+    };
   }
 
   async login(code: string, userInfo: any) {
     if (code !== userInfo.code) return '验证码错误';
 
-    const user = await this.userTable.findOne({
-      where: { username: userInfo.username },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('username = :un', { un: loginInfo.username })
+      .getOne();
+
     if (!user) return '用户名不存在';
 
-    const valid = await user.comparePassword(userInfo.password);
+    const valid = await bcrypt.compare(loginInfo.password, user.password);
+
     if (!valid) return '密码错误';
 
     const token = sign(
       {
         id: user.id,
       },
-      SECRCT,
+      SECRCT, 
+      { expiresIn: 60 * 60 * 24 }    // 过期时间， 单位（秒）
     );
+
+    delete user.password;
 
     return {
       message: '登录成功',
@@ -1941,7 +2072,7 @@ export class UserService {
 
     /* 
     直接返回svg标签，前端可以v-html
-    或直接直接 <img src="http://localhost:3000/user/code + 时间戳" 加上时间戳是为了防止浏览器缓存而不重新发请求 
+    或直接直接 <img src="http://localhost:3000/user/code/" + '?time=' + new Date() 加上时间戳是为了防止浏览器缓存而不重新发请求 
     */
     // 也可以返回其他形式，如url等
     res.type('image/svg+xml');
@@ -1966,7 +2097,7 @@ axios({
   data: {
     //账号，密码，验证码
   },
-  //带上cookie
+  //注册登录要验证码，就带上cookie
   withCredentials: true,
 }).then(res => {
   console.log(res.data.token);
@@ -2005,7 +2136,7 @@ token作为登录凭证来保持持久登录，无需账号密码。
         query: { redirect: to.path, ...to.query }  
         /*
         或者query: { redirect: to.fullPath}，因为fullPath包括了
-        params和query，切回保存在params对象和query对象中
+        params和query，且会保存在params对象和query对象中
         */
       });
     }
@@ -2018,7 +2149,7 @@ token作为登录凭证来保持持久登录，无需账号密码。
       ...发请求
       localStorage.setItem("token", "123");
       //如果不是从其他页面调过来登录，而是直接进入的登录页，那登录完就跳首页
-      if (!this.$route.query.redirect) router.push("/Home");
+      if (!this.$route.query.redirect) this.$router.push("/Home");
       else {
         this.$router.push({
           path: this.$route.query.redirect,
@@ -2042,9 +2173,54 @@ token作为登录凭证来保持持久登录，无需账号密码。
   
   比如a路由必须从b路由跳转而来，a配置组件内守卫或独享守卫，判断from是否来自b
 
-- NotFound
-  
-  配置NotFound路由
+- NotFound：配置NotFound路由
+
+导航守卫示例如下：
+
+```
+/* 路由配置示例
+{
+    path: '/confirmOrder',
+    name: 'confirmOrder',
+    component: () => import('@/views/Order/ConfirmOrder.vue'),
+    meta: {
+      jwt: true,
+      canFrom: ['login', 'goods', 'shopcart'],
+    },
+  },
+*/
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.jwt && !JSON.parse(localStorage.getItem('gxbuy_PC_user_store') || 'null')?.gxbuy_PC_jwt) {
+    //如果跳转后的路由需要登录，且此时未登录
+    next({
+      path: '/login',
+      query: { toPath: to.fullPath },
+    });
+  } else if (to.name === 'login' && JSON.parse(localStorage.getItem('gxbuy_PC_user_store') || 'null')?.gxbuy_PC_jwt) {
+    // 如果已登录，就不允许再进入登录页
+    next('/home');
+  } else {
+    // 跳转的目标还是当前路由时的处理，不处理的话页面自跳自己是不会刷新的
+    if ((to.name === 'goods' && from.name === 'goods') || (to.name === 'search' && from.name === 'search')) {
+      next({ name: 'empty', query: { toPath: to.path, ...to.query } });
+    }
+
+    // 如果某个页面只允许在限制的几个页面中跳转过来，且不是本页面自跳，就不允许跳转
+    // 例如确认订单页面只允许商品页面和购物车页面跳转而来，在确认订单页面跳转到支付页面后，就不允许从支付页面返回确认订单页面
+    else if (to.meta.canFrom && !(to.meta.canFrom as Array<string>)?.includes(from.name as string)) {
+      /* 
+        这里需要注意，因为刷新页面后，from.nmae 是 undefined，但是事实上我们刷新页面
+        也是需要警进行跳转的，所以这里需要判断 from.name 是否为undedined，如果是则精选跳转
+        所以路由配置中所有的路由都要给name，才能判断是否是刷新页面
+        可能有其他方法解决，但没找到
+        */
+      if (from.name) next(false);
+      else next();
+    } else next();   // 正常跳转
+  }
+});
+```
 
 ### 1.2 手机验证码登录
 
@@ -2052,7 +2228,15 @@ token作为登录凭证来保持持久登录，无需账号密码。
 
 ## 2 鉴权
 
-在进行数据的增删改查的时候，需要鉴权，将token发送给后端，鉴权成功才能进行增删改查，以查询数据为例：
+在进行数据的增删改查的时候，需要鉴权，将token发送给后端，鉴权成功才能进行增删改查。
+
+不过需要注意的是，像公共数据的查询如商品可以用商品id查询，但是隐私的数据如用户数据，即使鉴权了也不能直接前端传递用户id精选crud，否则的话任何一个已登录的用户都可以修改其他用户的信息。正确的方式是从jwt中取出用户id再crud，前端不需要传输用户id。
+
+```
+ const { id } = verify(req.headers.authorization, SECRCT) as any;
+```
+
+以查询数据为例：
 
 （1）后端
 
@@ -2098,6 +2282,7 @@ export class TokenGuard implements CanActivate {
     const token = req.headers.authorization;
     if(!token)  return false;
 
+    // 如果鉴权失败，或jwt过期，则会抛出异常
     try{
       verify(token,SECRCT)
     }catch(err){
@@ -2147,19 +2332,99 @@ axios({
 
 后端的接口总体分为需要token鉴权和不需要token鉴权两种。一般后端需要token鉴权的接口会统一命名，如果是统一命名就适用下面的方法，如果不是就另找方法。
 
-```
-//可以在请求拦截器上根据url判断是否需要token，给请求头加上token
-//比如需要token的接口的url都包含一个'/v2/''
-请求拦截器(config => {
-  if(/\/v2\//.test(config.url)){
-    let token: string = JSON.parse(localStorage.getItem('mainStore') as string) ? JSON.parse(localStorage.getItem('mainStore') as string)?.token : '';
-    config.headers!.Authorization = token;
+此外，路由守卫中只能处理页面级别的登录判断，而按钮级别的登录判断则也可以在请求拦截器中实现：
 
-    //如果是ts，headers可能为空而报错，需要非空断言
-    //config.headers!.Authorization = token;
+```
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import router from '@/router';
+
+const cancelTokenSource = axios.CancelToken.source();
+
+let instance: AxiosInstance = axios.create({
+  baseURL:
+    (import.meta.env.MODE === 'development' ? import.meta.env.VITE_DEV_BASEURL : import.meta.env.VITE_PROD_BASEURL) +
+    '/v1/',
+  timeout: 1000 *
+ 10,
+});
+// 请求拦截器
+instance.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  const userInfo = JSON.parse((localStorage.getItem('gxbuy_PC_user_store') as string) || 'null');
+  const jwt = userInfo?.gxbuy_PC_jwt;
+
+  // 后端需要jwt鉴权的接口，url都会有'/jwt/'，所以遇到有 '/jwt/' 的借口就加上请求头
+  if (/\/jwt\//.test(config.url as string)) {
+    // 如果未登录，就取消此次请求，并跳转登录页
+    if (!jwt) {
+      // 这里兜底一下，确保此时router却是已经挂在完毕
+      await router.isReady();
+      cancelTokenSource.cancel();
+      router.push({
+        path: '/login',
+        query: { toPath: router.currentRoute.value.fullPath },
+      });
+
+      // 拦截器必须returen，所以这里return一个异常，请求时catch就好
+      return Promise.reject(new Error('未登录'));
+    } else {
+      config.headers!.authorization = jwt;
+    }
   }
+  // 如果是登录状态，那么搜索和浏览商品时也携带token，让后端记录搜索记录和浏览记录
+  else if (jwt && (/\/goods\/search/.test(config.url as string) || /\/goods\/detail/.test(config.url as string))) {
+    config.headers!.authorization = jwt;
+  }
+
   return config;
-})
+});
+
+// 响应拦截器
+instance.interceptors.response.use(
+  (res: AxiosResponse) => {
+    return res.data;
+  },
+  async (err: AxiosError) => {
+    // 如果jwt验证失败或者jwt过期，后端一般是返回403
+    if ((err.response?.data as any)?.status === 403) {
+      console.log(localStorage.setItem('gxbuy_PC_user_store', ''));
+
+      await router.isReady();
+      cancelTokenSource.cancel();
+
+      // 如果首页会发送需要鉴权的请求，嘛呢过期了就不及自动今日登录界面，不认用户体验性不好，用户自己重新点击登录
+      if (router.currentRoute.value.name !== 'home') {
+        router.push({
+          path: '/login',
+          query: { toPath: router.currentRoute.value.fullPath },
+        });
+      }
+
+      return Promise.reject(new Error('未登录'));
+    }
+
+    return Promise.reject(err);
+  }
+);
+
+export default instance;
+```
+
+发请求：
+
+```
+async function getUserInfo() {
+  try {
+    const res = (await getUserInfoRequest()).data;
+    userStore.userInfo = res;
+  } catch (err: any) {
+    /*
+    如果这个错误时后端返回的异常，那么就会有err.response?.data，errorMessage是后端自己定义的
+    异常属性名；如果是前端请求拦截器返回的异常则没有err.response?.data，由此可以判断是前端异常
+    还是后端异常
+    */
+    console.log(err.response?.data?.errorMessage || '请重新登录');
+  }
+}
 ```
 
 ## 3 权限控制

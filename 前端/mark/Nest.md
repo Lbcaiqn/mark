@@ -1454,10 +1454,10 @@ export class Tag {
   */
 
   /* 不创建外键，同时自定义外检字段名,并创建索引，同时满足想在查询的时候有只要user_id，不要user表数据的需求
+  @Index()  
   @Column()
   user_id: number;
 
-  @Index()
   @ManyToOne(() => User, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'user_id' })
   user: User

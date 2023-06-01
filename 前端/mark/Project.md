@@ -137,17 +137,19 @@ assets和public同样都是存放静态资源，区别是：
   <img src="/123.jpg" />
   ```
 
-## 7 开发前准备
+## 7 开发前的项目配置
 
 ### 7.1 代码规范
 
 用户代码片段是方便款速创建模板的。
 
-eslint是检查可能出现的逻辑错误和约束代码风格，以及简单的格式化代码的
+eslint是检查可能出现的逻辑错误和约束代码风格，以及简单的格式化代码的。
 
-prettier是强大的格式化代码的
+stylelint是css版的eslint。
 
-① 用户代码片段
+prettier是强大的格式化代码的。
+
+#### 7.1.1 用户代码片段
 
 vscode-文件-首选项-配置用户代码片段-vue-json
 
@@ -171,77 +173,179 @@ vscode-文件-首选项-配置用户代码片段-vue-json
 
 这样在.vue文件中，输入vue3ts回车就能生成模板。
 
-② eslint
+#### 7.1.2 prettier
+
+```
+npm install -D prettier eslint-plugin-prettier eslint-config-prettier
+```
+
+项目下创建 .prettierrc.cjs，也可以是无后缀，json，js，cjs，mjs文件，以 .prettierrc.cjs 为例：
+
+注意：eslint，stylelint的风格和prettier的风格配置必须一样，否则会出现冲突。
+
+```
+module.exports = {
+  // 2缩进
+  tabWidth: 2,
+
+  // 每行最多有几个字符
+  printWidth: 120,
+
+  // 换行符为 lf
+  endOfLine: "lf",
+
+  //使用双引号
+  singleQuote: false,
+
+  // 结尾加分号
+  semi: true,
+
+  // 对象花括号周围加空格
+  bracketSpacing: true,
+
+  // 忽略 html 的空格
+  htmlWhitespaceSensitivity: "ignore",
+
+  // 去掉对象最后一个属性后的逗号
+  trailingComma: "none",
+
+  // 箭头函数若参数只有一个就省略括号
+  arrowParens: "avoid"
+};
+```
+
+prettier忽略文件 .prettierignore
+
+```
+/dist/*
+/html/*
+.local
+/node_modules/**
+**/*.svg
+**/*.sh
+/public/*
+```
+
+格式化代码：
+
+```
+npx prettier --write xxx.js
+```
+
+package.json 配置运行脚本；
+
+```
+"scripts": {
+    "format": "prettier --write \"./**/*.{html,vue,ts,js,json,md}\"",
+}
+```
+
+当然每次格式化都要执行命令非常麻烦，因此可以安装vscode的插件prettier，并且设置保存自动格式化为prettier。
+
+prettier插件有默认的格式化规则，vsocde也可以配置规则，但自定义的配置文件会覆盖默认的规则或vscode配置的规则。
+
+#### 7.1.3 eslint
 
 eslint会检查一些代码中可能出现的逻辑错误，以及约束代码风格。
 
 ```
-npm install --save-dev eslint
-npm install eslint-plugin-vue --save-dev
+npm install --D eslint
 ```
 
-初始化生成 .eslintrc.json：
+相关插件：
+
+```
+npm install -D eslint-plugin-import eslint-plugin-vue eslint-plugin-node eslint-plugin-prettier eslint-config-prettier eslint-plugin-node @babel/eslint-parser
+```
+
+初始化生成 .eslintrc.cjs：
 
 ```
 npx eslint --init
 ```
 
-* "env"，运行环境和导入导出规范，js版本
-
-* "extends"，使用的eslint规则，也可以设置vue等框架的eslint插件。一个值就用字符串，多个值就放到数组中
-
-* “parserOptions”，eslint的解析器配置，如ecma版本设置为最新
-
-* "rules"，额外自定义的规则，如"quotes"为强制使用双引号，"semi"为强制使用分号，"no-console"为强制不允许使用console.log()
-  
-  * 2 或 "error"，报错
-  
-  * 1 或 "warn"，警告
-  
-  * 0 或 "off"，关闭此规则，不检查
-  
-  * ["error或warn", config]，额外配置更多选项
-
-* "ignorePatterns"，忽略eslint检查的文件
-  
-  * 也可以在单独的 .eslintignore 文件定义，如：
-    
-    ```
-    build/*.js
-    src/assets
-    public
-    dist
-    ```
-
-.eslintrc.json
+配置参考：
 
 ```
-{
-    "env": {
-        "browser": true,
-        "commonjs": true,
-        "node": true,
-        "es2021": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended""
-    ],
-    "overrides": [
-    ],
-    "parserOptions": {
-        "ecmaVersion": "latest"
-    },
-    "rules": {
-        "quotes": 2,
-        "semi": 1,
-        "no-console": 0
-    },
-    "ignorePatterns": ["xxx.js","yyy.js"]
-}
+module.exports = {
+  // 运行环境和导入导出规范，js版本
+  env: {
+    browser: true,
+    es2021: true,
+    node: true,
+    jest: true
+  },
+
+  // 指定如何解析语法
+  parser: "vue-eslint-parser",
+
+  // 优先级低于 parse 的语法解析配置
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+    parser: "@typescript-eslint/parser",
+    jsxPragma: "React",
+    ecmaFeatures: {
+      jsx: true
+    }
+  },
+
+  // 继承已有的推荐eslint规则，也可以设置vue等框架的eslint插件。一个值就用字符串，多个值就放到数组中
+  extends: [
+    "eslint:recommended",
+    "plugin:vue/vue3-essential",
+    "standard-with-typescript",
+    "plugin:@typescript-eslint/recommended"
+  ],
+
+  // 插件
+  plugins: ["vue", "@typescript-eslint"],
+
+  /* 额外自定义的规则
+   * "off" 或 0    ==>  关闭规则
+   * "warn" 或 1   ==>  打开的规则作为警告（不影响代码执行）
+   * "error" 或 2  ==>  规则作为一个错误（代码不能执行，界面报错）
+   * ["error或warn", config] ==> 额外配置更多选项
+   */
+  rules: {
+    // eslint（https://eslint.bootcss.com/docs/rules/）
+    quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }], // 双引号和反引号包裹字符串
+    semi: ["error", "always"], // 结尾加分号
+    "space-before-function-paren": ["error", "never"], // 函数名和括号之间没有空格
+    "no-var": "error", // 要求使用 let 或 const 而不是 var
+    "no-multiple-empty-lines": ["warn", { max: 1 }], // 不允许多个空行
+    "no-console": process.env.NODE_ENV === "production" ? "error" : "off",
+    "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
+    "no-unexpected-multiline": "error", // 禁止空余的多行
+    "no-useless-escape": "off", // 禁止不必要的转义字符
+
+    // typeScript (https://typescript-eslint.io/rules)
+    "@typescript-eslint/no-unused-vars": "error", // 禁止定义未使用的变量
+    "@typescript-eslint/prefer-ts-expect-error": "error", // 禁止使用 @ts-ignore
+    "@typescript-eslint/no-explicit-any": "off", // 禁止使用 any 类型
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-namespace": "off", // 禁止使用自定义 TypeScript 模块和命名空间。
+    "@typescript-eslint/semi": "off",
+
+    // eslint-plugin-vue (https://eslint.vuejs.org/rules/)
+    "vue/multi-word-component-names": "off", // 要求组件名称始终为 “-” 链接的单词
+    "vue/script-setup-uses-vars": "error", // 防止<script setup>使用的变量<template>被标记为未使用
+    "vue/no-mutating-props": "off", // 不允许组件 prop的改变
+    "vue/attribute-hyphenation": "off" // 对模板中的自定义组件强制执行属性命名样式
+  }
+};
 ```
 
-代码中临时修改规则：
+eslint忽略文件：
+
+可以在eslint配置文件中配置项 "ignorePatterns" 配置，也可以单独创建 .eslintignore 文件
+
+```
+dist
+node_modules
+```
+
+在代码中也可以临时修改规则：
 
 ```
 /* eslint no-console: 0  */
@@ -254,20 +358,6 @@ console.log(123);
 npx eslint xxx.js
 ```
 
-在package.json中添加一个script，以便于更容易地运行ESLint：
-
-```
-"scripts": {
-  "lint": "eslint your-file.vue"
-},
-```
-
-现在你可以使用以下命令运行ESLint：
-
-```
-npm run lint
-```
-
 修复：
 
 只能修复简单的代码风格，如双引号，分好这种对代码运行结果没有影响的，像console.log这种就无法修复，甚至连缩进也不会管。
@@ -278,53 +368,115 @@ npm run lint
 npx eslint xxx.js --fix
 ```
 
-当然每次执行这个命令进行检查非常麻烦，因此可以安装vscode插件eslint，直接在编辑器报错。
+也可以在 package.json 中添加一个script，以便于更容易地运行ESLint：
+
+```
+"scripts": {
+    "eslint": "eslint src",
+    "eslint:fix": "eslint src --fix",
+    "eslint:lint-and-fix": "eslint src/**/*.{ts,vue} --cache --fix"
+}
+```
+
+最后，每次执行这个命令进行检查非常麻烦，因此可以安装vscode插件eslint，直接在编辑器报错。
 
 eslint'插件有默认的规则，vscode中也可以配置规则，但自定义的eslintrc文件的配置会覆盖插件的规则或vscode的配置规则。
 
-③ prettier
+#### 7.1.4 stylelint
 
-eslint虽然可以修复简单的代码风格，但是只能修复js，ts，而html，css无法修复，此时就可以使用prettier，prettier是一个代码格式化工具，可以格式化各种代码。
+css版的eslint
 
-注意：eslint的风格和prettier的风格配置必须一样，否则会出现冲突。
+根据项目使用的css预处理器安装对应的包：
 
-```
-npm install --save-dev prettier
-```
-
-项目下创建 .prettierrc.js (js文件) 或 .prettierrc (json文件)，以 .prettierrc.js 为例：
+less：
 
 ```
+npm install -D less less-loader stylelint postcss postcss-less postcss-html stylelint-config-prettier stylelint-config-recess-order stylelint-config-recommended-less stylelint-config-standard stylelint-config-standard-vue stylelint-less stylelint-order stylelint-config-standard-less
+```
+
+sass：
+
+```
+npm install -D sass sass-loader stylelint postcss postcss-scss postcss-html stylelint-config-prettier stylelint-config-recess-order stylelint-config-recommended-scss stylelint-config-standard stylelint-config-standard-vue stylelint-scss stylelint-order stylelint-config-standard-scss
+```
+
+创建配置文件 .stylelintrc.cjs
+
+```
+// @see https://stylelint.bootcss.com/
+
 module.exports = {
-  // 单行代码最大长度
-  printWidth: 80,
-  // 使用 tab 还是空格进行缩进
-  useTabs: false,
-  // 缩进的空格数
-  tabWidth: 2,
-  // 在行尾添加分号
-  semi: true,
-  // 使用单引号还是双引号
-  singleQuote: true,
-  // 箭头函数只有一个参数时是否省略括号
-  arrowParens: 'avoid',
-  // 换行符
-  endOfLine: 'auto',
-  //...
+  // 继承已有的推荐配置
+  extends: [
+    "stylelint-config-standard", // 配置stylelint拓展插件
+    "stylelint-config-html",
+    "stylelint-config-standard-less", // 配置stylelint scss插件
+    "stylelint-config-recess-order", // 配置stylelint css属性书写顺序插件,
+    "stylelint-config-prettier" // 配置stylelint和prettier兼容
+  ],
+
+  // 语法解析器
+  overrides: [
+    {
+      files: ["**/*.(scss|css|vue|html)"],
+      customSyntax: "postcss-less"
+    },
+    {
+      files: ["**/*.(html|vue)"],
+      customSyntax: "postcss-html"
+    }
+  ],
+
+  //忽略的文件
+  ignoreFiles: ["**/*.js", "**/*.jsx", "**/*.tsx", "**/*.ts", "**/*.json", "**/*.md", "**/*.yaml"],
+
+  /* 自定义规则
+   * null  => 关闭该规则
+   * always => 必须
+   */
+  rules: {
+    "value-keyword-case": null, // 在 css 中使用 v-bind，不报错
+    "no-descending-specificity": null, // 禁止在具有较高优先级的选择器后出现被其覆盖的较低优先级的选择器
+    "function-url-quotes": "always", // 要求或禁止 URL 的引号 "always(必须加上引号)"|"never(没有引号)"
+    "no-empty-source": null, // 关闭禁止空源码
+    "selector-class-pattern": null, // 关闭强制选择器类名的格式
+    "property-no-unknown": null, // 禁止未知的属性(true 为不允许)
+    "block-opening-brace-space-before": "always", //大括号之前必须有一个空格或不能有空白符
+    "value-no-vendor-prefix": null, // 关闭 属性值前缀 --webkit-box
+    "property-no-vendor-prefix": null, // 关闭 属性前缀 -webkit-mask
+    "selector-pseudo-class-no-unknown": [
+      // 不允许未知的选择器
+      true,
+      {
+        ignorePseudoClasses: ["global", "v-deep", "deep"] // 忽略属性，修改element默认样式的时候能使用到
+      }
+    ]
+  }
 };
 ```
 
-格式化代码：
+stylelint忽略文件 .stylelintignore
 
 ```
-npx prettier --write xxx.js
+/node_modules/*
+/dist/*
+/html/*
+/public/*
 ```
 
-当然每次格式化都要执行命令非常麻烦，因此可以安装vscode的插件prettier，并且设置保存自动格式化为prettier。
+package.json 配置运行脚本：
 
-prettier插件有默认的格式化规则，vsocde也可以配置规则，但自定义的配置文件会覆盖默认的规则或vscode配置的规则。
+```
+"scripts": {
+    "stylelint": "stylelint src",
+    "stylelint:fix": "stylelint src --fix",
+    "stylelint:lint-and-fix": "stylelint src/**/*.{css,scss,vue} --cache --fix"
+}
+```
 
-④ 换行符问题
+安装vscode插件 stylelint
+
+#### 7.1.5 换行符问题
 
 在unix，linux，mac等系统换行符是LF，而windows换行符是LF和CRLF，在windows使用eslint的时候就会有一个 ‘Delete `␍` eslint(prettier/prettier)’ 的警告，虽然实际使用上可能没有问题，但是为了消除eslint的警告和严谨的编码，就需要处理这个问题：
 
@@ -346,7 +498,7 @@ prettier插件有默认的格式化规则，vsocde也可以配置规则，但自
    }
    ```
 
-5. .editor
+5. .editorconfig
    
    ```
    [*]
@@ -359,42 +511,134 @@ prettier插件有默认的格式化规则，vsocde也可以配置规则，但自
 
 ### 7.2 git提交规范
 
-自己写git钩子比较麻烦，有现成的库：
+#### 7.2.1 git 忽略文件
 
-Husky和lint-staged是两个工具，它们可以结合使用来实现Git钩子和代码规范检查等自动化流程。
-
-* Husky是一个Git钩子管理工具，可以在Git钩子触发前执行自定义的脚本，例如在提交代码前进行代码规范检查
-
-* lint-staged则是一个在提交之前只对暂存区（Git Index）中修改过的文件进行特定操作的工具，例如对暂存区中的JS、CSS、JSON等文件进行格式化或者检查代码规范。
+.gitignore 忽略提交的文件，如：
 
 ```
-npm install husky lint-staged --save-dev
+.DS_Store
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+tests/**/coverage/
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 ```
 
-在`package.json`文件中添加`husky`和`lint-staged`配置s：
+#### 7.2.2 husky
+
+可以配置git钩子 pre-commit ，在 git commit 之前触发，可以在这里做代码的格式化，保证提交的代码都是格式化好的。
 
 ```
-{
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "git add"
+npm install -D husky
+```
+
+执行，执行之前确保项目已经有 .git 文件夹，没有就 git init
+
+```
+npx husky-init
+```
+
+会在根目录下生成个一个.husky目录，在这个目录下面会有一个pre-commit文件，这个文件里面的命令在我们执行commit的时候就会执行
+
+在`.husky/pre-commit`文件添加如下命令：
+
+```
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+npm run format
+
+# 因为格式化后试一次新的修改，而之前add在暂存区的代码还是未修改的，所以这里需要再次add新的修改
+git add .
+```
+
+当我们对代码进行commit操作的时候，就会执行命令，对代码进行格式化，然后再提交。
+
+#### 7.2.3 commitlint
+
+规范 git commit 的提交信息。
+
+```
+npm install -D @commitlint/config-conventional @commitlint/cli
+```
+
+添加配置文件，新建`commitlint.config.cjs`(注意是cjs)，然后添加下面的代码：
+
+```
+module.exports = {
+  extends: ["@commitlint/config-conventional"],
+  // 校验规则
+  rules: {
+    "type-enum": [
+      2,
+      "always",
+      ["feat", "fix", "docs", "style", "refactor", "perf", "test", "chore", "revert", "build"]
     ],
-    "*.vue": [
-      "eslint --fix",
-      "prettier --write",
-      "git add"
-    ]
+    "type-case": [0],
+    "type-empty": [0],
+    "scope-empty": [0],
+    "scope-case": [0],
+    "subject-full-stop": [0, "never"],
+    "subject-case": [0, "never"],
+    "header-max-length": [0, "always", 72]
   }
+};
+```
+
+在`package.json`中配置scripts命令
+
+```
+# 在scrips中添加下面的代码
+{
+"scripts": {
+    "commitlint": "commitlint --config commitlint.config.cjs -e -V"
+  },
 }
 ```
 
-上述配置的含义是，在提交代码前使用ESLint对修改过的JS文件进行代码规范检查和自动修复，然后将修改过的文件添加到Git暂存区。
+配置husky
+
+```
+npx husky add .husky/commit-msg 
+```
+
+在生成的commit-msg文件中添加下面的命令
+
+```
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+npm run commitlint
+```
+
+配置完成，提交的信息举例：
+
+```
+'feat',//新特性、新功能
+'fix',//修改bug
+'docs',//文档修改
+'style',//代码格式修改, 注意不是 css 修改
+'refactor',//代码重构
+'perf',//优化相关，比如提升性能、体验
+'test',//测试用例修改
+'chore',//其他修改, 比如改变构建流程、或者增加依赖库、工具等
+'revert',//回滚到上一个版本
+'build',//编译相关的修改，例如发布版本、对项目构建或者依赖的改动
+```
+
+提交信息格式是 `xxx: 信息`
+
+```
+git commit -m "chore: 提交信息"
+```
 
 ### 7.3 配置脚手架或vite
 
@@ -419,17 +663,17 @@ module.exports = {
       alias: {
         '@': path.resolve(__dirname, 'src'),
       },
-      extensions: ['.ts', '.json', '.vue', '.less'],
-    },
+      extensions: ['.ts', '.json', '.vue', '.less']
+    }
   },
   devServer: {
     proxy: {
       //...
     }
-  },
+  }
   plugins: [
-    require('@vitejs/plugin-vue')(),
-  ],
+    require('@vitejs/plugin-vue')()
+  ]
 };
 ```
 
@@ -450,9 +694,9 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, 'src')
     },
-    extensions: ['.ts', '.json', '.vue', '.less'], // 指定可省略的扩展名
+    extensions: ['.ts', '.json', '.vue', '.less'] // 指定可省略的扩展名
   },
   server: {
     proxy: {
@@ -462,7 +706,169 @@ export default defineConfig({
 })
 ```
 
-### 7.4 其他配置文件
+注意，如果项目使用的是 ts，且配置了路径别名，那么还需要在 tsconfig.json 中配置路径别名，否则会出错：
+
+```
+//确保已经 npm install -D @types/node
+
+{
+  "compilerOptions": {
+    //...
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  }
+}
+```
+
+另外，附上 tsconfig.json 配置参考：
+
+```
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "node",      // 这个配置如果值设为其他，导入模块可能会出错
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "types": [ "node" ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "references": [{ "path": "./tsconfig.node.json" }],
+}
+```
+
+### 7.4 配置node环境
+
+#### 7.4.1 统一包管理工具
+
+包管理工具有npm，yarn，pnpm等，不同的包管理工具可能安装的包的版本不一样，版本不一样的话就可能出bug，所以必须统一，这里统一强制使用 pnpm：
+
+在根目录创建`scripts/preinstall.js`文件，添加下面的内容
+
+```
+if (!/pnpm/.test(process.env.npm_execpath || '')) {
+  console.warn(
+    `\u001b[33mThis repository must using pnpm as the package manager ` +
+    ` for scripts to work properly.\u001b[39m\n`,
+  )
+  process.exit(1)
+}
+```
+
+配置命令
+
+```
+"scripts": {
+    "preinstall": "node ./scripts/preinstall.js"
+}
+```
+
+配置完成后，安装包之前会触发 preinstall 钩子，根据配置就只能使用 pnpm 了，使用其他包管理工具安装包就会报错。
+
+#### 7.4.2 package.json 配置
+
+（1）配置 npm run dev
+
+vite的话，改一下运行脚本的dev，使得在 npm run dev 的时候可以检查 ts，脚手架目前没找到方法，此外也没找到如何开启ts观察模式：
+
+```
+{
+    "scripts": {
+        "dev": "vue-tsc && vite",
+    },
+}
+```
+
+（2）配置环境变量
+
+分为开发环境（dev），测试环境（test），生产环境（production）等等，代码中可以根据当前处于的环境做对应的事，如以下两个常见例子：
+
+- 开发环境和生产环境用到的后端api不同，就可以根据环境变量切换baseURL
+
+- 某个表单在测试环境测试时需要有一个一键补全表单的内容，方便测试，而生产环境不需要，就可以根据环境变量v-if
+
+配置环境变量的文件有两种形式：
+
+- 一个 .env 统一配置
+  
+  ```
+  .env
+  ```
+
+- 多个 .env.xxx单独配置
+  
+  ```
+  .env.development
+  .env.production
+  .env.test
+  ```
+
+不同的环境，变量命名规则不同：
+
+- webpack环境，变量命名必须以VUE开头
+
+- vite环境，变量命名必须以VITE开头
+
+- node环境，NODE，webpack和vite也可以使用
+
+比如在 .env-development 文件定义 vite 的环境变量：
+
+```
+NODE_ENV = '这是development'
+VITE_BASEURL = 'https://xxxx'
+```
+
+然后再 package.json 配置：
+
+```
+ "scripts": {
+    "dev": "vue-tsc && vite",
+    "build:test": "vue-tsc && vite build --mode test",
+    "build:pro": "vue-tsc && vite build --mode production",
+    "preview": "vite preview"
+  },
+```
+
+在代码中调用：
+
+- webpack环境
+
+- vite环境
+  
+  ```
+  console.log(import.meta.env);
+  if (import.meta.env.DEV) console.log(import.meta.env.VITE_XXX);
+  ```
+
+- node环境
+
+### 7.5 其他配置文件
 
 （1）编辑器配置文件 .editorconfig ：
 
@@ -485,111 +891,63 @@ insert_final_newline = false
 trim_trailing_whitespace = false
 ```
 
-（2）环境变量配置：
-
-分为开发环境（dev），测试环境（test），生产环境（production）等等，代码中可以根据当前处于的环境做对应的事，如以下两个常见例子：
-
-* 开发环境和生产环境用到的后端api不同，就可以根据环境变量切换baseURL
-
-* 某个表单在测试环境测试时需要有一个一键补全表单的内容，方便测试，而生产环境不需要，就可以根据环境变量v-if
-
-配置环境变量的文件有两种形式：
-
-* 一个 .env 统一配置 
-  
-  ```
-  VITE_XXX = 123
-  ```
-
-* 多个 .env.xxx单独配置
-  
-  这种情况下，xxx必须是developmemnt，production等才能解析
-
-不同的环境，变量命名规则不同：
-
-* webpack环境，变量命名必须以VUE开头
-
-* vite环境，变量命名必须以VITE开头
-
-* node环境
-
-在代码中调用：
-
-* webpack环境
-
-* vite环境
-  
-  ```
-  console.log(import.meta.env);
-  if (import.meta.env.DEV) console.log(import.meta.env.VITE_XXX);
-  ```
-
-* node环境
-
-（3）git配置
-
-.gitignore 忽略提交的文件，如：
-
-```
-.DS_Store
-node_modules/
-dist/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-tests/**/coverage/
-
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-```
-
-（4）README
+（2）README
 
 README.md 是项目的说明文件，在github项目的首页会显示里面的内容。
 
 README-zh.md 和 README.md 同时存在时，github会根据浏览器的语言设置使用对应的README文件。
 
-### 7.5 初始化CSS
+### 7.6 CSS配置
 
-normalize.css，统一不同浏览器的标签样式：
-
-```
-npm install --save normalize.css
-```
+css预处理器：
 
 ```
-//App.vue
-<script>
-import 'normalize.css'    
-</script>
+npm install --D less less-loader
+```
 
-<style>
-/* 再自己做一些其他初始化 */
+normalize.css，统一不同浏览器的标签样式
+
+reset.css，清除默认样式（如margin，padding都变为0）
+
+```
+npm install --save normalize.css reset.css
+```
+
+```
+/* src/assets/style/global.less */
+
+@import 'normalize.css';
+@import 'reset.css';
+
+/* 自己的其他初始化css */
 * {
-  margin: 0;
-  padding: 0;
+  line-height: 1.5;
+  font-size: 16px;
+  box-sizing: border-box;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
 }
-</style>
+
+.pc-center {
+  margin: 0 auto;
+  width: 1200px;
+}
+
+::-webkit-scrollbar {
+  display: none; /* Chrome Safari */
+}
 ```
 
-如果想统一管理，可以public下建立一个专门的css文件，里面导入normalize并补充自己的初始化样式，再在App.vue的script中导入或者index.html导入。
-
-使用less预处理器：
+main.ts
 
 ```
-npm install --save less-loader
+import "@/assets/style/global.less";
 ```
 
 如果开发移动端，可以使用px转vw，vh的库：
 
 ```
-npm install --save-dev postcss-px-to-viewport
+npm install -D postcss-px-to-viewport
 ```
 
 ```
@@ -615,9 +973,143 @@ export default defineConfig({
 ```
 
 ```
-.a {
+.test {
   width: 750px; /* 自动解析为100vw */
 }
+```
+
+### 7.7 字体图标
+
+在开发项目的时候经常会用到svg矢量图,而且我们使用SVG以后，页面上加载的不再是图片资源,
+
+这对页面性能来说是个很大的提升，而且我们SVG文件比img要小的很多，放在项目中几乎不占用资源。
+
+（1）方式一：云图标
+
+可以在阿里iconfont上，选择需要的字体图标，创建项目，并生成链接，在项目的 index.html 中引入：
+
+```
+<link
+  type="text/css"
+  rel="stylesheet"
+  href="https://at.alicdn.com/t/c/font_4068422_mghbaleb6o.css?spm=a313x.7781069.1998910419.52&file=font_4068422_mghbaleb6o.css"
+/>
+```
+
+使用：
+
+```
+<i class="iconfont 字体图标类名" />
+```
+
+缺陷是阿里只提供图标和连接，不保证服务器的稳定。
+
+（2）方式二：使用组件库的字体图标
+
+（3）方式三：使用本地svg图标
+
+**安装SVG依赖插件**
+
+```
+npm install vite-plugin-svg-icons -D
+```
+
+在`vite.config.ts`中配置插件：
+
+```
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
+import path from 'path'
+
+export default () => {
+  return {
+    plugins: [
+      createSvgIconsPlugin({
+        iconDirs: [path.resolve(process.cwd(), 'src/assets/icons')],
+        symbolId: 'icon-[dir]-[name]',
+      }),
+    ],
+  }
+}
+```
+
+入口文件导入
+
+```
+import 'virtual:svg-icons-register'
+```
+
+上面的配置的意思是，把放在 /src/assets/icons 的svg文件依次标记id，如 /src/assets/icons/aaa.svg 的id就是 ‘#icon-aaa’，/src/assets/icons/sub/aaa.svg 的id就是 ‘#icon-sub-aaa’
+
+然后就可以使用了：
+
+```
+<svg style="width: 16px; height: 16px">
+  <use xlink:href="#icon-aaa" fill="#000000"></use>
+</svg>
+```
+
+但是占用了三行，比较冗余，所以可以封装为全局组件：
+
+在 src/components/common 目录下创建一个SvgIcon组件:代表如下：
+
+```
+<script setup lang="ts">
+withDefaults(
+  defineProps<{
+    prefix: string; // xlink:href属性值的前缀
+    name: string; // svg矢量图的名字
+    color?: string;
+    width?: string;
+    height?: string;
+  }>(),
+  {
+    prefix?: "#icon-",
+    name: "",
+    color: "#000000",
+    width: "16px",
+    height: "16px"
+  }
+);
+</script>
+
+<template>
+  <div>
+    <svg :style="{ width: width, height: height }">
+      <use :xlink:href="prefix + name" :fill="color"></use>
+    </svg>
+  </div>
+</template>
+```
+
+在 src/components/common 下创建 globalComponent.ts 用来注册全局组件：
+
+```
+import SvgIcon from "./SvgIcon.vue";
+import type { App, Component } from "vue";
+
+// 准备注册的组件，目前只注册 SvgIcon
+const components: { [name: string]: Component } = { SvgIcon };
+
+export default {
+  install(app: App) {
+    Object.keys(components).forEach((key: string) => {
+      app.component(key, components[key]);
+    });
+  }
+};
+```
+
+main.ts
+
+```
+import gloablComponent from "./components/common/globalComponent";
+createApp(App).use(gloablComponent);
+```
+
+使用：
+
+```
+<SvgIcon name="aaa" />
 ```
 
 # 二、常用布局。交互效果和业务逻辑
@@ -1280,10 +1772,7 @@ watch(count, newVal => {
   }
 }
 </style>
-
 ```
-
-
 
 （5）移动端搜索框：
 

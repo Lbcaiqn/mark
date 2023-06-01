@@ -3331,7 +3331,11 @@ cpn组件中，使用路由a，a嵌套路由b，则在cpn中用一次，a路由�
   compoenent: aaa,
   children: [   //使用与 routers: [] 一样，但path不加/，也可以使用默认路由
     {
-       path: 'bbb',
+       path: '',          // 嵌套路由的默认路由不能写成 '/'
+       redirect: '/aaa/bbb'
+    },
+    {
+       path: 'bbb',       //  不能写成 '/bbb'
        component: bbb
     }
   ]   
@@ -3892,6 +3896,8 @@ export default new Vuex.Store({
 注意点：
 
 * 这么配置后，vuex照旧操作就能实现持久化
+
+* 修改vuex的数据会自动修改storage的数据，反之亦然
 
 * 必须通过mutations修改数据，createPersistedstate才生效。
 
@@ -6242,6 +6248,28 @@ export const MainStore = defineStore('Main',{
   }
 })
 
+// 组合式api写法
+/*
+可以用vue3的ref，reactive，computed，toRefs等等，不需要导入
+ref和reactive定义的就是state的数据（ref定义的在vue中不需要.value，ts文件中要）
+函数就是actions
+computed就是getters
+为了简化return，可以将所有属性都放到一个reactive对象里，toRefs出去
+*/
+export const MenuStore = defineStore(
+  "Menu",
+  () => {
+    const state = reactive<MenuStoreStateInterface>({
+      menuIsCollapse: false,
+      menuData: []
+    });
+
+    return {
+      ...toRefs(state)
+    };
+  }
+);
+
 export default pinia;
 
 //main.js
@@ -6387,6 +6415,23 @@ const XxxStore = defineStore('Xxx',{
   */
   ...
 })
+
+// 组合式api写法
+const HeaderStore = defineStore(
+  "Header",
+  () => {
+    const state = reactive<HeaderStoreStateInterface>({
+      breadCrumb: ["首页"]
+    });
+
+    return {
+      ...toRefs(state)
+    };
+  },
+  {
+    persist: { key: "gxbuy_manager_header_store", storage: window.localStorage }
+  }
+);
 ...
 ```
 

@@ -892,6 +892,12 @@ import { Request, Response, NextFunction } from "express";
 @Catch()
 export class HttpFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
+    // 如果是服务器自己语法逻辑错误，则直接return
+    if (!exception.getStatus) {
+      console.log(exception);
+      return;
+    }
+
     const ctx = host.switchToHttp();
 
     const req = ctx.getRequest<Request>(),
@@ -1694,7 +1700,7 @@ async getTags() {
     .createQueryBuilder('user')  // user表别名
     .innerJoinAndSelect('user.tag', 'tag表别名')
     .where('user._id = :id', { id: 12345 })
-    /* 也可以用模板字符串
+    /* 也可以用模板字符串，但是有问题，比如 '123' 会匹配出 '000123' 等结果，须慎用
     .where(`user._id = ${变量}`)
     */
     /* 如果有多个where条件，可以写在一个where里，也可以使用andWhere，
@@ -2030,7 +2036,7 @@ export class UserService {
 
     const user = await this.userRepository
       .createQueryBuilder('user')
-      .addSelect('user.password')
+      .addSelect('user.password')   // addSelect就算只查询一个表，也要加表名
       .where('username = :un', { un: loginInfo.username })
       .getOne();
 
@@ -2427,27 +2433,48 @@ async function getUserInfo() {
 }
 ```
 
+请求失败可弹出信息：
+
+```
+// /src/tools/myMessage.ts
+
+
+import { ElMessage } from "element-plus";
+import "element-plus/dist/index.css";
+
+export function myMessage(message: string | any, type: any, messageIsErrorType: boolean = false) {
+  if (type === "error" && messageIsErrorType) {
+    message = message?.response ? message?.response?.data?.errorMessage || "网络异常" : "请重新登录";
+  }
+
+  ElMessage({
+    customClass: "my-el-message",
+    showClose: true,
+    message,
+    type
+  });
+}
+```
+
 ## 3 权限控制
 
 权限管理分为前端权限管理和后端权限管理，前后端未分离的时代权限都是由后端管理的，但是在前后端分离的时代，前端也需要权限管理。
 
-权限的本质就是对数据库中的数据的增删改查
+权限的本质就是对数据库中的数据的CRUD。
 
-后台管理系统一般admin需要有对用户、角色、权限、菜单的增删改查
+后台管理系统必须要有一个超级管理员admin，具备所有权限，必须要有对用户、角色、权限、菜单的增删改查，因为用户不是注册而来，而是管理员分配而来。
 
-### 3.1 后端权限管理
+### 3.1 后端
 
 后端权限通过token来鉴权增删改查的操作，是权限管理的最后一道关口
 
-### 3.2 前端权限管理
-
-前端权限管理仅仅是针对于视图层展示和请求的发送，并不能管理数据库的增删改查。
+### 3.2 前端
 
 RBAC（基于角色的权限控制）：权限并不是针对于某个用户，而是针对于某类角色，一个用户可能有多个角色，在数据库设计上可以设计成用户表、角色表、权限表。
 
-前端登录成功时，会同时发送该用户具备的权限。
+前端权限管理仅仅是针对于视图层展示和请求的发送这些用户体验方面的控制。前端就算做了再多的控制，用户也可以在控制台中绕过，所以真正的权限控制还在后端。
 
-但是前端的权限管理也是非常有必要的，主要有以下几点：
+，但是前端的权限管理也是非常有必要的，主要有以下几点：
 
 - 减少用户非法操作的可能性，如隐藏需要权限的按钮。
 
@@ -2457,254 +2484,340 @@ RBAC（基于角色的权限控制）：权限并不是针对于某个用户，�
 
 前端权限管理分为四个方面：
 
-- 菜单权限：主要指后台管理系统的侧边菜单栏，登录后根据后端返回的菜单权限，只展示该用户具备权限的菜单。菜单权限控制一般都要配合页面的权限控制。
+- 菜单权限：主要指后台管理系统的侧边菜单栏，每个用户只会拥有自己权限范围的菜单
 
-- 页面/路由权限：用户只能访问自己具备权限的页面，若用户通过非法操作（如输入不具备权限的url，或控制台进行路由跳转），应当强制跳转到登录页或404页。
+- 路由权限：用户只能访问自己具备权限的页面，需与菜单权限配合
 
-- 按钮/超链接权限：一些页面可能几类角色都有权限进入（或非法进入），而该页面的按钮则具备权限，如普通角色只有查看权，而管理员有编辑、删除等按钮，那么这些按钮就应该根据权限来显示隐藏/启用禁用。
+- 按钮权限：一些页面可能几类角色都有权限进入（或非法进入），而该页面的按钮则具备权限，如普通角色只有查看权，而管理员有编辑、删除等按钮，那么这些按钮就应该根据权限来显示隐藏/启用禁用。
 
 - 请求权限：若通过以上操作还不能规避用户非法操作，如用户非法进入页面，通过控制台修改按钮为显示/启用，那么在发送请求时，应当根据权限在前端层面请求发起时就拒绝发送请求。
 
 可以看出这四个方面是循序渐进的。由前端进行的一系列权限控制之后若用户还是能够非法的操作对数据进行增删改查，后端通过token鉴权也能规避。
 
-### 3.3 前端权限管理代码实现
+#### 3.2.1 菜单权限与路由权限
 
-（1）场景模拟
+这两个其实是配合在一起的。
 
-某系统具备七个页面，分别是登录页，404页、个人主页，订单信息页和管理页（用户管理、商品给管理），具有两种角色，分别是普通用户和管理员。
+根据用户的权限所能查看的菜单，动态添加菜单对应的路由。
 
-登录页和404页在未登录时就能访问，
-
-个人主页需要登录但是所有角色都可访问。
-
-订单信息页和管理页需要登录且只有管理员具备权限访问。其中用户管理页和商品管理页是管理页的嵌套路由
-
-管理员能在用户管理页设置各个用户的各项权限
-
-如管理员的菜单如下：
-
-个人信息
-
-订单信息
-
-管理
-
----用户管理
----商品管理
-
-（2）菜单权限控制
-
-默认路由为f个人主页，未登录时跳转到登录页，登录同时后端会返回权限列表，普通用户的菜单只有个人主页，管理员的菜单有个人主页、订单信息和管理（用户管理、商品管理）。
-
-路由配置共有一条默认路由，一条NotFound路由和六条页面路由。其中管理页路由又有两个嵌套路由
-
-但是由于菜单控制一般都要配合页面控制，所以路由配置不能写死，初始只配置不需要权限的路由，需要权限的路由根据权限列表由动态路由addRoute()动态添加
-
-后端返回的菜单权限有可能是只有需要权限的菜单（如管理），也有可能是连个人主页也返回，这里就以只返回需要权限的菜单。
-
-路由配置：
+初始路由及配置：
 
 ```
-const route = [
+// /src/router/indexts
+
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
+
+const routes: Array<RouteRecordRaw> = [
   {
-     // 默认路由
-     path: '/',
-     redirect: '/profile'
+    path: "/",
+    name: "homeDefaultRoute",
+    redirect: "/home"
   },
   {
-     //NotFound路由
-     path: '/:catchAll(.*)',
-     component: () => import(...)  
-  },
-  {
-     path: '/login',
-     component: () => import(...)  
-  },
-  {
-     path: '/profile',
-     component: () => import(...)  
-  }
-]
-```
-
-登录拿到权限列表后，就可以实现菜单/路由权限，分两种：
-
-（1）后端实现
-
-后端把权限信息、菜单信息和路由信息都返回了，前端必须要有一个菜单/路由管理的页面。
-
-适合体量大，菜单变动多的项目。
-
-缺陷：前后端开发人员需要高度配合。此外，后端返回的路由信息不一定是规范的，需要前端自行转换。
-
-```
-/*
-管理员登录，后端返回的数据模拟：
-token: '...',
-rights:[
-  {
-    ...
-  },
-  {
-    name: 'manage',
-    title: '管理',
-    icon: 'xxx',
-    path: '/manage',
-    url: '/Manage/Manage.vue',
-    children: [
-      ...
-    ]
-  }
-]
-普通用户登录rights则是空数组
-*/
-
-axios({
-  //登录
-}).then(res => {
-  /* 拿到token并保存到storage和vuex的操作... */
-  //拿到菜单权限，并保存到本地和vuex
-  for(let i of res.data.rights){
-    //若有多级菜单，就多套一层循环，视情况是配置普通路由还是嵌套路由
-    this.$router.addRoute({
-      path: i.path,
-      name: i.name,
-      component: () => import('...' + i.componentURL)
-    ))
-  }
-  localStorage.set('rights',res.data.rights)
-  this.$store.commit('setRights',res.data.rights)
-})
-```
-
-（1）前端实现
-
-后端不返回路由信息或菜单信息，这两个信息存储在前端，拿到权限信息后，在丛中筛选出对应的路由、菜单。
-
-适合体量小，菜单变动少的项目，实现起来比较简单。
-
-缺陷：路由信息、菜单信息存储在前端，一旦要修改这些信息就要重新打包前端。
-
-① 前端实现方案1，后台只返回了菜单信息和权限信息，没有路由信息
-
-需要前端先定义全部路由的数组，根据后台返回的权限来筛选出相应的路由并动态添加到路由配置
-
-返回的权限信息可能是标识字符串，也可能是是角色信息，若是角色信息，则meta的内容就是角色，根据角色筛选权限，若是标识，就是下面的代码
-
-```
-/*
-管理员登录，后端返回的数据模拟：
-token: '...',
-rights:[
-  {
-    ...
-  },
-  {
-    name: 'manage',
-    title: '管理',
-    icon: 'xxx',
-    children: [
-      ...
-    ]
-  }
-]
-普通用户登录rights则是空数组
-*/
-//先定义好全部路由,若后台返回的name能和路由的name对应，也可以不要meta
-const allRoutes = [
-  {
-    ...
-  },
-  {
-    path: '/manage',
-    url: '/Manage/Manage.vue',
+    path: "/home",
+    name: "home",
+    component: () => import("@/views/Home/Home.vue"),
     meta: {
-      name: 'manage'
+      useLayout: true,
+      jwt: true,
+      menuData: {
+        title: "首页",
+        icon: "home-filled"
+      }
+    }
+  },
+  {
+    path: "/login",
+    name: "login",
+    component: () => import("@/views/Login/Login.vue"),
+    meta: {
+      useLayout: false,
+      jwt: false
+    }
+  },
+  {
+    path: "/:catchAll(.*)",
+    component: () => import("@/views/404/404.vue"),
+    meta: {
+      useLayout: false,
+      jwt: false
+    }
+  }
+];
+
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes
+});
+
+router.beforeEach((to, from, next) => {
+  if (!from) return;
+
+  if (to.meta.jwt && !JSON.parse(localStorage.getItem("gxbuy_manager_user_store") || "null")?.gxbuy_manager_jwt) {
+    next({
+      path: "/login",
+      query: { toPath: to.fullPath }
+    });
+  } else if (
+    to.name === "login" &&
+    JSON.parse(localStorage.getItem("gxbuy_manager_user_store") || "null")?.gxbuy_manager_jwt
+  ) {
+    next("/home");
+  } else next();
+});
+
+export default router;
+
+
+```
+
+
+
+根据后端返回信息的完整度，动态添加路由，后端最少都需要返回能标识该用户菜单权限的信息，比如路由name，角色等。
+
+下面是后端只返回了路由name的情况，这种最复杂：
+
+```
+// /src/types/types/authority.ts
+
+export interface RoutesNameInterface {
+  name: string;
+  children?: Array<RoutesNameInterface>;
+}
+
+export interface MenuDataInterface {
+  path: string;
+  title: string;
+  icon: string;
+  children?: Array<MenuDataInterface>;
+}
+```
+
+```
+// /src/router/authRoutes.ts
+
+import router from "./index.ts";
+import { RouteRecordRaw } from "vue-router";
+import store from "@/store";
+import { RoutesNameInterface, MenuDataInterface } from "@/types";
+import { deepCopy } from "@/tools/deepCopy";
+
+/* 示例路由
+ * 若下面有路由已存在的路由也没关系，动态添加时不影响，放在这里可以方便取出菜单信息
+ * 默认路由不能先定义，因为胡无法确定定义的默认路由筛选后还是否存在
+ */
+const authRoutes: Array<RouteRecordRaw> = [
+  {
+    path: "/home",
+    name: "home",
+    component: () => import("@/views/Home/Home.vue"),
+    meta: {
+      useLayout: true,
+      jwt: false,
+      menuData: {
+        title: "首页",
+        icon: "home-filled"
+      }
+    }
+  },
+  {
+    path: "/authority",
+    name: "authority",
+    component: () => import("@/views/Authority/Authority.vue"),
+    meta: {
+      useLayout: true,
+      jwt: true,
+      menuData: {
+        title: "权限管理",
+        icon: "user-filled"
+      }
     },
     children: [
-      ...
+      {
+        path: "roleManage",
+        name: "roleManage",
+        component: () => import("@/views/Authority/children/RoleManage.vue"),
+        meta: {
+          useLayout: true,
+          jwt: true,
+          menuData: {
+            title: "角色管理",
+            icon: "user-filled"
+          }
+        }
+      },
+      {
+        path: "userManage",
+        name: "userManage",
+        component: () => import("@/views/Authority/children/UserManage.vue"),
+        meta: {
+          useLayout: true,
+          jwt: true,
+          menuData: {
+            title: "用户管理",
+            icon: "user-filled"
+          }
+        }
+      }
     ]
   }
-]
-//筛选路由的方法
-function filteRoutes(userRoutes, allRoutes){
-    let routes = [], allRoutesCopy = 深拷贝(allRoutes)
-    for(let userR of userRoutes){
-        for(let allR of allRoutesCopy){
-            if(userR.name == allR.meta.name){
-                if(userR?.children?.length > 0){
-                  allR.children = filteRoutes(userR.children,allR.children)
-                }
-                else delete allR.children
-                routes.push(allR)
-            }
-        }
+];
+
+// 根据后端返回的该用户具有的菜单name，筛选出对应的路由
+function filterAuthRoutes(
+  routesName: Array<RoutesNameInterface>,
+  authRoutesData: Array<RouteRecordRaw> = authRoutes
+): Array<RouteRecordRaw> {
+  const result: Array<RouteRecordRaw> = [];
+  const authRoutesDataCopy = deepCopy(authRoutesData);
+
+  for (const item of routesName) {
+    for (let route of authRoutesDataCopy) {
+      if (item.name === route.name) {
+        if (item?.children?.length! > 0) {
+          route.children = filterAuthRoutes(item.children!, route.children);
+        } else delete route.children;
+
+        result.push(route);
+      }
     }
-    return routes
+  }
+  return result;
 }
 
-//登录拿到权限列表的代码略
-```
+// 获取路由meta中的菜单信息，若后端已返回菜单信息可忽略此函数
+function getMenuData(routes: Array<RouteRecordRaw>, parentPath: string = ""): Array<MenuDataInterface> {
+  const menuData: Array<MenuDataInterface> = [];
 
-② 前端实现方案2，后端只返回权限信息，菜单信息和路由信息都不返回
+  for (let i of routes) {
+    if (i?.children?.length! > 0) {
+      menuData.push({
+        path: i.path,
+        title: (i?.meta?.menuData as any).title,
+        icon: (i?.meta?.menuData as any).icon,
+        children: getMenuData(i.children!, parentPath + i.path + "/")
+      });
+    } else menuData.push({ path: parentPath + i.path, ...(i?.meta?.menuData as object) } as MenuDataInterface);
+  }
 
-需要在①的基础上在meta加入菜单信息即可
-
-③ 前端实现方案3，不太推荐，后端只返回权限信息和路由信息，不返回菜单
-
-把①的先定义全部路由改为先定义全部菜单，筛选路由改为筛选菜单即可
-
-其他：
-
-权限菜单路由信息和token一样需要持久化存储。
-
-动态路由保持持久化，在App.vue的create()中，若有token，则根据storage的rights来重新addRoute()
-
-退出登录时，需要清除storage和vuex的token和权限信息，removeRoute()对应路由或代码刷新页面
-
-缺陷就是用户可以通过控制台自己addRoute()再push()达到非法进入页面的目的
-
-若有动态默认路由的需求，可使用addRouter添加默认路由，修改默认路由通过router.getRoutes()[0].redirect == '/xxx'
-
-（3）页面/路由权限控制
-
-上面的NotFound路由和动态路由其实已经涉及了大部分页面/路由控制，就差一个登录状态的判断了
-
-组件内守卫或独享守卫配置，缺陷就是每一个需要登录的页面都要配置；
-
-```
-//以组件内守卫为例
-beforeRouteEnter(to,from,next){
-  if(sessionStorage.getItem('token') != null) next()
-  else  next({path: '/login'})
+  return menuData;
 }
 
-/*
-路由守卫中，next({path: '/login'})跳转到登录页时，可以正常跳转，但是报错 ...via a navigation...
-解决：
-路由文件中：
-const originalPush = VueRouter.prototype.push
-VueRouter.prototype.push = function push(location, onResolve, onReject){
-  if (onResolve || onReject) return originalPush.call(this, location, onResolve, onReject)
-  return originalPush.call(this, location).catch(err => err)
+// 如果想给每个子路由都增加默认路由，可使用此函数
+function addDefaultRoute(routes: Array<RouteRecordRaw>, parentPath: string = ""): Array<RouteRecordRaw> {
+  for (let index in routes) {
+    if (index === "0") {
+      routes.push({
+        path: "",
+        name: String(routes[index].name) + "DefaultRoute",
+        redirect: parentPath + routes[index].path
+      });
+    }
+    if (routes[index]?.children?.length! > 0) {
+      addDefaultRoute(routes[index].children!, parentPath + routes[index].path + "/");
+    }
+  }
+  return routes;
 }
-其本质是跳转报错时，catch捕获异常，所以还是没有解决根本的问题，只是没有报错了
-*/
+
+export async function addAuthRoutes(routesName: Array<RoutesNameInterface>) {
+  // 筛选路由并增加默认路由
+  const routes = addDefaultRoute(filterAuthRoutes(routesName));
+
+  // 保证此时router已挂在完毕，再动态添加路由
+  await router.isReady();
+  for (let i of routes) router.addRoute(i);
+
+  
+}
 ```
 
-也可以全局前置守卫中配置，更方便：
+jwt鉴权，路由守卫和axios拦截器配置参考之前的配置。
+
+这里的pinia已做持久化存储，参考之前的配置。
+
+登录拿到权限，并开始动态添加路由：
 
 ```
-//路由的js文件中
-...
-router.beforeEach((from,to,next) => {
+async function login(){
+  try {
+      const res = (await userLoginRequest(loginInfo)).data;
 
-  if(sessionStorage.getItem('token') != null) next()
-  else  next({path: '/login'})
-})
+      userStore.gxbuy_manager_jwt = res.jwt;
+      userStore.userInfo = res.userInfo;
+      userStore.routesName = res.routesName;
+
+      addAuthRoutes(userStore.routesName);
+      router.push("/home");
+    } catch (err) {
+      // ...
+    }
+}
 ```
 
-（4）按钮/超链接权限控制
+App.vue中判断，若storage有jwt则发请求获取权限信息，如果storage中有权限信息也最好重新请求一下，获取最新的权限信息：
+
+```
+<script setup lang="ts">
+// ...
+
+async function init() {
+  if (userStore.gxbuy_manager_jwt) {
+    try {
+      const res = (await getUserInfoRequest()).data;
+
+      userStore.userInfo = res.userInfo;
+      userStore.routesName = res.routesName;
+
+      await addAuthRoutes(userStore.routesName);
+
+      // 没有添加路由前会跳转到404，所以添加完路由后要跳转一下
+      router.push(route.fullPath);
+    } catch (err: any) {
+      myMessage(err, "error", true);
+    }
+  }
+}
+
+init();
+</script>
+```
+
+退出登录：
+
+```
+function logout() {
+  // 清空pinia数据，因为已经做了持久化，所以storage也同时清空
+  menuStore.menuIsCollapse = false;
+  menuStore.menuData = [];
+  headerStore.breadCrumb = ["首页"];
+  userStore.gxbuy_manager_jwt = "";
+  userStore.userInfo = {};
+  userStore.routesName = [];
+
+  // 也要 removeRoute() 路由，但是比较麻烦，直接刷新页面就行了
+  router.go(0);
+
+  // ... 退出登录请求
+
+  // 跳转登录页
+  router.push("/login");
+}
+```
+
+
+
+这种适合体量小，菜单变动少的项目，缺陷是路由信息、菜单信息存储在前端，一旦要修改这些信息就要重新打包前端。
+
+后端可能返回的信息还有以下几种情况，根据情况修改上面代码即可：
+
+* 在上面情况基础上多返回了菜单信息，那么路由meta就不需要存储菜单信息了，也不需要从meta中取出菜单信息。菜单的信息存到数据库中也可以进行修改，适合体量大，菜单变动多的项目
+
+* 在上面的基础上，又把路由的路径和组件路径都返回了，优点是灵活，缺点是后端需要高度配合前端。此外，后端返回的路由信息不一定是规范的，需要前端自行转换。
+
+
+
+#### 3.3.2 按钮权限控制
 
 后端返回的权限列表里，可能也会有按钮的权限，一种是返回增删改查的权限，按钮根据增删改考察的类型来设置权限，一种是返回特定按钮的布尔值。在筛选路由的同时可以把按钮权限存到对应路由配置的meta中。
 
@@ -2712,7 +2825,7 @@ router.beforeEach((from,to,next) => {
 
 【警告】在某些情况下，使用自定义指令v-permission将无效。例如：元素UI的选项卡组件或el表格列以及其他动态渲染dom的场景。您只能使用v-if来执行此操作
 
-（5）请求权限控制
+#### 3.3.3 请求权限控制
 
 分为token鉴权和截断无权限请求
 

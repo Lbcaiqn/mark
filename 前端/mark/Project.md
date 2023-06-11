@@ -923,6 +923,7 @@ npm install --save normalize.css reset.css
 * {
   line-height: 1.5;
   font-size: 16px;
+  
   box-sizing: border-box;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */

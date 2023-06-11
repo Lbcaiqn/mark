@@ -242,10 +242,7 @@ export function formatDate(datetime: Date | string | number, fmt: string): strin
 
   return fmt;
 }
-
 ```
-
-
 
 ## 4 fetch
 

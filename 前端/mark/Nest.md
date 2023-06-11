@@ -62,8 +62,8 @@ nest g resource xxx
 生成到指定目录下；
 
 ```
-# --directory 或 -d
-nest g res xxx --directory src/module
+# 会生成在 /src/modules/ , 注意路径必须是nest规定的文件夹名，如modules
+nest g res authority modules
 ```
 
 ## 3 RESTful风格设计
@@ -572,6 +572,12 @@ bootstrap();
 
 用来做权限控制，jwt验证，访问控制等
 
+返回ture就是通过，返回false就是不通过，不通过也可以直接抛出HttpError，这样可以自定义错误信息和状态码，如果是 return false 那状态码为 403。
+
+如果在守卫使用了实体，则在每一个用到该守卫的控制器对应的module中都要引入该实体并在imports中用typeorm引用它。
+
+canActivate 不能用async修饰，如果要是用异步的代码，可以 return 一个 Promise
+
 ```
 // nest g gu xxx
 // xxx.guard.ts
@@ -721,6 +727,71 @@ export class CreateLoginDto {
 }
 ```
 
+如果是数组，对象的复杂数据：
+
+```
+import { IsNotEmpty, IsString, IsNumber, IsObject, IsArray, ValidateNested } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger/dist';
+
+class SalesAttrsDto {
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ type: String, example: '分类' })
+  name: string;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  values: Array<string>;
+}
+
+export class CreateGoodsSpuDto {
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ type: String, example: '商品名' })
+  goodsSpuName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ type: String, example: 'https://xxx' })
+  goodsSpuMainImg: string;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsObject({ each: true })
+  @ValidateNested({ each: true })
+  @ApiProperty({ type: Array<SalesAttrsDto>, example: [{ name: '颜色', values: ['黑色', '红色'] }] })
+  spuSalesAttrs: Array<SalesAttrsDto>;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  @ApiProperty({ type: Array<string>, example: ['https:/xxx', 'https://yyy'] })
+  bannerImgList: Array<string>;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  @ApiProperty({ type: Array<string>, example: ['https:/xxx', 'https://yyy'] })
+  detailImgList: Array<string>;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({ type: Number, example: 1 })
+  c1id: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({ type: Number, example: 1 })
+  c2id: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @ApiProperty({ type: Number, example: 1 })
+  c3id: number;
+}
+```
+
 方式一：
 
 ```
@@ -760,7 +831,7 @@ export class LoginPipe implements PipeTransform {
     const fail = await validate(DTO);
     if (fail.length) {
       // 枚举HttpStatus.BAD_REQUEST对应的状态码是400，表示参数错误
-      throw new HttpException(fail, HttpStatus.BAD_REQUEST);
+      throw new HttpException('表单验证不通过', HttpStatus.BAD_REQUEST);
     }
     return value;
   }
@@ -1271,6 +1342,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  Index,
   CreateDateColumn,
   Generated,
 } from "typeorm";
@@ -1282,6 +1354,8 @@ enum sexEnum {
 }
 
 @Entity()
+// 多列唯一约束
+// @Index('idx_unique_role_name_by_shop', ['shop_manager_role_name', 'shop_id'], { unique: true })
 export class Db {
   @PrimaryGeneratedColumn()             //自动自增的主键
   // @PrimaryGeneratedColumn('uuid')    //自动自增的uuid主键
@@ -1320,6 +1394,9 @@ export class Db {
   @Generated("uuid")
   uuid: string;
 
+  @Column("json")             //存入取出时会自动JSON.stringify(),JSON.parse()
+  j: { name: string; age: number }; 
+
   @CreateDateColumn({ type: "timestamp" })
   time: Date;
 
@@ -1332,8 +1409,8 @@ export class Db {
   @Column("simple-array")
   hobbits: string[];
 
-  @Column("simple-json")             //自动JSON.stringify()
-  jjj: { name: string; age: number };    // 或者类型为 JSON
+  @Column("simple-json")             //存入取出时会自动JSON.stringify(),JSON.parse()
+  jjj: { name: string; age: number };    
 }
 ```
 
@@ -1666,6 +1743,10 @@ export class UserService {
     比如下面的data瑞国包含了关系数据
     const newUser = await this.userTable.save(data)
     delete newUser.xxx
+
+    尤其常见于更新多对多关系的数据时中，因为多对多关系没有字段来关联另一个表，只能通过
+    关系数据进行更新，此时update就不能用了，不过可以用 save 代替，因为 save 如果是
+    同一行数据它会进行update
     */
     return this.userTable.update(id, updateUserDto);
   }
@@ -1712,6 +1793,20 @@ async getTags() {
     .getMany();
   console.log(data);
   return data;
+}
+```
+
+使用 IN 时需要注意，如果数组是空数组的话实惠报错的，所以需要判断数组是否为空，不为空才能继续查询：
+
+```
+const ids = [1,4,8];
+if(dis.length !== 0){
+  const data = 
+  //...
+  .where(`_id IN (${updateInfo.roleIds})`)
+  //...
+} else {
+   const data = xxx  // 数组为空时，根据情况给结果，如null, []
 }
 ```
 
@@ -2249,49 +2344,30 @@ router.beforeEach((to, from, next) => {
 在守卫中鉴权：
 
 ```
-// token.guard.ts
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
-import { Observable } from "rxjs";
-import { Request } from "express";
-import { Reflector } from "@nestjs/core";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from 'typeorm';
-import { User } from '../user/entities/user.entity';
+// jwt.guard.ts
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { Request } from 'express';
+import { Reflector } from '@nestjs/core';
 import { verify } from 'jsonwebtoken';
-
-//私钥为了安全一般是不可见的，保存在本地文件中，不存放于git，这里为了方便就直接定义为了变量
-const SECRCT = 'asf34g35s1g56erssa'
+import { SECRCT } from '../secrct';
 
 @Injectable()
-export class TokenGuard implements CanActivate {
+export class JwtGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
 
-  constructor(
-    private reflector: Reflector,
-    @InjectRepository(User)
-    private readonly userTable: Repository<User>,
-  ) {}
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const authority = this.reflector.get<string[]>('jwt', context.getHandler());
 
-  canActivate(
-    context: ExecutionContext
-  ): boolean | Promise<boolean> | Observable<boolean> {
+    if (!authority) return true;
 
-    const authority = this.reflector.get<string[]>(
-      "token",
-      context.getHandler()
-    );
-
-    //如果是不需要token鉴权的路由，就直接通过
-    if(!authority)  return true;
-
-    //token鉴权
     const req = context.switchToHttp().getRequest<Request>();
-    const token = req.headers.authorization;
-    if(!token)  return false;
+    const jwt = req.headers.authorization;
+    if (!jwt) return false;
 
-    // 如果鉴权失败，或jwt过期，则会抛出异常
-    try{
-      verify(token,SECRCT)
-    }catch(err){
+    try {
+      verify(jwt, SECRCT);
+    } catch (err) {
       return false;
     }
 
@@ -2466,7 +2542,114 @@ export function myMessage(message: string | any, type: any, messageIsErrorType: 
 
 ### 3.1 后端
 
-后端权限通过token来鉴权增删改查的操作，是权限管理的最后一道关口
+后端权限通过token来鉴权增删改查的操作，是权限管理的最后一道关口。
+
+通过守卫实现：
+
+```
+// auth-guard.ts
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { Request } from 'express';
+import { Reflector } from '@nestjs/core';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ShopManager } from '@/modules/user/entities/shop_manager.entity';
+import { verify } from 'jsonwebtoken';
+import { SECRCT } from '../secrct';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(
+    private reflector: Reflector,
+    @InjectRepository(ShopManager) private readonly shopManagerRepository: Repository<ShopManager>
+  ) {}
+
+  getAuth(
+    data: any,
+    auth: any = {
+      menu: [],
+      button: [],
+    }
+  ): any {
+    let authority = auth;
+
+    for (const i of data) {
+      if (i.name) authority.menu.push(i.name);
+      if (i?.button?.length > 0)
+        authority.button = [...authority.button, ...(i?.button?.map((v: any) => v.value) || [])];
+
+      if (i?.children?.length > 0) authority = this.getAuth(i.children, authority);
+    }
+
+    return authority;
+  }
+
+  async auth(userId: string, shopId: string, authorityInfo: any): Promise<boolean> {
+    const user = await this.shopManagerRepository.findOne({
+      relations: ['shop_manager_role'],
+      where: { _id: userId, shop_id: shopId },
+    });
+
+    if (!user) throw new HttpException('您没有该权限', HttpStatus.UNAUTHORIZED);
+    if (user.shop_manager_role.length === 0) throw new HttpException('您没有该权限', HttpStatus.UNAUTHORIZED);
+
+    if (user.shop_manager_role.map((role: any) => role.shop_manager_role_name).includes('admin')) return true;
+
+    for (const role of user.shop_manager_role) {
+      if (!role.shop_manager_role_authority) continue;
+
+      const { menu, button } = this.getAuth(role.shop_manager_role_authority);
+
+      if (authorityInfo.isBtn) {
+        if (button.includes(authorityInfo.value)) return true;
+      } else {
+        if (menu.includes(authorityInfo.value)) return true;
+      }
+    }
+
+    throw new HttpException('您没有该权限', HttpStatus.UNAUTHORIZED);
+  }
+
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const authority = this.reflector.get<string[]>('auth', context.getHandler());
+
+    if (!authority) return true;
+
+    const req = context.switchToHttp().getRequest<Request>();
+    const jwt = req.headers.authorization;
+    if (!jwt) throw new HttpException('您未登录，或登录过期', HttpStatus.FORBIDDEN);
+
+    let id: any = null;
+    try {
+      id = verify(jwt, SECRCT);
+    } catch (err) {
+      throw new HttpException('您未登录，或登录过期', HttpStatus.FORBIDDEN);
+    }
+
+    const { shopId, userId } = id;
+
+    return this.auth(userId, shopId, authority);
+  }
+}
+```
+
+需要权限的控制器中（参考鉴权笔记，先导入guard并use）；
+
+```
+// 菜单权限，如获取角色列表的接口
+@SetMetadata('auth', {
+  value: 'roleManage',
+  isBtn: false,
+})
+
+// 按钮权限，如修改角色的接口
+@SetMetadata('auth', {
+  value: 'role-update-role',
+  isBtn: true,
+})
+```
 
 ### 3.2 前端
 
@@ -2567,11 +2750,7 @@ router.beforeEach((to, from, next) => {
 });
 
 export default router;
-
-
 ```
-
-
 
 根据后端返回信息的完整度，动态添加路由，后端最少都需要返回能标识该用户菜单权限的信息，比如路由name，角色等。
 
@@ -2594,8 +2773,6 @@ export interface MenuDataInterface {
 ```
 
 ```
-// /src/router/authRoutes.ts
-
 import router from "./index.ts";
 import { RouteRecordRaw } from "vue-router";
 import store from "@/store";
@@ -2634,6 +2811,19 @@ const authRoutes: Array<RouteRecordRaw> = [
     },
     children: [
       {
+        path: "menuManage",
+        name: "menuManage",
+        component: () => import("@/views/Authority/children/MenuManage.vue"),
+        meta: {
+          useLayout: true,
+          jwt: true,
+          menuData: {
+            title: "菜单管理",
+            icon: "user-filled"
+          }
+        }
+      },
+      {
         path: "roleManage",
         name: "roleManage",
         component: () => import("@/views/Authority/children/RoleManage.vue"),
@@ -2655,6 +2845,88 @@ const authRoutes: Array<RouteRecordRaw> = [
           jwt: true,
           menuData: {
             title: "用户管理",
+            icon: "user-filled"
+          }
+        }
+      }
+    ]
+  },
+  {
+    path: "/goods",
+    name: "goods",
+    component: () => import("@/views/Goods/Goods.vue"),
+    meta: {
+      useLayout: true,
+      jwt: true,
+      menuData: {
+        title: "商品管理",
+        icon: "user-filled"
+      }
+    },
+    children: [
+      {
+        path: "spuManage",
+        name: "spuManage",
+        component: () => import("@/views/Goods/children/SpuManage.vue"),
+        meta: {
+          useLayout: true,
+          jwt: true,
+          menuData: {
+            title: "SPU管理",
+            icon: "user-filled"
+          }
+        }
+      },
+      {
+        path: "skuManage",
+        name: "skuManage",
+        component: () => import("@/views/Goods/children/SkuManage.vue"),
+        meta: {
+          useLayout: true,
+          jwt: true,
+          menuData: {
+            title: "SKU管理",
+            icon: "user-filled"
+          }
+        }
+      }
+    ]
+  },
+  {
+    path: "/order",
+    name: "order",
+    component: () => import("@/views/Order/Order.vue"),
+    meta: {
+      useLayout: true,
+      jwt: true,
+      menuData: {
+        title: "订单管理",
+        icon: "user-filled"
+      }
+    },
+    children: [
+      {
+        path: "logisticsManage",
+        name: "logisticsManage",
+        component: () => import("@/views/Order/children/LogisticsManage.vue"),
+        meta: {
+          useLayout: true,
+          jwt: true,
+          menuData: {
+            title: "物流管理",
+            icon: "user-filled"
+          }
+        }
+      },
+      {
+        path: "commentManage",
+        name: "commentManage",
+        component: () => import("@/views/Order/children/CommentManage.vue"),
+        meta: {
+          useLayout: true,
+          jwt: true,
+          menuData: {
+            title: "评论管理",
             icon: "user-filled"
           }
         }
@@ -2690,6 +2962,8 @@ function getMenuData(routes: Array<RouteRecordRaw>, parentPath: string = ""): Ar
   const menuData: Array<MenuDataInterface> = [];
 
   for (let i of routes) {
+    if (["", "/"].includes(i.path)) continue;
+
     if (i?.children?.length! > 0) {
       menuData.push({
         path: i.path,
@@ -2704,6 +2978,7 @@ function getMenuData(routes: Array<RouteRecordRaw>, parentPath: string = ""): Ar
 }
 
 // 如果想给每个子路由都增加默认路由，可使用此函数
+
 function addDefaultRoute(routes: Array<RouteRecordRaw>, parentPath: string = ""): Array<RouteRecordRaw> {
   for (let index in routes) {
     if (index === "0") {
@@ -2728,7 +3003,9 @@ export async function addAuthRoutes(routesName: Array<RoutesNameInterface>) {
   await router.isReady();
   for (let i of routes) router.addRoute(i);
 
-  
+  // 菜单信息存储到pinia中
+  const menuStore = store.state.value.Menu;
+  menuStore.menuData = getMenuData(routes);
 }
 ```
 
@@ -2786,7 +3063,7 @@ init();
 退出登录：
 
 ```
-function logout() {
+async function logout() {
   // 清空pinia数据，因为已经做了持久化，所以storage也同时清空
   menuStore.menuIsCollapse = false;
   menuStore.menuData = [];
@@ -2795,17 +3072,15 @@ function logout() {
   userStore.userInfo = {};
   userStore.routesName = [];
 
-  // 也要 removeRoute() 路由，但是比较麻烦，直接刷新页面就行了
-  router.go(0);
-
   // ... 退出登录请求
 
   // 跳转登录页
-  router.push("/login");
+  await router.push("/login");
+
+  // 也要 removeRoute() 路由，但是比较麻烦，直接刷新页面就行了,注意要在跳转到登录页后再刷新
+  router.go(0);
 }
 ```
-
-
 
 这种适合体量小，菜单变动少的项目，缺陷是路由信息、菜单信息存储在前端，一旦要修改这些信息就要重新打包前端。
 
@@ -2815,8 +3090,6 @@ function logout() {
 
 * 在上面的基础上，又把路由的路径和组件路径都返回了，优点是灵活，缺点是后端需要高度配合前端。此外，后端返回的路由信息不一定是规范的，需要前端自行转换。
 
-
-
 #### 3.3.2 按钮权限控制
 
 后端返回的权限列表里，可能也会有按钮的权限，一种是返回增删改查的权限，按钮根据增删改考察的类型来设置权限，一种是返回特定按钮的布尔值。在筛选路由的同时可以把按钮权限存到对应路由配置的meta中。
@@ -2824,6 +3097,32 @@ function logout() {
 根据权限信息来v-if，v-show来隐藏，但是比较麻烦。最方便的实现就是全局自定义指令，需要权限的按钮绑定自定义指令，自定义指令内部根据当前路由的meta取得权限信息，来隐藏/禁用/删除按钮。
 
 【警告】在某些情况下，使用自定义指令v-permission将无效。例如：元素UI的选项卡组件或el表格列以及其他动态渲染dom的场景。您只能使用v-if来执行此操作
+
+全局自定义指令：
+
+```
+import { DirectiveBinding } from "vue";
+import { UserStore } from "@/store";
+
+export function authBtn(app: any) {
+  app.directive("authBtn", {
+    mounted(el: HTMLElement, dir: DirectiveBinding) {
+      const userStore = UserStore();
+      if (!userStore.button.includes(dir.value)) el.parentNode?.removeChild(el);
+    }
+
+
+  });
+}
+// main.js 
+import ...
+authBtn(app);
+
+// 按钮 中
+<button v-auth-btn="'goods-add-spu'"></button>
+```
+
+
 
 #### 3.3.3 请求权限控制
 

@@ -5000,8 +5000,6 @@ export default {
 </script>
 ```
 
-全局指令：
-
 （2）Vue3.2的自定义指令
 
 ```
@@ -5033,7 +5031,27 @@ const vBig: Directive = {
 </script>
 ```
 
-（3）应用案例
+（3）全局自定义指令
+
+```
+import { DirectiveBinding } from "vue";
+
+export function authBtn(app: any) {
+  app.directive("authBtn", {
+    mounted(el: HTMLElement, dir: DirectiveBinding) {
+      console.log("mounted", dir.value);
+    }
+  });
+}
+```
+
+```
+// main.ts
+import { authBtn } from '...'
+authBtn(app)
+```
+
+（4）应用案例
 
 拖拽盒子
 

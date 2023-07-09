@@ -2242,6 +2242,8 @@ this.$refs.xxx
 
 注意点：
 
+* ref实例必须在mounted及之后才能拿到，需要注意的是，如果ref绑定的实例的祖先有v-if，那么在mounted也是拿不到的，可以watch监听拿到，这是因为mounted的时机v-if是false的，当v-if为true后会再次解析模板，此时ref实例才会拿到
+
 * ref和id相同名字，不冲突。
 
 * 父组件使用子组件时，即使在不同的组件，子组件里面的ref也不要重名。
@@ -6207,6 +6209,16 @@ plugins: [
 <script setup name="home"></script>
 ```
 
+此外，在使用路由动画时，不知道为啥必须要套一层keep-alive，否则动画无效：
+
+```
+<router-view v-slot="{ Component }">
+  <transition >
+    <keep-alive><component :is="Component" /></keep-alive>
+  </transition>
+</router-view>
+```
+
 （4）修复了vue2路由的两个bug
 
 bug1：当跳转的路由就是当前路由时，不再像vue2会有警告
@@ -6268,12 +6280,13 @@ export const MainStore = defineStore('Main',{
 
 // 组合式api写法
 /*
-可以用vue3的ref，reactive，computed，toRefs等等，不需要导入
-ref和reactive定义的就是state的数据（ref定义的在vue中不需要.value，ts文件中要）
-函数就是actions
-computed就是getters
-为了简化return，可以将所有属性都放到一个reactive对象里，toRefs出去
-*/
+ * 可以用vue3的ref，reactive，computed，toRefs等等，需要导入
+ * ref和reactive定义的就是state的数据（ref定义的在vue中不需要.value，ts文件中要）
+ * 函数就是actions，computed就是getters
+ * 为了简化return，可以将所有属性都放到一个reactive对象里，toRefs出去
+ */
+import { reactive, toRefs } from 'vue';
+
 export const MenuStore = defineStore(
   "Menu",
   () => {
@@ -6290,7 +6303,7 @@ export const MenuStore = defineStore(
 
 export default pinia;
 
-//main.js
+// main.js
 import pinia from './store';
 ...
 app.use(pinia);

@@ -63,7 +63,7 @@ nest g resource xxx
 
 ```
 # 会生成在 /src/modules/ , 注意路径必须是nest规定的文件夹名，如modules
-nest g res authority modules
+nest g res xxx modules
 ```
 
 ## 3 RESTful风格设计
@@ -730,7 +730,7 @@ export class CreateLoginDto {
 如果是数组，对象的复杂数据：
 
 ```
-import { IsNotEmpty, IsString, IsNumber, IsObject, IsArray, ValidateNested } from 'class-validator';
+import { IsNotEmpty, ArrayNotEmpty, IsString, IsNumber, IsObject, IsArray, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger/dist';
 
 class SalesAttrsDto {
@@ -740,6 +740,7 @@ class SalesAttrsDto {
   name: string;
 
   @IsNotEmpty()
+  @ArrayNotEmpty()
   @IsArray()
   @IsString({ each: true })
   values: Array<string>;
@@ -2785,61 +2786,35 @@ import { deepCopy } from "@/tools/deepCopy";
  */
 const authRoutes: Array<RouteRecordRaw> = [
   {
-    path: "/home",
-    name: "home",
-    component: () => import("@/views/Home/Home.vue"),
-    meta: {
-      useLayout: true,
-      jwt: false,
-      menuData: {
-        title: "首页",
-        icon: "home-filled"
-      }
-    }
-  },
-  {
-    path: "/authority",
-    name: "authority",
-    component: () => import("@/views/Authority/Authority.vue"),
+    path: "/authorityManage",
+    name: "authorityManage",
+    component: () => import("@/views/AuthorityManage/AuthorityManage.vue"),
     meta: {
       useLayout: true,
       jwt: true,
       menuData: {
         title: "权限管理",
-        icon: "user-filled"
+        icon: "lock"
       }
     },
     children: [
       {
-        path: "menuManage",
-        name: "menuManage",
-        component: () => import("@/views/Authority/children/MenuManage.vue"),
-        meta: {
-          useLayout: true,
-          jwt: true,
-          menuData: {
-            title: "菜单管理",
-            icon: "user-filled"
-          }
-        }
-      },
-      {
         path: "roleManage",
         name: "roleManage",
-        component: () => import("@/views/Authority/children/RoleManage.vue"),
+        component: () => import("@/views/AuthorityManage/children/RoleManage.vue"),
         meta: {
           useLayout: true,
           jwt: true,
           menuData: {
             title: "角色管理",
-            icon: "user-filled"
+            icon: "CreditCard"
           }
         }
       },
       {
         path: "userManage",
         name: "userManage",
-        component: () => import("@/views/Authority/children/UserManage.vue"),
+        component: () => import("@/views/AuthorityManage/children/UserManage.vue"),
         meta: {
           useLayout: true,
           jwt: true,
@@ -2852,50 +2827,22 @@ const authRoutes: Array<RouteRecordRaw> = [
     ]
   },
   {
-    path: "/goods",
-    name: "goods",
-    component: () => import("@/views/Goods/Goods.vue"),
+    path: "/goodsManage",
+    name: "goodsManage",
+    component: () => import("@/views/GoodsManage/GoodsManage.vue"),
     meta: {
       useLayout: true,
       jwt: true,
       menuData: {
         title: "商品管理",
-        icon: "user-filled"
+        icon: "DocumentCopy"
       }
-    },
-    children: [
-      {
-        path: "spuManage",
-        name: "spuManage",
-        component: () => import("@/views/Goods/children/SpuManage.vue"),
-        meta: {
-          useLayout: true,
-          jwt: true,
-          menuData: {
-            title: "SPU管理",
-            icon: "user-filled"
-          }
-        }
-      },
-      {
-        path: "skuManage",
-        name: "skuManage",
-        component: () => import("@/views/Goods/children/SkuManage.vue"),
-        meta: {
-          useLayout: true,
-          jwt: true,
-          menuData: {
-            title: "SKU管理",
-            icon: "user-filled"
-          }
-        }
-      }
-    ]
+    }
   },
   {
-    path: "/order",
-    name: "order",
-    component: () => import("@/views/Order/Order.vue"),
+    path: "/orderManage",
+    name: "orderManage",
+    component: () => import("@/views/OrderManage/OrderManage.vue"),
     meta: {
       useLayout: true,
       jwt: true,
@@ -2908,7 +2855,7 @@ const authRoutes: Array<RouteRecordRaw> = [
       {
         path: "logisticsManage",
         name: "logisticsManage",
-        component: () => import("@/views/Order/children/LogisticsManage.vue"),
+        component: () => import("@/views/OrderManage/children/LogisticsManage.vue"),
         meta: {
           useLayout: true,
           jwt: true,
@@ -2921,7 +2868,7 @@ const authRoutes: Array<RouteRecordRaw> = [
       {
         path: "commentManage",
         name: "commentManage",
-        component: () => import("@/views/Order/children/CommentManage.vue"),
+        component: () => import("@/views/OrderManage/children/CommentManage.vue"),
         meta: {
           useLayout: true,
           jwt: true,
@@ -2963,6 +2910,7 @@ function getMenuData(routes: Array<RouteRecordRaw>, parentPath: string = ""): Ar
 
   for (let i of routes) {
     if (["", "/"].includes(i.path)) continue;
+    if (!i?.meta?.menuData) continue;
 
     if (i?.children?.length! > 0) {
       menuData.push({
@@ -3005,7 +2953,7 @@ export async function addAuthRoutes(routesName: Array<RoutesNameInterface>) {
 
   // 菜单信息存储到pinia中
   const menuStore = store.state.value.Menu;
-  menuStore.menuData = getMenuData(routes);
+  menuStore.menuData = getMenuData([...router.options.routes, ...routes, routes] as Array<RouteRecordRaw>);
 }
 ```
 
@@ -3064,13 +3012,9 @@ init();
 
 ```
 async function logout() {
-  // 清空pinia数据，因为已经做了持久化，所以storage也同时清空
-  menuStore.menuIsCollapse = false;
-  menuStore.menuData = [];
-  headerStore.breadCrumb = ["首页"];
-  userStore.gxbuy_manager_jwt = "";
-  userStore.userInfo = {};
-  userStore.routesName = [];
+  // 清空pinia数据，因为已经做了持久化，所以storage和pinia会同时清空
+  localStorage.setItem("gxbuy_manager_user_store", "");
+  localStorage.setItem("gxbuy_manager_menu_store", "");
 
   // ... 退出登录请求
 
@@ -3092,15 +3036,19 @@ async function logout() {
 
 #### 3.3.2 按钮权限控制
 
-后端返回的权限列表里，可能也会有按钮的权限，一种是返回增删改查的权限，按钮根据增删改考察的类型来设置权限，一种是返回特定按钮的布尔值。在筛选路由的同时可以把按钮权限存到对应路由配置的meta中。
+不同用户拥有不同的按钮权限，每个用户只能看到自己有权限的权限。
 
 根据权限信息来v-if，v-show来隐藏，但是比较麻烦。最方便的实现就是全局自定义指令，需要权限的按钮绑定自定义指令，自定义指令内部根据当前路由的meta取得权限信息，来隐藏/禁用/删除按钮。
 
-【警告】在某些情况下，使用自定义指令v-permission将无效。例如：元素UI的选项卡组件或el表格列以及其他动态渲染dom的场景。您只能使用v-if来执行此操作
+【警告】在某些情况下，使用自定义指令v-permission将无效。例如：元素UI的选项卡组件或el表格列以及其他动态渲染dom的场景。您只能使用v-if来执行此操作。
 
 全局自定义指令：
 
 ```
+// 根据后端返回的按钮权限的数据形式来做，比如登录后就返回：
+// {  buttons: ['goods-add','goods-update'] }
+
+// /src/directs/authBtn.ts
 import { DirectiveBinding } from "vue";
 import { UserStore } from "@/store";
 
@@ -3122,17 +3070,13 @@ authBtn(app);
 <button v-auth-btn="'goods-add-spu'"></button>
 ```
 
-
-
 #### 3.3.3 请求权限控制
 
-分为token鉴权和截断无权限请求
+不太好实现，也没有太大的必要弄，有些多余，一般按钮权限就够了。
 
-token鉴权不再赘述
+要弄得话，可以再筛选路由的时候根据权限添加请求权限的路由元信息，组件中发请求是判断是否有权限。
 
-截断无权限请求：在发送请求前，先根据当前路由的meta的权限信息判断是否有权发送。在筛选路由的同时可以把请求权限存到对应路由配置的meta中。
-
-后端接口如果设计比较规范的，如restfulAPI，可能会返回增删改查的权限，前端根据请求类型的设置权限
+也可以在请求拦截器中，根据url判断（如果url包含请求权限信息的话），或者判断请求类型来做。
 
 # 六、文件上传与下载
 

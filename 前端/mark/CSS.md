@@ -778,7 +778,7 @@ display: -webkit-box;         /*弹性伸缩盒子*/
 //3.盒子宽高都固定，图片多出的尽量不裁剪
 .img-box {
   display: flex;
-  justify-cntent: center;
+  justify-content: center;
   align-items: center;
   overflow: hidden;
 }

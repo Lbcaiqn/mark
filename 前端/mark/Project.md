@@ -682,8 +682,14 @@ vite：
 vite.config.js
 
 ```
+# 这个插件可以配置一些变量，用在 index.html 中，比如配置标题
+pnpm install -D vite-plugin-html
+```
+
+```
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { createHtmlPlugin } from "vite-plugin-html"
 import path from "path"
 
 // https://vitejs.dev/config/
@@ -691,8 +697,30 @@ export default defineConfig({
   build: {
     sourcemap: false
   },
-  plugins: [vue()],
-  resolve: {
+  plugins: [
+    vue(),
+    createHtmlPlugin({
+      minify: true,
+        inject: {
+          data: {
+            /* 在 index.html 中使用类似插值语法，如：
+               <head>
+                 <title><%- title %><title/>
+                 <%- xxx %>
+               </head>
+             会解析为：
+             <head>
+                 <title>asdf<title/>
+                 <script>...</script>
+               </head>
+             */
+            title: "asdf",
+            xxx: `<script>...</script>`
+          }
+        }
+      }),
+    ],
+    resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')
     },
@@ -868,6 +896,8 @@ VITE_BASEURL = 'https://xxxx'
 
 - node环境
 
+在webpack，vite配置文件中使用环境变量和普通代码中不同，具体看文档。
+
 ### 7.5 其他配置文件
 
 （1）编辑器配置文件 .editorconfig ：
@@ -923,7 +953,7 @@ npm install --save normalize.css reset.css
 * {
   line-height: 1.5;
   font-size: 16px;
-  
+
   box-sizing: border-box;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
@@ -2222,6 +2252,386 @@ function submit(data: any) {
 </style>
 ```
 
+也可以以二次封装elementplus的表单：
+
+```
+<script setup lang="ts">
+import { ref, watch } from "vue";
+import MyUpload from "./MyUpload.vue";
+import type { FormInstance, FormRules } from "element-plus";
+
+const formRef = ref<FormInstance>();
+
+const props = withDefaults(
+  defineProps<{
+    formMessage: Array<
+      Array<{
+        type:
+          | "text"
+          | "password"
+          | "textarea"
+          | "number"
+          | "radio"
+          | "checkbox"
+          | "select"
+          | "date-picker"
+          | "upload-one"
+          | "upload-many"
+          | string;
+        model: string;
+        formItemLabel?: string;
+        label?: string;
+        hide?: boolean;
+        unsigned: boolean;
+        integer: boolean;
+        options?: Array<{ value: string; text: string }>;
+        action?: string;
+
+        rules?: Array<{
+          type: "required" | "reg" | "same" | string;
+          reg?: Array<RegExp>;
+          sameName?: string;
+          errorMessage: string;
+        }>;
+      }>
+    >;
+    formData: any;
+    useExtraFormItem?: boolean;
+    extraFormItemLabel?: string;
+  }>(),
+  {
+    formMessage: () => [],
+    formData: () => {
+      return {};
+    },
+    useExtraFormItem: false,
+    extraFormItemLabel: ""
+  }
+);
+
+const emit = defineEmits(["selectChange", "cancel", "reset", "submit"]);
+
+defineExpose({
+  formRef,
+  reset
+});
+
+/* 由于vue会对表单进行复用，即使v-if也不会删除表单，这样在使用上会有一个问题，若MyForm组件需要
+   显示隐藏，哪么若隐藏之前表单验证了并出现错误提示，哪么隐藏后再次显示错误提示依旧会存在。
+   所以这里提供父组件一个清空错误提示的函数
+*/
+function reset(options: { resetValueToo: boolean }) {
+  if (!formRef.value) return;
+
+  const { resetValueToo } = options;
+  if (resetValueToo) formRef.value?.resetFields();
+  else {
+    const temp: any = {};
+    for (const key in props.formData) temp[key] = props.formData[key];
+    formRef.value?.resetFields();
+    for (const key in temp) props.formData[key] = temp[key];
+  }
+}
+
+// 数字是否限制整数和小数 -----------------------------------------------------------------------------
+// input类型本来是用number，但是输入 -和. 的时候input事件不毁掉，为了直接不让输入 -和. ，input类型就设置为了text
+function formatNumber(form: any) {
+  const { model, unsigned, integer } = form;
+
+  if (props.formData[model] === "") return;
+  if (props.formData[model] === "-" && !unsigned) return;
+
+  const num = Number(props.formData[model]);
+
+  if (unsigned && integer) {
+    if (!/^\d+$/.test(props.formData[model]) || num === 0) {
+      if (/^\d+$/.test(props.formData[model].slice(0, -1))) props.formData[model] = props.formData[model].slice(0, -1);
+      else props.formData[model] = "";
+    }
+  } else if (unsigned && !integer) {
+    if (!/^[+]?(\d+\.?\d*|\.\d+)$/.test(props.formData[model])) {
+      if (/^[+]?(\d+\.?\d*|\.\d+)$/.test(props.formData[model].slice(0, -1))) {
+        props.formData[model] = props.formData[model].slice(0, -1);
+      } else props.formData[model] = "";
+    }
+  } else if (!unsigned && integer) {
+    if (!/^[-+]?\d+$/.test(props.formData[model])) {
+      if (/^[-+]?\d+$/.test(props.formData[model].slice(0, -1))) {
+        props.formData[model] = props.formData[model].slice(0, -1);
+      } else props.formData[model] = "";
+    }
+  } else if (!unsigned && !integer) {
+    if (!/^-?\d+(\.\d*)?$/.test(props.formData[model])) {
+      if (/^-?\d+(\.\d*)?$/.test(props.formData[model].slice(0, -1))) {
+        props.formData[model] = props.formData[model].slice(0, -1);
+      } else props.formData[model] = "";
+    }
+  }
+}
+
+// 表单验证 ----------------------------------------------------------
+const validatePass = (rule: any, _: any, callback: any) => {
+  // if (value) return;
+
+  const formItem = props.formMessage.find((i: any) => i[0].model === rule.field);
+  if (!formItem) return true;
+
+  for (const child of formItem) {
+    if (!child.rules) return true;
+
+    for (const i of child.rules) {
+      const formDataValue = props.formData[child.model];
+
+      switch (i.type) {
+        case "required":
+          if (!formDataValue || formDataValue?.length === 0) callback(new Error(i.errorMessage));
+          break;
+        case "reg":
+          if (!i.reg!.every(r => r.test(formDataValue))) callback(new Error(i.errorMessage));
+          break;
+        case "same":
+          if (formDataValue !== props.formData[i.sameName || ""]) callback(new Error(i.errorMessage));
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  return true;
+};
+
+const rules = ref<FormRules>({});
+
+watch(
+  () => props.formMessage,
+  () => {
+    for (const i of props.formMessage) {
+      if (!i[0]?.model) continue;
+      if (i.filter((child: any) => child.rules?.length > 0).length === 0) continue;
+
+      rules.value[i[0].model] = [{ validator: validatePass, trigger: "blur" }];
+    }
+  },
+  { immediate: true }
+);
+
+function submit(formEl: FormInstance | undefined) {
+  if (!formEl) return;
+  formEl.validate(valid => {
+    if (valid) {
+      emit("submit");
+    } else {
+      return false;
+    }
+  });
+}
+
+function resetForm() {
+  if (formRef.value) formRef.value.resetFields();
+  emit("reset");
+}
+
+// 例子
+// const example = {
+//   title: "新增SPU",
+//   formMessage: [
+//     [{ type: "text", formItemLabel: "工号", label: "工号", model: "username" }],
+//     [{ type: "password", formItemLabel: "初始密码", label: "初始密码", model: "password" }],
+//     [
+//       {
+//         type: "select",
+//         formItemLabel: "国家",
+//         label: "国家",
+//         model: "area",
+//         options: [
+//           { value: "s1", text: "opt2" },
+//           { value: "s2", text: "opt2" }
+//         ]
+//       }
+//     ],
+//     [
+//       {
+//         type: "select",
+//         formItemLabel: "分类",
+//         label: "一级分类",
+//         model: "c1",
+//         options: [
+//           { value: "s1", text: "opt1" },
+//           { value: "s2", text: "opt2" }
+//         ]
+//       },
+//       {
+//         type: "select",
+//         label: "二级分类",
+//         model: "c2",
+//         options: [
+//           { value: "s1", text: "opt1" },
+//           { value: "s2", text: "opt2" }
+//         ]
+//       }
+//     ],
+//     [
+//       {
+//         type: "radio",
+//         formItemLabel: "性别",
+//         model: "sex",
+//         options: [
+//           { value: "male", text: "男" },
+//           { value: "remale", text: "女" }
+//         ]
+//       }
+//     ],
+//     [
+//       {
+//         type: "checkbox",
+//         formItemLabel: "角色",
+//         model: "role",
+//         options: [
+//           { value: "role1", text: "前端" },
+//           { value: "role2", text: "后端" }
+//         ]
+//       }
+//     ],
+//     [{ type: "date-picker", formItemLabel: "出生日期", model: "birthday" }],
+//     [
+//       {
+//         type: "upload-one",
+//         formItemLabel: "图",
+//         action: "https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15",
+//         model: "mainImage"
+//       }
+//     ],
+//     [
+//       {
+//         type: "upload-many",
+//         formItemLabel: "轮播图",
+//         action: "https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15",
+//         model: "banner"
+//       }
+//     ]
+//   ],
+//   formData: {
+//     username: "",
+//     password: "123456",
+//     area: "",
+//     c1: "",
+//     c2: "",
+//     sex: "",
+//     role: [],
+//     birthday: "",
+//     mainImage: "",
+//     banner: {
+//       fileList: [
+//         {
+//           name: "food.jpeg",
+//           url: "https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100"
+//         }
+//       ]
+//     }
+//   }
+// };
+</script>
+
+<template>
+  <div v-if="JSON.stringify(formData) !== '{}'">
+    <el-form
+      class="el-form"
+      ref="formRef"
+      label-width="120px"
+      :model="formData"
+      :rules="rules"
+      status-icon
+      scroll-to-error
+    >
+      <el-form-item
+        v-show="!i[0]?.hide"
+        v-for="(i, iIndex) in formMessage"
+        :key="iIndex"
+        :prop="i[0]?.model || ''"
+        :label="i[0]?.formItemLabel + '：'"
+      >
+        <div
+          v-for="(j, jIndex) in i"
+          :key="jIndex"
+          :style="{ width: i.length === 1 ? '100%' : 'auto', 'margin-right': i.length === 1 ? '0' : '10px' }"
+        >
+          <el-input
+            v-if="['text', 'password', 'textarea'].includes(j.type)"
+            :type="j.type"
+            v-model="formData[j.model]"
+            :placeholder="'请输入' + j.label"
+          />
+
+          <el-input
+            v-if="['number'].includes(j.type)"
+            type="text"
+            v-model="formData[j.model]"
+            :placeholder="'请输入' + j.label"
+            @input="formatNumber(j)"
+            @blur="formData[j.model] = isNaN(Number(formData[j.model])) ? '' : String(Number(formData[j.model]))"
+          />
+
+          <el-select
+            v-if="j.type == 'select'"
+            v-model="formData[j.model]"
+            :placeholder="'请选择' + j.label"
+            @change="emit('selectChange', { rowIndex: iIndex, columnIndex: jIndex })"
+          >
+            <el-option v-for="opt in j?.options" :key="opt" :value="opt.value" :label="opt.text"></el-option>
+          </el-select>
+
+          <el-radio-group v-if="j.type == 'radio'" v-model="formData[j.model]">
+            <el-radio v-for="(opt, optIndex) in j.options" :key="optIndex" :label="opt.value" size="large">
+              {{ opt.text }}
+            </el-radio>
+          </el-radio-group>
+
+          <el-checkbox-group v-if="j.type == 'checkbox'" v-model="formData[j.model]">
+            <el-checkbox v-for="(opt, optIndex) in j.options" :key="optIndex" :label="opt.value" size="large">
+              {{ opt.text }}
+            </el-checkbox>
+          </el-checkbox-group>
+
+          <el-date-picker
+            v-if="j.type == 'date-picker'"
+            v-model="formData[j.model]"
+            type="date"
+            :placeholder="'请选择' + j.label"
+            style="width: 100%"
+          />
+
+          <MyUpload v-if="j.type == 'upload-one'" type="one" :action="j.action" v-model:imageUrl="formData[j.model]" />
+
+          <MyUpload
+            v-if="j.type == 'upload-many'"
+            type="many"
+            :action="j.action"
+            :fileData="formData[j.model]"
+          ></MyUpload>
+        </div>
+      </el-form-item>
+
+      <el-form-item :label="extraFormItemLabel + '：'" v-if="useExtraFormItem">
+        <slot name="extraFormItem"></slot>
+      </el-form-item>
+
+      <el-form-item>
+        <el-button size="large" @click="emit('cancel')">取消</el-button>
+        <el-button size="large" @click="resetForm">清空</el-button>
+        <el-button type="primary" size="large" @click="submit(formRef)">确定</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+
+<style lang="less" scoped>
+.el-form {
+  margin: 0 auto;
+}
+</style>
+```
+
 （3）注册/登录/权限管理
 
 详见nest笔记
@@ -2243,13 +2653,21 @@ function submit(data: any) {
 3.支付：发情支付的请求，返回二维码，通常后端返回的二维码不是图片的网络地址，而是普通的字符串，前段需要将其转化为二维码的网络地址才能在img标签使用：
 
 ```
-npm install --save qrcode
+pnpm install --save qr-image querystring
 ```
 
 ```
-import qrcode from 'qrcode';
-...
-let url = await qrcode.toDataURL(str);
+// 后端
+import { imageSync } from 'qr-image';
+import * as queryString from 'querystring'
+;//...
+const url = 'https://www.baicu.com';
+const query = {aaa: 123};
+const qrcode = imageSync(url, { type: 'svg});
+const qrcodeWithQuery = imageSync(url + '?' + queryString.stringify(query), { type: 'svg});
+
+// 前端
+<div v-html="..."></div>
 ```
 
 * 微信支付：wx.requestPayment({参数}) 参数为2得到的
@@ -2669,16 +3087,20 @@ const props = withDefaults(
     options: any;
   }>(),
   {
-    width: 600,
-    height: 400,
+    width: 300,
+    height: 200,
+    options: () => {
+      return {};
+    }
   }
 );
 
-let echartsRef = ref<HTMLElement | null>(null);
+const echartsRef = ref<HTMLElement | null>(null);
 
 onMounted(() => {
   echartsRef.value!.style.width = props.width + "px";
   echartsRef.value!.style.height = props.height + "px";
+
   const myChart = echarts.init(echartsRef.value!);
   myChart.setOption(props.options);
 });
@@ -2687,8 +3109,77 @@ onMounted(() => {
 <template>
   <div ref="echartsRef"></div>
 </template>
+```
 
-<style lang="less" scoped></style>
+数据大屏：
+
+即数据可视化的大屏幕，因为可能会展示在不同大小的屏幕上，所以需要做适配，但是vw，vh对目前echars中的文本无效，所以需要采用别的方法，这里使用 transform: scale() 的方法实现适配。
+
+需要注意的是，scale的的缩放是基于缩放目标的中心点的，所以缩放后相对位置不会在原处，所以需要先将缩放目标水平垂直居中在屏幕中心。
+
+flex的水平垂直居中配合scale不知道为什么会改变缩放目标的宽高比，所以不能用flex做居中，这里采用固定定位的方式做居中，下面是一个例子：
+
+```
+<script setup lang="ts">
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+
+const containerRef = ref<HTMLElement | null>(null);
+
+function windowResize() {
+  if (!containerRef.value) return;
+
+  const scaleX = window.innerWidth / 1920;
+  const scaleY = window.innerHeight / 1080;
+
+  containerRef.value.style.transform = `scale(${scaleX < scaleY ? scaleX : scaleY})`;
+}
+
+/* 在进入页面时就进行适配
+  本来可以在onMounted里面的，但是一般数据都是后端请求来的，而echarts对数据变化时不会
+  更新图表的，所以需要v-if等数据请求完再渲染图标，但是如果用了v-if的话，onMounted的时
+  机是在v-if为false的时候，而不是在v-if为true的时机，所以onMounted中ref实例还是null
+  ，所以只能在watch监听ref实例，等ref实例有了再进行第一次适配  
+*/
+watch(
+  () => containerRef.value,
+  () => {
+    if (containerRef.value) windowResize();
+  }
+);
+
+onMounted(() => {
+  window.addEventListener("resize", windowResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", windowResize);
+});
+</script>
+
+<template>
+  <div id="sales-data">
+    <div class="container" ref="containerRef"></div>
+  </div>
+</template>
+
+<style lang="less" scoped>
+#sales-data {
+  height: 100vh;
+  background: url("@/assets/img/common/salesData_background.jpg") no-repeat;
+  background-size: 100% 100%;
+
+  .container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -960px;
+    margin-top: -540px;
+    width: 1920px;
+    height: 1080px;
+    border: 10px solid #fff;
+  }
+}
+</style>
 ```
 
 ## 3 组件库
@@ -3444,37 +3935,22 @@ windows上的cmd：
 ssh root@服务器ip
 ```
 
-windows的cmd非常不好用，推荐自行下载cmder
+windows的cmd非常不好用，推荐自行下载cmder，也可以用xshell，宝塔等。
 
-连接到服务器后，配置Linux服务器的系统环境
+连接到服务器后，配置Linux服务器的系统环境：
+
+安装软件：
+
+yum安装后会放在 /etc ，wget下载后解压安装后放在 /usr/local，wget下载的压缩包可以统一放到一个地方，如 /usr/src，方便管理：
 
 ```
-//1.更新yum，并且安装常用软件
 yum update
-yum install -y gcc gcc-c++ cmake ncurses ncurses-devel bison
+yum install -y git gcc gcc-c++ cmake ncurses ncurses-devel bison
+yum install -y openssl openssl-devel pcre pcre-devel zlib zlib-devel
+yum install -y p7zip
+# 7z 的解压命令 7za x 文件
 
-//2.node，通过编译源代码安装，
-cd /usr/src 这里专门存放源代码
-wget https://nodejs.org/dist/v9.3.0/node-v9.3.0.tar.gz
-tar -xf node-v9.3.0.tar.gz
-cd node-v9.3.0
-./configure
-make && make install
-//编译完成，程序放在 /usr/local
-
-//3.更新node到最新版本，n也可以款速切换node版本
-npm install -g n
-//不要用n latest安装最新版本，最新版本node17不稳定
-n 14 安装node14
-n的使用：https://segmentfault.com/a/1190000015302680
-
-//4.python装包：
-pip3 install --upgrade pip
-pip3 install numpy==1.19.3
-pip3 install pandas==0.23.4
-pip3 install matplotlib
-
-//5.创建公钥，并安装git：
+# 创建公钥，并安装git：
 cd ~/.ssh
 ssh-keygen -t rsa -C "邮箱" 回车执行，再回车三次
 cat ~/.ssh/id_rsa.pub 复制输出得到内容到github
@@ -3484,7 +3960,357 @@ git config --global user.name "xxx"
 git config --global user.email "xxx"
 ```
 
-## 2 后台运行服务，开机自启
+安装node：
+
+```
+cd /usr/src 
+wget https://nodejs.org/dist/v9.3.0/node-v9.3.0.tar.gz
+tar -xf node-v9.3.0.tar.gz
+cd node-v9.3.0
+./configure
+make && make install
+
+# 更新node到较新版本，n也可以款速切换node版本，并安装pnpm，ts
+npm install -g n pnpm typescript ts-node
+
+# 不要用n latest安装最新版本，最新版本node17不稳定
+# 安装node16版本
+n 16
+
+# n的使用：https://segmentfault.com/a/1190000015302680
+```
+
+python：
+
+```
+# linux自带python，不过使用python3需要戴上3
+pip3 install --upgrade pip
+pip3 install numpy==1.19.3
+pip3 install pandas==0.23.4
+pip3 install matplotlib
+```
+
+安装nginx：
+
+```
+cd /usr/src
+wget https://nginx.org/download/nginx-1.19.9.tar.gz
+tar -zxvf nginx-1.19.9.tar.gz
+cd nginx-1.19.9
+./configure --with-http_gzip_static_module
+make && make install
+
+# 查看是否安装成功
+whereis nginx
+
+# 开启nginx服务
+cd /usr/local/nginx/sbin
+./nginx
+
+# 查看服务是否开启成功
+ps -ef | grep nginx
+
+# 浏览器输入服务器ip，若出现nginx欢迎页面则说明配置成功
+
+# 重启nginx
+cd /usr/local/nginx/sbin
+./nginx -s reload
+```
+
+安装mysql8：
+
+```
+mkdir /usr/local/mysql8
+cd /usr/local/mysql8
+
+wget https://dev.mysql.com/get/mysql80-community-release-el7-2.noarch.rpm
+
+yum -y install mysql80-community-release-el7-2.noarch.rpm
+# 如果这一步报错，就需要从CentOS 8 迁移到CentOS Stream 8，换成下面命令
+# dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos
+# yum -y install mysql80-community-release-el7-2.noarch.rpm
+
+yum -y install mysql-community-server
+# 如果这一步报错，就换成执行下面命令
+# yum module disable mysql
+# yum -y install mysql-community-server --nogpgcheck
+
+# 启动mysql服务
+systemctl start  mysqld.service
+
+# 查看mysql初始密码，输出的最后面是 root@localhost: xxx   xxx就是初始密码
+grep "password" /var/log/mysqld.log
+
+# 修改mysql密码
+mysql -u root -p
+ALTER USER '用户名'@'localhost' IDENTIFIED BY '新密码';
+quit;
+
+# 最后，可以查看mysql状态
+systemctl status mysqld.service 
+```
+
+安装宝塔，方便操作服务器，并能上传文件到服务器：
+
+```
+cd /usr/src
+yum install -y wget && wget -O install.sh https://download.bt.cn/install/install_6.0.sh && sh install.sh ed8484bec
+```
+
+查看宝塔面板地址，账号和密码：
+
+```
+# 外网宝塔地址就是可以在浏览器访问自己服务器的宝塔面板
+/etc/init.d/bt  default
+```
+
+注意需要打开对应的端口才能访问。
+
+其他操作，如修改宝塔密码：
+
+```
+bt
+```
+
+## 2 打包
+
+### 2.1 后端
+
+```
+pnpm run build
+```
+
+按理说打包出来 dist 中应该只有一个 main.js，但是却有很多文件，而且也没有打包 node_modules 中的依赖，使用依赖是靠 ./node_modules，可能是官方的一些考虑才这样做。如何想打包成单独的 main.js ，可以在 package.json 的 build 命令增加 --webpack 参数，想要打包 node_modules 的依赖需要自行配置 webpack.config.js（但是没有成功）。
+
+所以，只能在服务器中 git clone 下来整个项目，pnpm install 安装依赖，再 pnpm run build 打包，最后执行 node ./dist/main.js
+
+### 2.2 前端
+
+（1）减小打包体积
+
+先确保代码中均使用了路由懒加载，图片懒加载，第三方库按需加载。
+
+查看打包分析报告：
+
+```
+pnpm install -D rollup-plugin-visualizer
+```
+
+```
+// vite.config.ts
+import { visualizer } from "rollup-plugin-visualizer";
+
+export default defineConfig({
+  plugins: [
+    visualizer()
+  ]
+})
+```
+
+配置完成后，npm run build 项目根目录就会生成打包报告 stats.html
+
+接下来继续减小打包体积：
+
+① 使用CDN
+
+若不适应CDN，则项目中使用的库如vue，elementplus按需引入的资源会被打包到dist中，这会大大增加打包体积，所以可以使用CDN。
+
+```
+pnpm install -D vite-plugin-cdn-import
+```
+
+```
+// vite.config.ts
+import { Plugin as importToCDN } from "vite-plugin-cdn-import";
+
+/* 注意
+ * 如果某包使用了CDN，那么它的依赖的包也要CDN，比如elementplus使用了CDN，那么
+   它依赖的vue也要使用cdn，且需要注意先后顺序
+ * pinia中会用到 vue-demi包，所以也需要 cdn 引入 vue-demi
+ * 使用 cdn 的库，就不能再将其配置为 autoimport
+ * name是库的名字，var是导入该库的变量名，path是cdn链接，css是css的cdn链接，比如：
+   import * as echarts from 'echarts'; name 和 var 就是 echarts
+   import ElementPlus from 'element-plus'; name 就是 element-plus 和 var 就是 ElementPlus
+ * 使用 cdn 后，打包后的 index.html 就会自动加上 cdn，而在项目代码中各种 import 
+   都不用修改，该 import 的额import， 该 use 的 use。
+
+ */
+
+export default defineConfig({
+  plugins: [
+    importToCDN({
+      modules: [
+        {
+          name: "vue",
+          var: "Vue",
+          path: "https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.prod.js"
+        },
+        {
+          name: "vue-demi",
+          var: "VueDemi",
+          path: "https://cdn.bootcdn.net/ajax/libs/vue-demi/0.14.0/index.iife.js"
+        },
+        {
+          name: "vue-router",
+          var: "VueRouter",
+          path: "https://unpkg.com/vue-router@4.2.1"
+        },
+        {
+          name: "pinia",
+          var: "Pinia",
+          path: "https://cdn.bootcdn.net/ajax/libs/pinia/2.0.36/pinia.iife.prod.min.js"
+        },
+        {
+          name: "axios",
+          var: "axios",
+          path: "https://cdn.bootcdn.net/ajax/libs/axios/1.4.0/axios.js"
+        },
+        {
+          name: "element-plus",
+          var: "ElementPlus",
+          path: "//unpkg.com/element-plus@2.3.5",
+          css: "//unpkg.com/element-plus/dist/index.css"
+        },
+        {
+          name: "element-plus/icons-vue",
+          var: "ElementPlusIconsVue",
+          path: "https://cdn.bootcdn.net/ajax/libs/element-plus-icons-vue/2.1.0/global.iife.min.js"
+        },
+        {
+          name: "echarts",
+          var: "echarts",
+          path: "https://cdn.bootcdn.net/ajax/libs/echarts/5.4.2/echarts.common.js"
+        }
+      ]
+    })
+  ]
+})
+```
+
+② gzip压缩
+
+进一步减小打包体积。
+
+```
+pnpm install -D vite-plugin-compression
+```
+
+```
+// vite.config.ts
+import viteCompression from "vite-plugin-compression";
+
+export default defineConfig({
+  plugins: [
+    viteCompression({
+      filter: /.(js|mjs|json|css|html|jpg|png)$/i, // 需要压缩什么文件，默认为 /.(js|mjs|json|css|html)$/i
+      // deleteOriginFile: true, // 压缩完成后 dist 中是否删除原文件，默认为false
+      verbose: true, // build 完成后是否显示压缩结果，默认为true
+      disable: false, // 是否禁用压缩，默认值为false
+      threshold: 10240, // 超过多少B才进行压缩，这里设置为10kB，默认值不知道是多少
+      algorithm: "gzip", // 压缩算法，默认为 gzip
+      ext: ".gz" // 压缩文件后缀
+    })
+  ]
+})
+```
+
+```
+# nginx.conf
+user  root;
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+
+    keepalive_timeout  65;
+
+    # 开启gzip功能
+    gzip on;
+    # 开启gzip静态压缩功能
+    gzip_static on;
+    # gzip缓存大小
+    gzip_buffers 4 16k;
+    # gzip http版本
+    gzip_http_version 1.1;
+    # gzip 压缩级别 1-10
+    gzip_comp_level 5;
+    # gzip 压缩类型
+    gzip_types text/plain application/javascript text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png;
+    g zip_vary on;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location / {
+            # 前端路径
+            root   /root/gxbuy/gxbuy-client-manager-dist;
+            # 入口       
+            index  index.html;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+    }
+}
+```
+
+（2）测试生产环境
+
+为了省事不多次部署，可以先将打包好的前段部署到服务器前，可以测试一下生产环境中有没有问题。
+
+直接打开 dist 中的 index.html 会有一些问题，比如路径问题，跨域问题，这里只是测试生产环境，就不管它了，直接将 dist 的所有文件放到 express 项目的 public 文件夹中即可。
+
+创建一个 express 项目：
+
+```
+pnpm init
+pnpm install --save express nodemon compression
+```
+
+项目根目录创建 index.js 和 public 文件夹，将 dist 中的所有文件放到 public 中：
+
+```
+// index.js
+const express = require("express");
+const compression = require("compression");
+
+const app = express();
+app.use(compression());
+app.use(express.static("./public"));
+
+app.all("*", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "*");
+  res.setHeader("Access-Control-Allow-Headers", "content-type,Authorization");
+  if (req.method == "OPTIONS") res.send(200);
+  else next();
+});
+
+app.listen("8000", () => {
+  console.log("服务器已启动");
+});
+```
+
+启动 express：
+
+```
+npx nodemon index.js
+```
+
+浏览器访问 localhost:8000
+
+## 3 部署
 
 为了同时启动vue和node，且断开ssh连接不结束服务，需要将他们挂到后台中
 
@@ -3496,9 +4322,44 @@ screen -S xxx #创建xxx会话并进入，在里面 ctrl+a+d 离开当前会话�
 screen -r xxx #进入xxx会话
 ```
 
-## 3 Linux可能遇到的问题
+开启端口：
 
-（1）解决刷新后找不到网页的问题：
+```
+# 开启端口，一 3001 为例
+firewall-cmd --zone=public --add-port=3001/tcp --permanent
+
+# 重启防火墙
+firewall-cmd --reload
+
+# 验证是否开启成功
+firewall-cmd --zone=public --list-ports
+```
+
+然后还要去云服务器控制台开启对应的安全组。
+
+（1）启动后端
+
+```
+screen -S xxx
+cd 项目目录
+node ./dist/main.js
+# ctrl+a+d 离开回话
+```
+
+（2）部署前端
+
+```
+cd /usr/local/nginx/conf
+vim nginx.conf
+
+# 将 user 改为 root，
+# http -> server -> location -> root 改为 前端项目路径
+# http -< server -> location -> index 改为 入口html名
+```
+
+## 4 Linux可能遇到的问题
+
+（1）如果是express部署而不是nginx，解决刷新后找不到网页的问题：
 
 ```
 npm install --save connect-history-api-fallback

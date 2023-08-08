@@ -1884,11 +1884,13 @@ mounted(){
 
 * props传过来的值可能做一些操作，此时推荐使用计算属性。
 
-### 8.3 组件v-model
+### 8.3 组件 v-model
 
-v-model也可以用在自定义组件上，是结合props和emit的语法糖。
+props 的变量是只读的，子组件无法对其修改，表单也无法 v-model 这些变量（当然如果 props 的变量是引用类型，虽然自身无法修改，但它的成员却可以修改和 v-model ，这点参考 const）。
 
-v-model的props的默认值是value，emit默认是input，可以通过子组件的model配置项修改默认值
+如果要对 props 的变量进行修改，除了上面那种方式外，也只能通过 emit 告诉父组件，让父组件进行修改，然后修改后的值通过 props 出传进子组件，就完成了修改，但是十分麻烦。而组件 v-model 就是这种方式的语法糖。
+
+v-model的 props 的默认值是value，emit默认是input，可以通过子组件的model配置项修改默认值
 
 ```
 <template>

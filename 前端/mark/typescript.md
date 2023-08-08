@@ -1713,7 +1713,24 @@ import {asd} from '...'
 
 命名空间也可以放到外部模块中，再导出使用
 
-## 2 三斜线指令
+## 2 导入导出类型
+
+这样导入是一种规范。
+
+```
+// aaa.ts
+export interface Aaa {}
+
+// bbb.ts
+import type { Aaa } from 'aaa.ts';
+
+// 这样也行，只不过不规范
+// import { Aaa } from 'aaa.ts';
+```
+
+
+
+## 3 三斜线指令
 
 用于引入ts文件，引入后可以直接使用那个文件里面的资源，缺点就是会产生命名冲突
 

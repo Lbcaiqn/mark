@@ -6,7 +6,7 @@
 
 页面布局使用wxml，wxss，javascript
 
-（1）开发环境：
+（1）开发环境
 
 申请小程序开发账号   https://mp.weixin.qq.com/    注册小程序
 
@@ -19,12 +19,6 @@
 黑色   设置-外观
 
 代理  设置-代理-不适用代理    防止vpn冲突
-
-（2）编译运行
-
-修改代码时，模拟器会相应变化，但有时不会且数据有时也需要重置，此时就可以进行编译。模拟器有些效果出不来，预览可以在手机上看效果，但前提是得编译通过。
-
-有些效果只有在预览才能看见，预览必须配置appid才能用，每次重新修改都要重新编译并重新点击预览生成新的二维码。手机扫码后，右上角三点的设置里开启开发调试模式，否则网络请求失效。
 
 ## 2 配置文件
 
@@ -57,7 +51,7 @@ tabBar配置项属性（只有list数组的text和pagePath是必填项）：
 
 pagePath必须是pages目录
 
-tabbar页面会有类似keep-alive的效果，缓存状态；而非tabbar页面则没有。
+*tabbar*页面会有类似keep-alive的效果，缓存状态；而非tabbar页面则没有。
 
 ```
 "tabBar":{
@@ -366,10 +360,20 @@ map地图组件，canvas画布组件，开放能力，无障碍访问
 
 rpx将宽度分为750rpx，会根据不同屏幕来自动转化px
 
+1 rpx = 7.5 px
+
 假设设计稿宽度为total，每处px的标注为n，则：
 
 ```
-rpx = 750 * n / total
+rpx = 750 * (n / total)
+```
+
+不过，rpx默认最大支持的宽度是960px，超过了就失效了，如果想要适配更大的快递，可以在 pages.json 中配置：
+
+```
+"globalStyle": {
+    "rpxCalcMaxDeviceWidth": 10240
+}
 ```
 
 也可以使用vw，但是vw在一些小尺寸（如1px）不够精确，此时就使用rpx。
@@ -666,6 +670,7 @@ Component({
 //js中通过this.propertise.xxx调用
 
 <!-- wxml -->
+
 <cpn xxx="100" bbb="50"></cpn>
 ```
 
@@ -1092,31 +1097,41 @@ Component({
 
 # 二、uniapp
 
-## 1 基本
+uniapp用vue的语法结合小程序的语法开发各种小程序、安卓、ios等。
 
-### 1.1 介绍
+appid，除了各个小程序的appid外，uniapp自己本身也有一个appid。
 
-uniapp用vue的语法开发小程序、安卓、ios等
+## 1 在HBuilderX开发
 
-开发工具-HBuilder：
+（1）编辑器设置
 
-切换快捷键方案：工具-预设快捷键方案切换-VS Code
+* 切换快捷键方案：工具-预设快捷键方案切换-VS Code
 
-主题切换：工具-主题
+* 主题切换：工具-主题
 
-字体等设置：工具-设置-就能打开settings.json
+* 字体等设置：工具-设置-就能打开settings.json
 
-项目创建和运行：
+（2）项目创建和运行
 
-HBuilder中新建项目，而不是webpack或vite创建
+创建项目：
 
-hbuilder保存后微信开发者工具会热更新（json不会），所以最好编译一下
+* HBuilder中新建项目，而不是webpack或vite创建。
+
+* 新建项目，选择模板，其中 uni-ui模板 就会自带 uni-ui。
+
+编译运行：
+
+* HBuilderX保存后微信开发者工具会热更新（json不会），所以最好编译一下
+
+* 修改代码时，模拟器会相应变化，但有时不会且数据有时也需要重置，此时就可以进行编译。模拟器有些效果出不来，预览可以在手机上看效果，但前提是得编译通过。
+
+* 有些效果只有在预览才能看见，预览必须配置appid才能用，每次重新修改都要重新编译并重新点击预览生成新的二维码。手机扫码后，右上角三点的设置里开启开发调试模式，否则网络请求失效。
 
 配置文件：
 
-HBuilder的json文件一些会变成图形界面（manifast.json settings.json，点开后可在左侧栏最下面点击源码视图），一些不会
+* HBuilder的json文件一些会变成图形界面（manifast.json settings.json，点开后可在左侧栏最下面点击源码视图），一些不会
 
-第三方库安装；
+（2）第三方库安装；
 
 部分npm安装
 
@@ -1132,24 +1147,75 @@ HBuilder的项目运行到微信开发者工具查看效果：
 
 4. HBuilder-运行-运行到小程序模拟器-微信开发者工具 就会编译成微信小程序的代码并打开微信开发者工具，HBuilder修改代码保存后微信开发者工具会热更新
 
-.gitignore需要忽略的文件：
+### 1.2 在vscode开发
+
+HBuilderX好像没有 vite 和 ts 的模板，可以选择在 vscode 中开发。
+
+先确保有 vue/cli，如果没有就安装：
 
 ```
-/node_modules
-/unpackage/dist
+vue -V
+pnpm install -g @vue/cli
 ```
 
-unpackage为了防止没有文件而不提交的本地库，需要在里面新建.gitkeep文件占位
+创建 vite 和 ts 的 uniapp 项目：
 
-appid：
+```
+npx degit dcloudio/uni-preset-vue#vite-ts project-name
+cd project-name
+pnpm install
+```
 
-除了各个小程序的appid外，uniapp自己本身也有一个appid
+ts 支持：
 
-### 1.2 目录结构
+官方的 types": ["@dcloudio/types 不太完善，需要再使用社区提供的 @uni-helper/uni-app-types
+
+```
+pnpm install -D @uni-helper/uni-app-types
+```
+
+```
+// tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@dcloudio/types", "@uni-helper/uni-app-types"]
+  }
+}
+```
+
+运行：
+
+根据 package.json 来运行，h5 就直接可以浏览器访问，app 和小程序就 pnpm run dev:xxx 后根据提示来。
+
+检查 ts：
+
+```
+pnpm run type-check
+```
+
+vscode 插件支持：
+
+vscode 开发 uniapp 除了需要 volar，eslint，prettier 这些vscode插件外，还需要安装 uniapp-snippet ，uni-app-schemas ，uni-create-view 。
+
+如果要在 HBuilderX 运行 vite 项目：
+
+需要设置 HBuilderX 运行 node 路径改为自己本地的node目录：
+
+HBuilderX->工具->设置->运行配置->node
+
+### 1.3 目录结构
 
 可以像温馨小程序一样，新建页面、新建组件等快速创建文件
 
-- pages：存放tabbar页面的.vue文件
+不同方式创建的项目，目录结构不同：
+
+- HBuilderX创建的项目的目录是全部文件在根目录。
+
+- 而vscode创建的项目，核心的源码都放在 src 下。
+
+目录结构：
+
+- pages：存放tabbar页面
 
 - components：存放自定义组件，放在这里的自定义组件不需要引入注册就可以在任何页面上使用；其他文件夹下的组件要使用就需要引入注册
 
@@ -1166,6 +1232,467 @@ appid：
 - pages.json：相当于微信小程序的app.json
 
 - vue.config.json：webpack配置文件（需要自己创建）
+
+### 1.4 全家桶支持
+
+（1）ui库
+
+在HBuilderX开发的话，有了uni-ui就可以直接使用，不需要注册导入。components 下的组件不需要导入也是能直接使用。
+
+但是vscode中就不同了，没有自带 uni-ui ，需要自行安装，且需要导入，就连 components 下的组件都需要导入才能使用：
+
+```
+pnpm install --save @dcloudio/uni-ui
+```
+
+然后在 pages.json 配置自动注册和引入 uni-ui 和 自定义组件，就可以不用导入直接使用了：
+
+```
+{
+    "easycom": {
+        "autoscan": true,
+        "custom": {
+            "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
+            "MySearcher":"@/components/common/MySearcher.vue",
+            "PullUpLoading":"@/components/common/PullUpLoading.vue",
+            "GoodsCard":"@/components/content/GoodsCard.vue",
+            "GoodsList":"@/components/content/GoodsList.vue"
+        }
+    },
+}
+```
+
+（2）状态管理工具
+
+可以使用 pinia ，不过持久化的插件需要使用支持 uniapp 的，毕竟每个平台的本地存储都不一样：
+
+```
+pnpm install --save pinia pinia-plugin-unistorag
+```
+
+```
+import { createPinia, defineStore } from "pinia";
+import { createUnistorage } from "pinia-plugin-unistorage";
+import { reactive, toRefs } from "vue";
+import type { UserStoreStateInterface } from "@/types/types/store";
+
+const pinia = createPinia();
+pinia.use(createUnistorage());
+
+export const UserStore = defineStore(
+  "User",
+  () => {
+    const state = reactive<UserStoreStateInterface>({
+      gxbuy_uniapp_jwt: "",
+      userInfo: {}
+    });
+
+    return {
+      ...toRefs(state)
+    };
+
+  },
+  {
+    unistorage: true
+  }
+);
+
+export default pinia;
+```
+
+需要注意的是，修改了pinia的数据后，如果用 uni.getStorageSync() 获取数据获取不到，需要手动刷新页面才行，可能是 bug ，因为调试工具中已经更新数据了，PC端用 localstorage.getItem() 也能正常获取，所以 uniapp 这个不知道是什么原因，那就尽量直接用 pinia 获取数据。 
+
+uni.setStorageSync() 也是一样。
+
+用 uniapp 强制刷新 api 也不行，必须手动刷新。
+
+（3）请求
+
+可以使用 uni.request ，但是比较简陋：
+
+```
+// 二次封装示例
+const baseURL =
+  (import.meta.env.MODE === "development" ? import.meta.env.VITE_DEV_BASEURL : import.meta.env.VITE_PROD_BASEURL) +
+  "/v1";
+const timeout = 1000 * 10;
+
+// uniapp 有 uni.addInterceptor 可以配置拦截器，但是没有必要，下面已经实现了拦截器功能
+const instance = function (options: any): Promise<any> {
+  // 这里可以写请求拦截器的功能
+  options.url = baseURL + options.url;
+  options.timeout = timeout;
+
+  return new Promise((resolve, reject) => {
+    uni.request({
+      ...options,
+      // success 和 fail 可以写响应拦截器的功能
+      success(res: any) {
+        resolve(res.data);
+      },
+      faill(err: any) {
+        reject(err);
+      }
+    });
+  });
+};
+
+export default instance;
+```
+
+小程序中，默认无法使用 axios ，需要自己做适配：
+
+原理：uni.request() 可以兼容各个平台，但是没有拦截器，且使用上也不习惯。axios 中提供了适配器，可以修改底层的请求逻辑，我们将底层的请求换成 uni.request ，这样就能用 axios 了。
+
+既然底层是用的 uni.request() ，那么 uni.request() 的问题依然会存在：
+
+* axios get请求参数是放到 params 的，其他类型请求放到 data 中，而 uni.request 不管什么请求类型都放到 data 中，使用上不习惯
+
+* 原生的 axios 若请求结果状态码不为 2xx 时会走 promise 的 catch，而 uni.request 不为 2xx 也会进入 then 回调，这样在使用上就不太方便 try...catch... 了，所以要在 succs
+  
+  中判断是否要 reject：
+
+* get 请求会把参数放到 url 上，但是 uni.request() 处理的不好，比如传数组会有问题：
+  
+  ```
+  const query = {
+    arr1: [100],
+    arr2: [123, 456],
+    obj: {a: 789}
+  }
+  
+  /* uni.request
+   * 后端接收的结果：{ arr1: '100', arr2: '123,456', obj: '{"a":789}' }
+   */
+  uni.request({
+    url: 'xxx',
+    data: query
+  })
+  
+  /* axios
+   * 后端接收的结果：{ arr1: [ '100' ], arr2: [ '123', '456' ], obj: { a: '789' } }
+   */
+  axios({
+    url: 'xxx',
+    params: query
+  })
+  ```
+  
+  
+
+这些问题可以看代码中的注释：
+
+```
+pnpm install --save qs
+pnpm install -D @types/qs
+```
+
+```
+import axios from "axios";
+import type {
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+  AxiosPromise,
+  AxiosRequestConfig
+} from "axios";
+import qs from "qs";
+import { UserStore } from "@/store";
+
+// 适配器 ------------------------------------------------------------------------
+const getResponse = (res: any, config: any) => {
+  const { statusCode, errMsg } = res;
+
+  return {
+    ...res,
+    status: statusCode,
+    statusText: errMsg,
+    config,
+    request: null
+  };
+};
+
+function uniAdapter(config: AxiosRequestConfig | any): AxiosPromise {
+  if (!uni) throw new Error("please use this in uni-app project!");
+
+  return new Promise((resolve, reject) => {
+    const { baseURL, url, headers, method, data, params } = config;
+    const uniConfig = {
+      ...config,
+      url: baseURL + url,
+      header: headers
+    };
+
+    if (data || params) {
+      try {
+        uniConfig.data = JSON.parse(data || params);
+      } catch (e) {
+        uniConfig.data = data || params;
+      }
+    }
+
+    // 通过 qs.stringify 序列化解决 uni.request 参数问题
+    if (method === "get") {
+      uniConfig.url = `${uniConfig.url}?${qs.stringify(uniConfig.data)}`;
+      delete uniConfig.data;
+    }
+
+    uni.request({
+      ...uniConfig,
+      success(res: any) {
+        const response = getResponse(res, config);
+        if (response.status < 200 || response.status >= 300) {
+          reject(response);
+        } else resolve(response);
+      },
+      fail(res: any) {
+        const response = getResponse(res, config);
+        reject(response);
+      }
+    });
+  });
+}
+
+// 二次封装 axios -------------------------------------------------------------------------
+const baseURL =
+  (import.meta.env.MODE === "development" ? import.meta.env.VITE_DEV_BASEURL : import.meta.env.VITE_PROD_BASEURL) +
+  "/v1";
+
+const cancelTokenSource = axios.CancelToken.source();
+
+const instance: AxiosInstance = axios.create({
+  // 使用适配器，以适配小程序
+  adapter: uniAdapter,
+  // 注意，使用了适配器后，一定要配置 baseURL 和 timeout，否则无法使用
+  baseURL,
+  timeout: 1000 * 10
+});
+
+// 请求拦截器
+instance.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  uni.showLoading({
+    title: "加载中..."
+  });
+  const userStore = UserStore();
+  const jwt = userStore.gxbuy_uniapp_jwt;
+
+  // 后端需要jwt鉴权的接口，url都会有'/jwt/'，所以遇到有 '/jwt/' 的借口就加上请求头
+  if (/\/jwt\//.test(config.url as string)) {
+    // 如果未登录，就取消此次请求，并跳转登录页
+    if (!jwt) {
+      cancelTokenSource.cancel();
+      uni.hideLoading();
+
+      userStore.toPath = location.hash.substring(1);
+      uni.navigateTo({ url: "/sub-pages-user/Login/Login" });
+
+      // 拦截器必须returen，所以这里return一个异常，请求时catch就好
+      return Promise.reject(new Error("未登录"));
+    } else {
+      config.headers!.authorization = jwt;
+    }
+  } else if (
+    jwt &&
+    (/\/goods\/search/.test(config.url as string) ||
+      /\/goods\/detail/.test(config.url as string) ||
+      /\/shop\/getShopInfo/.test(config.url as string))
+  ) {
+    config.headers!.authorization = jwt;
+  }
+
+  return config;
+});
+
+// 响应拦截器
+instance.interceptors.response.use(
+  (res: AxiosResponse | any) => {
+    uni.hideLoading();
+    return res.data;
+  },
+  (err: AxiosError) => {
+    uni.hideLoading();
+    // 如果jwt验证失败或者jwt过期，后端一般是返回403
+    if (err.status === 403) {
+      const userStore = UserStore();
+      cancelTokenSource.cancel();
+
+      userStore.gxbuy_uniapp_jwt = "";
+      userStore.userInfo = {};
+      userStore.toPath = location.hash.substring(1);
+
+      uni.navigateTo({ url: "/sub-pages-user/Login/Login" });
+      return Promise.reject(new Error("请重新登录"));
+    }
+
+    return Promise.reject(err);
+  }
+);
+
+export const staticBaseURL =
+  import.meta.env.MODE === "development" ? import.meta.env.VITE_DEV_BASEURL : import.meta.env.VITE_PROD_BASEURL;
+
+export default instance;
+
+```
+
+也可以用第三方的适配器，不过有一些小问题，不过它的问题就是在状态码不为 2xx 时不会抛出异常，get 请求传不了数组参数问题也没解决，所以我才在它的代码基础上进行修改。
+
+```
+pnpm install --save axios uniapp-axios-adapter
+```
+
+（4）路由
+
+路由是不需要 vue-router 的，路由的功能在 pages.json 配置。但是没有导航守卫，路由元信息，动态路由等等这些功能，路由传参也有限制。
+
+目前的第三方库有 uni-simple-router ，基本和 vue-router 差不多，不过 v3 版本是收费的，v3 开发板可能不稳定，免费v2 版本有不维护了。
+
+如果只是需要守卫功能，可以自己用 uni.addInterceptor() 实现粗糙的导航守卫：
+
+```
+// /src/router/index.ts
+import { UserStore } from "@/store";
+
+export default function () {
+  // 点击 tabbar 底层也是触发 switchTab
+  const routeMethod = ["navigateTo", "navigateBack", "redirectTo", "switchTab"];
+
+  // 需要登录才能进入的页面
+  const needJwt = ["/pages/Profile/Profile"];
+
+  for (const rm of routeMethod) {
+    uni.addInterceptor(rm, {
+      // uni api 调用前触发，可以做全局前置守卫
+      invoke(args: any) {
+        const userStore = UserStore();
+        const jwt = userStore.gxbuy_uniapp_jwt;
+
+        // 如果没有jwt且需要jwt
+        if (!jwt && needJwt.find((url: string) => new RegExp(url).test(args.url))) {
+          // 保存此次跳转的路由，以在登录后跳转回来，不过uni自带的跳转只能把参数连接到url里，且url长度又有限制，只能存到本地存储了
+          userStore.toPath = args.url;
+
+          // 跳转登录页
+          uni.navigateTo({ url: "/sub-pages-user/Login/Login" });
+          return false;
+        }
+      },
+      // uni api 调用成功后触发，可以做全局后置守卫
+      success(args: any) {}
+    });
+  }
+}
+```
+
+```
+// main.ts
+import router from '@/router';
+router();
+```
+
+```
+// 登录
+function login() {
+  // ...
+  if (userStore.toPath) {
+    if (new RegExp("^\/pages\/").test(userStore.toPath)) uni.switchTab({ url: userStore.toPath });
+    else uni.navigateTo({ url: userStore.toPath });
+  } else {
+    uni.switchTab({ url: "/pages/Home/Home" });
+  }
+}
+```
+
+此外，路由传参也有问题，如果路由传参传的是复杂数据类型，则必须JSON序列化，否则无法正常获取，如：
+
+```
+// 路由跳转
+const arr = [1, 2, 3];
+uni,navigateTo({
+  url: `/xxx?arr=${JSON.stringify(arr)}`
+))
+
+// 接收参数
+onLoad((query: any) => {
+  console.log(JSON.parse(query.arr));
+})
+```
+
+至于其他功能，看以后有没有其他库或者 uni-simple-router 会不会开源了。
+
+### 1.5 多段适配
+
+（1）vue 和 nvue
+
+nvue 的 css 限制很多，不过在部分场景下会用到，具体见文档，以下的多段是配方案都是基于 vue 的，nvue可能部分无效。
+
+一般情况下用vue就可以了。如果是 app 且有部分场景 vue 页面的性能不满足需求时，这个页面可以改用 nvue 页面。
+
+（2）尺寸，选择器，全局样式/局部样式
+
+尺寸用微信小程序的 rpx 就可以了，100 rpx = 750 px。
+
+选择器只支持部分基础的，注意事项如下：
+
+* 不支持 * 选择器
+
+* 微信小程序不支持 id 选择器，为了多段兼容就不要用了
+
+* body 变成 page
+
+全局样式/j局部样式：
+
+* 全局样式写在 App.vue 或者在 App.vue 引入，局部样式则在各个组件中自行定义
+
+* uni.scss 文件中定义了全局 css 变量，无需导入就可以直接使用
+
+（3）导航栏，状态栏和 tabbar 适配
+
+在 app 和 小程序中，这些都是原生控件，是不占用视口的，100vh是不包括这三个的。
+
+而 h5 中，这三个都是用 div 渲染的，100vh包括了导航栏，状态栏和 tabbar。
+
+因此，就需要做适配，否则就会出现 vh 不一样，底部定位被 tabbar 遮挡等等问题。
+
+uniapp 提供了三哥哥 css 变量，--window-top，--status-bar-height 和 --window-top，分别是动态获取当前端的导航栏，状态栏，tabbar占用视口的高度。只有在 h5 中它们的值才不为0，在 app 和小程序中均为0。
+
+例1：将一个盒子定位到页面底部，tabbar上方
+
+```
+.box {
+  position: fixed;
+  bottom: var(--window-bottom);
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 80rpx;
+}
+```
+
+例2：100vh 的盒子
+
+```
+.box {
+  height: calc(100vh - var(--window-bottom));
+}
+```
+
+在每个属性中都这样使用其实很麻烦，但是目前没有找到可以全局配置的方法。
+
+此外，h5 中由于导航栏，状态栏，tabbar 是 div 渲染的，所以定位时有可能会覆盖掉他们，比如tabbaer的z-index是999， >= 999 的盒子会挡住tabbar。
+
+（4）其他
+
+* 肃然 vue3 的模板已经可以不用根标签了，但是 uniapp 不知道为什么会有警告，所以还是带上吧
+
+* 精良使用 flex 布局，兼容多端
+
+* css 使用背景图片注意，微信小程序不支持相对路径（真机不支持，开发工具支持），所以统一用绝对路径
+
+* ios 对.webp格式的图片支持都不太好；ios 的地图覆盖物，使用高清图时，文件名要以@2或@3结尾，如 [xxx@2.png](mailto:xxx@2.png)
+
+* 支付宝小程序不允许出现以@等特殊符号命名的文件
 
 ## 2 使用
 
@@ -1203,6 +1730,7 @@ uniapp也有自己的适配单位upx，起初是为了兼容多个平台而设�
 
 ```
 //app.vue
+
 <style>
 page {
 
@@ -1240,6 +1768,7 @@ Vue3.2的使用：
 
 ```
 //微信小程序的生命周期和上拉加载等等在Vue2 Vue3.0都可以写在配置项中，而Vue3.2的script setup用法如下：
+
 <script setup>
 import {onLoad} from '@dcloudio/uni-app'
 onLoad((options) => {
@@ -1331,7 +1860,7 @@ uni.$http.get('/api/public/v1/home/swiperdata').then(res => {
 
 注意，由于项目最终运行到微信小程序端，所以网络请求的要求也和微信小程序一样，需要配置合法域名，或勾选不检验合法域名
 
-## 4 跨平台兼容
+## 4 多端适配
 
 ### 4.1 平台判断
 
@@ -1376,12 +1905,14 @@ export default {
   }  
 }
 </script>
+
 /* #ifdef h5 */
 ...
 /* #endif */
 /* #ifdef MP-WEIXIN */
 ...
 /* #endif */
+
 <style>
 
 </style>
@@ -1439,23 +1970,7 @@ export default {
 
 ### 4.2 各平台注意事项
 
-（1）安卓
-
-（2）ios
-
-- ios设备，即使是ios的小程序对.webp格式的图片支持都不太好
-
-- 地图的覆盖物，使用高清图时，文件名要以@2或@3结尾，如 [xxx@2.png](mailto:xxx@2.png)
-
-（3）微信小程序
-
-- 不支持id选择器和通配符选择器
-
-（4）支付宝小程序
-
-- 项目中不允许出现以@等特殊符号命名的文件
-
-（5）
+123
 
 ### 4.3 打包发布
 
@@ -1468,3 +1983,11 @@ uniapp发布微信小程序：
 6.微信后台-管理-版本管理-提交审核
 
 end
+
+```
+
+```
+
+```
+
+```

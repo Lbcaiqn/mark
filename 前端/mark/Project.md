@@ -571,7 +571,7 @@ git add .
 npm install -D @commitlint/config-conventional @commitlint/cli
 ```
 
-添加配置文件，新建`commitlint.config.cjs`(注意是cjs)，然后添加下面的代码：
+根目录添加配置文件，新建`commitlint.config.cjs`(注意是cjs)，然后添加下面的代码：
 
 ```
 module.exports = {
@@ -950,10 +950,12 @@ npm install --save normalize.css reset.css
 @import 'reset.css';
 
 /* 自己的其他初始化css */
+/* uniapp 中没有通配符选择器 */
 * {
+  margin: 0;
+  padding: 0;
   line-height: 1.5;
   font-size: 16px;
-
   box-sizing: border-box;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
@@ -2694,7 +2696,6 @@ route的params和query依然保留，没找到清除的方法。
 location.reload()   //BOM
 this.$router.go(0)  //Vue
 uni.redirectTo({url: '你的当前页面路径'});  //uniapp
-uni.reload()
 ```
 
 ② 非强制刷新

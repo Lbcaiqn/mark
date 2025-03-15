@@ -1,639 +1,1462 @@
-编写规范：一行一属性，小写，注意空格。
+# 一、HTML
+
+HTML 标签无法识别大写，遇到大写会转化成 \-小写 ，如 \<xxx-yyy\> ，不过打包工具可以解决。
+
+（1）基本
 
 ```
-选择器 {
-  属性: 值;
-}
+<!DOCTYPE html>
+<!-- 使用 HTML5,必须在最顶部 -->
+
+<!-- 根元素 -->
+<html lang="en">
+  <!-- head 中用来设置页面、引入资源等 -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>标题</title>
+  </head>
+
+  <!-- 页面主体 -->
+  <body>
+    <!-- 注释 -->
+
+    <!-- 特殊字符，分别是空格，小于号、大于号 -->
+      < >
+
+    <!-- 换行 -->
+    <br />
+
+    <!-- 行内元素，一行多个 -->
+    <span>文本</span>
+    <strong>加粗</strong>
+    <b>加粗</b>
+    <em>倾斜</em>
+    <i>倾斜</i>
+    <ins>下划线</ins>
+    <u>下划线</u>
+    <del>删除线</del>
+    <s>删除线</s>
+
+    <!-- 块级元素，独占一行 -->
+    <div>独占一行</div>
+    <p>p 比 div 在多了上下 margin</p>
+
+    <!-- 行内快元素，一行多个 -->
+    <a href="">link</a>
+    <img src="" alt="" />
+    <input type="text" />
+
+    <!-- 属性没有顺序之分，多个属性用空格隔开 -->
+    <div id="app" class="box"></div>
+
+    <!-- 布尔属性，value 只有有或没有两种情况，可以简写 -->
+    <button disabled="disabled"></button>
+    <button disabled></button>
+
+    <!-- 双标签 -->
+    <div></div>
+    <!-- 单标签，/ 不加，但最好加上 -->
+    <input />
+  </body>
+</html>
 ```
 
-css分为：
-行内样式表：直接在标签中添加属性style=”属性: 值; 属性: 值;……….”
-内部样式表：一般在head标签中书写<style></style>
-外部样式表：单独一个.css文件，在head标签中使用：
+html 内容默认不换行。多个空格默认只显示一个。
+
+书写在不同行的标签会多出一个空格，在同一行在不书写空格前提下，不会有空格。
+
+（2）图片、超链接
+
+都是行内快元素：
 
 ```
-<li~~nk rel="stylesheet" href="路径">
+<img src="" alt="" /> 单标签，不换行
 ```
 
-css文件中也可以引入css文件：
+| src    | 图像路径，必选属性                                    |
+| ------ | -------------------------------------------- |
+| alt    | 替换文本，图片不能正常显示时，显示的文本                         |
+| title  | 显示文本，鼠标移动到图片时显示的文本                           |
+| border | 设置边框                                         |
+| width  | width和height只修改一个时另一个等比缩放，两个都改可能会扭曲图片，一般只改一个 |
+| height | 同上                                           |
+
+超链接：
+
+分为：外部链接，内部链接，空链接，下载链接，锚点链接五种和一种元素链接
+被a标签包含的标签（如img标签）整个元素成为超链接，称为元素链接
 
 ```
-@import './a.css';
+<a href="#">超链接</a>  不换行
 ```
 
-@import与link的区别：
+属性：
 
-* @import是css引入样式，link是html引入样式
+| href   | 必选属性，跳转网址(外部链接)或自己html路径(内部链接)，#表示不跳转(空链接),文件或者压缩包(下载链接)。#id(锚点链接，需要在待跳转的标签中添加 id=”id名”) |
+| ------ | ---------------------------------------------------------------------------------------- |
+| target | 跳转方式，默认为_self当前页面打开，_blank为新窗口打开                                                         |
 
-* @import是CSS2.1才有的，非常老的浏览器如IE5以前不支持，link所有浏览器都支持
-
-* link可以用js控制，而@import无法用js控制
-
-* 页面加载时会同时加载link，而@import在页面加载完后才会加载，因此性能差一些。
-
-综上，不推荐用@import
-
-# 一、 属性
-
-## 1 编写顺序规范：
-
-display
-
-定位
-
-浮动
-
-盒子（宽高-外内边距-边框）
-
-背景复合写法-字体复合写法
-
-文本
-
-CSS3
-
-## 2 字体类：
-
-| font-style  | 倾斜，如italic，normal       |
-| ----------- | ----------------------- |
-| font-weight | 粗细，如bold或700 normal或400 |
-| font-size   | 字体大小                    |
-| line-height | 行高，行高=盒子高可实现文本垂直居中      |
-| font-family | 字体集，如“Microsoft Yahei”  |
-
-复合写法：
-
-font: font-style font-weight font-size/line-height font-family;
-注意加上line-height时/是要写的
-书写复合属性时。必须按照顺序，且font-size和font-family必须有
-
-示例：font: normal normal 15px/20px “Microsoft Yahei”;
-
-## 3 文本类：
-
-| color           | 字体颜色     | 颜色英文，#16，rgb(x,y,z)                                                               |
-| --------------- | -------- | --------------------------------------------------------------------------------- |
-| text-indent     | 首行缩进     | 2em                                                                               |
-| text-align      | 文本水平对齐方式 | left，center，right                                                                 |
-| line-height     | 行高       | 行高 = 字体大小+上间距+下间距，由此可以设置行间距。（行高=盒子高度达到垂直居中。值为px则是px，没有px时表示字体大小的倍数），百分比则是字体大小的百分比 |
-| text-decoration | 文本装饰     | none，underline，orderline，line-through（a标签一般设置为none）                               |
-| list-style      | 列表默认s样式  | none（去除列表默认样式）                                                                    |
-
-直接给父元素设置文字，文本属性，利用继承性方便给包含的子元素设置效果，但是注意text-align只影响包含的行内元素和行内块元素。
-
-## 4 背景
-
-| background-color      | 背景颜色 | 颜色英文  #16  rgb()                                                                                                                                        |
-|:--------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| background-image      | 背景图片 | url(路径)   注意没有引号。默认图片重复平铺，背景图片比img标签方便控制位置,小图片放需要的盒子，大图片（如网站背景）设置body的css。                                                                              |
-| background-repeat     | 平铺   | repeat \| no-repeat \| repeat-x \| repeat-y<br/>分别是全平铺，不平铺，x轴平铺，y轴平铺                                                                                    |
-| background-position   | 位置   | x y;   值可以是百分制或者px的数值，也可以是范围名词<方位名词：top,botton,center,left,right,center<br/>都是方位名词则顺序随意；若只写一个另一个默认为center<br/>都是数值时或方位数值混合时，xy为距离左上的距离/方位，只写一个另一个默认垂直居中 |
-| background-attachment | 滚动固定 | scroll \| fixed 分别是滚动和固定                                                                                                                                |
-
-复合写法：
-
-background: color url() no-repeat fixed x y; 没有顺序之分
-
-# 二、 选择器
-
-## 1 基础选择器
-
-| 标签选择器  | tagname {}                                                        |
-| ------ | ----------------------------------------------------------------- |
-| 类选择器   | .classname {}  标签需要class属性，多类名：一个标签可以有多个类名，用空格隔开  class=”类名a 类名b” |
-| id选择器  | #id {}   需要标签具有id属性  id唯一（有多个相同id的标签则最前的使用），class不唯一。             |
-| 通配符选择器 | * {} 选择所有标签，通常用来初始化                                               |
-
-## 2 复合选择到期
-
-复合选择器，基础选择器的复合
-（1）后代选择器：
+（3）表格
 
 ```
-祖先 后代 {
-  /* 所有残疾的后代都会选到 */
-} 
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <table>
+      <!-- thead、tbody 不是必须得 -->
+      <thead>
+        <th>表头</th>
+        <th>表头</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>4</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 合并单元格 -->
+    <table border="1">
+      <tr>
+        <td colspan="2">1</td>
+        <td rowspan="2">2</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>4</td>
+      </tr>
+    </table>
+    <!-- 合并前 -->
+    <!-- <table>
+      <tr>
+        <td>1</td>
+        <td></td>
+        <td>2</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>4</td>
+        <td></td>
+      </tr>
+    </table> -->
+  </body>
+</html>
 ```
 
-（2）子选择器： 
+table 属性：
+
+| align        | 整个表格页面对齐位置，left，center，right |
+| ------------ | ---------------------------- |
+| cellpadding  | 单元格和其内容的距离                   |
+| border       | 边框宽度                         |
+| cellspacing  | 每个单元格之间的距离                   |
+| width和height | 宽和高                          |
+
+（4）列表
 
 ```
-父 > 子 {
-  /* 只选择最近一级的子 */
-}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- 无序列表 -->
+    <ul>
+      <li>1</li>
+      <li>2</li>
+    </ul>
+
+    <!-- 有序列表 -->
+    <ol>
+      <li>1</li>
+      <li>2</li>
+    </ol>
+
+    <!-- 自定义列表 -->
+    <dl>
+      <dt>title</dt>
+      <dd>1</dd>
+      <dd>2</dd>
+    </dl>
+  </body>
+</html>
 ```
 
-（3）并集选择器：
+（5）表单
+
+一个表单由表单域、表单控件、提示信息组成。表单域是包含所有表单控件和提示信息的区域。
 
 ```
-.xxx ,
-,yyy {
-  /* 同时选中 */
-}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form action="">
+      <input type="text" />
+      <input type="radio" />
+    </form>
+  </body>
+</html>
 ```
 
-（4）兄弟选择器：
-
 ```
-div ~ p {
-  /* 一般兄弟选择器，选择div之后所有的p兄弟 */
-}
-div + p {
-  /* 相邻兄弟选择器，选择div的下一个p兄弟 */
-}
-```
+<form>表单域</form>
+属性：
+action：提交的后台地址
+method：提交方式
+name：表单域的名字
 
-（5）属性选择器
+输入表单元素
+<input type="">  单标签，不换行，type必须有
+属性：
+type的值：
+text:文本框，password:*密码，
+radio:单选框，checkbox:复选框
+button:普通按钮，submit:提交按钮，提交后台，reset:重置按钮，所有表单恢复默认值
+image:图像形式的提交按钮
+file:上传文件，hidden:隐藏的表单
+其中button也有单独的标签，常用属性disabled=”disabled”  无法点击按钮
 
-选出写有某属性的标签,可以单独使用，也可以配合其他选择器使用。
+name：相同name的radio才能生效爱哦单选，同一组选择框应当都是相同的name
+id：id是唯一的，通常与label标签搭配使用
+value：表单的默认显示文本
+checked=”checked”：选择框默认被选上
+maxlength：值为正整数，表单文本的最大长度
 
-权重：[]=0010, =0010+E权重。
+<label for=”绑定的表单id”>文本</label>
+效果：点击label包含的文本，绑定的表单会生效。
 
-```
-[href] {}
-div[href] {}
+下拉表单元素
+<select>
+<option></option>
+       ...
+      <option></option>
+</select>
+option的属性，selected=”selected”则默认被选上。
 
-
-//子串匹配
-E[属性=”value”] {} 选出写有该属性,且值为value的标签。
-
-// ^*$
-E[属性^=”value”] {} 选出写有该属性,且值开头为value的标签。
-E[属性*=”value”] {} 选出写有该属性,且值含有value的标签。
-E[属性$=”value”] {} 选出写有该属性,且值结尾value的标签。
-
-[attribute]：匹配具有指定属性的元素。
-[attribute=value]：匹配属性值完全等于指定值的元素。
-[attribute~=value]：匹配属性值中包含指定词汇的元素。
-[attribute|=value]：匹配属性值以指定值开头的元素。
-```
-
-（6）伪元素选择器
-
-用CSS创建一个模拟的新标签，就叫伪元素，在HTML中没有的，就可以不用新增HTML标签，简化HTML。应用如侧边栏三角，遮层。清除浮动，配合字体图标。
-
-其实在CSS3之前就有一些伪元素了，那时候的伪元素可用用 : 或 ::，CSS3之前的伪元素还可用:，但是CSS3后必须是::，:用来表示伪类。
-
-```
-E::before {} 在E里面的最前面(有文字也跳过文字)生成，作为第一个孩子
-E::after {} 在E里面的最后面(有文字也跳过文字)生成，作为最后一个孩子
-before,after都是作为E的孩子，它们必须要有content属性，值可以为空。
-伪元素默认是行内元素。
+文本域元素
+<textarea>默认显示文本</textarea> 属性cols，rows设置宽高
 ```
 
-伪元素一般配合绝对定位做一些效果，也可以清除浮动，如以下应用场景：
+## 2 HTML5
 
-* 小箭头，小圆点等
+（1）语义化标签
 
-* 制作遮层鼠标经过时 E:hover::after
-
-* 清除浮动，原理：在父盒子最后面生成一个伪元素卡住，若再加上before更严谨的闭合浮动。
-
-使用示例：
+和 div 一模一样，只是语义化不同，利于 SEO ：
 
 ```
-xxx::after {
-  content: '';   /* 这个是必须的，是文本内容，不想要就为空字符串 */
-  width: 20px;
-  height: 20px;
-  background-color: black;
-}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <header>header</header>
+    <main>main</main>
+    <footer>footer</footer>
+
+    <nav>导航栏</nav>
+    <aside>侧边栏</aside>
+
+    <article>文章</article>
+    <section>某段内容</section>
+  </body>
+</html>
 ```
 
-（7）伪类选择器：
-
-用于在特定的状态下展示特定的样式。
-
-①、链接伪类选择器：a标签有默认样式，要修改a就要单独选择出a
-a:link {}   a:visiter {}    a:hover {}    a:active {}
-分别是未访问，已访问，鼠标经过，活动（如点击）
-书写顺序：a的样式，lvha
-②、:focus伪类选择器：input:focus {}   选出光标当前点击的表单
-③、基础选择器:hover 设置鼠标经过时的样式
-
-# 三、元素显示模式
-
-## 1 分类：
-
-### 1.1 块元素
-
-div ，h1…h6，p，ol，ul，li
-
-独占一行，可以设置宽高（宽度默认与父相同），内外边距
-
-里面可以放块元素和行内元素（但文字类块元素不能再放块元素）
-
-### 1.2 行内元素
-
-span，a，格式化标签
-
-一行多个，无法设置宽高（默认宽度为内容宽度）
-
-里面只能有文本或行内元素。
-
-PS：a里不能放a，a能放块元素。（a通常转换为块元素）
-
-### 1.3 行内块元素
-
-img，input，td
-
-一行多个（空格隔开），可以设置宽高（宽度默认为内容宽度），内外边距，
-
-## 2 转换：
-
-display: blpck;  display: inline;   display: inline-blpck;  分别转换成块，行内，行内块。
-
-## 3 元素显示与隐藏：
-
-（1）重排
-
-包括重绘和节流。
-
-回流：当元素的属性、样式被修改且会影响布局时（如修改宽高），触发回流，重新渲染页面。
-
-重绘：当元素的属性、样式被修改，但是不影响布局时（如修改背景色）。触发重绘，不会重新渲染页面，而只是动态更新内容。
-
-回流必然会引起重绘，重绘不一定引起回流。
-
-实际开发中，应当尽量减少回流与重绘，提高性能。
-
-如何避免：
-
-CSS：
-
-- 避免使用table布局。
-- 尽可能在DOM树的最末端改变class。
-- 避免设置多层内联样式。
-- 将动画效果应用到position属性为absolute或fixed的元素上。
-- 避免使用CSS表达式（例如：calc()）。
-
-JavaScript：
-
-- 避免频繁操作样式，最好一次性重写style属性，或者将样式列表定义为class并一次性更改class属性。
-- 避免频繁操作DOM，创建一个documentFragment，在它上面应用所有DOM操作，最后再把它添加到文档中。
-- 也可以先为元素设置display: none，操作结束后再把它显示出来。因为在display属性为none的元素上进行的DOM操作不会引发回流和重绘。
-- 避免频繁读取会引发回流/重绘的属性，如果确实需要多次使用，就用一个变量缓存起来。
-- 对具有复杂动画的元素使用绝对定位，使它脱离文档流，否则会引起父元素及后续元素频繁回流。
-
-（2）显示隐藏
-
-显示：
+（2）多媒体标签
 
 ```
-display: block;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+      <!-- 视频，只支持 MP4，WebM，Ogg 三种格式，各浏览器支持不同，但几乎都支持 MP4 -->
+      <video src=""></video>
+
+      <!-- 由于各个浏览器支持的格式不同，可以这样处理 -->
+       <video>
+        <source src="xx.mp4" type=”video/mp4”></source>
+          <source src="xx.ogg" type=”video/ogg”></source>
+          <h3>浏览器不支持该格式</h3>
+       </video>
+
+       <!-- 音频，只支持 MP3、Wav、Ogg 三种格式，各浏览器支持的也不同，但几乎都支持 MP3 -->
+       <audio src="">
+       </audio>
+
+       由于各个浏览器支持的格式不同，可以这样处理：
+       <audio>
+         <source src="xx.mp3" type=”audio/mpeg”>
+         <source src="xx.ogg" type=”audio/ogg”>
+         <h3>浏览器不支持该格式</h3>
+       </audio>
+</body>
+</html>
 ```
 
-隐藏分为三类：
+video 属性：
 
-* 不删除且保留位置的隐藏，这种方式不会回流会重绘，性能正常情况下的是最好的
-  
-  方法一：
-  
-  ```
-  visibility: value; inherit | visible | hidden | collapse 
-  /* 分别是；
-  继承（默认，继承上一个父亲的可见性）
-  显示
-  隐藏（保留原位置）
-  隐藏表格行或列
-  */
-  ```
-  
-  方法二，透明度设为0
-  
-  ```
-  opacity: 0;
-  ```
-  
-  通过绝对定位吧要隐藏的元素压在下面
+| src           | 路径                                                                         |
+| ------------- | -------------------------------------------------------------------------- |
+| width和height  | 宽高，单位px或%                                                                  |
+| autoplay      | 是否自动播放（默认不）                                                                |
+| muted         | 是否静音播放（默认不静音），可以解决谷歌浏览器强制不能自动播放的问题                                         |
+| controls      | 是否显示播放控件，即播放，音量，全屏等按钮                                                      |
+| loop          | 循环播放（默认只播放一次的                                                              |
+| preload       | 是否预先加载视频，设置了autoplay则忽略该属性（auto：预加载，none：不预加载，metadata：只预加载元数据如大小、时间、第一帧等） |
+| poster=“图片路径” | 视频等待加载时的封面                                                                 |
 
-* 不删除且不保留位置的隐藏 ，这种方式会引起回流，性能差一些
-  
-  ```
-  display: none;
-  ```
+audio 属性：没有 width、height。autoplay 谷歌浏览器无效，需要 JS 解决，其他属性与视频一样。
 
-* 直接删除的隐藏（原位置自然就空出了），这种方式会引起回流，通过js实现。性能是三类中最差的
-
-（3）设置盒子装不下的溢出内容的可见性
+JS 操作，视频、音频一样：
 
 ```
-overflow: visible | hidden | auto,scroll;
-/*分别是
-显示（默认）
-隐藏
-需要时自动增加滚动条
-强制增加滚动条
-*/
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <video class=".mp4" src=""></video>
+  </body>
+  <script>
+    var mp4 = document.querySelector(".mp4");
+
+    // 播放
+    mp4.play();
+    // 暂停
+    mp4.pause();
+    // 重新加载
+    mp4.load();
+
+    // 是否已暂停
+    console.log(mp4.paused);
+    // src
+    console.log(mp4.currentSrc);
+
+    // 设置 src
+    mp4.src = "";
+
+    /**网络状态
+     * 0 初始
+     * 1 空闲 （此时还未建立网络连接）
+     * 2 正在加载
+     * 3 没找到或不支持
+     */
+    console.log(mp4.networkState);
+
+    /**当前就绪状态
+     * 0 还未获取任何数据
+     * 1 已获得元数据，但未获得媒体数据，无法播放
+     * 2 已获得当前位置媒体数据，但未获得下一位置媒体数据，或当前位置是最后
+     * 3 当前/下一位置美体数据都获得
+     * 4 获得
+     */
+    console.log(mp4.readyState);
+  </script>
+</html>
 ```
 
-overflow: hidden; 还可以清除浮动和解决包含关系盒子的垂直margin的塌陷。
+（3）input 新特性
 
-隐藏滚动条：
+type 新类型，若输入的格式不一致，会自动报错：
 
 ```
-/* ... */
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form action="">
+      <input type="email" />
+      <input type="url" />
+      <input type="tel" />
+      <input type="email" />
+      <input type="number" />
+
+      <input type="date" />
+      <input type="time" />
+      <input type="month" />
+      <input type="week" />
+
+      <input type="search" />
+      <input type="color" />
+    </form>
+  </body>
+</html>
 ```
 
-# 四、CSS三大特性
+新属性：
 
-## 1 层叠性
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <form action="">
+      <!-- 必填，在 submit 时验证 -->
+      <input required />
 
-SS属性冲突时，最后面的生效。
+      <!-- 自动聚焦 -->
+      <input autofocus />
 
-## 2 继承性
+      <!-- input::placeholder 可修改样式 -->
+      <input placeholder="请输入..." />
 
-字标签会继承父标签的CSS
+      <!-- submit 时是否记录历史，默认 on，必须有 name 属性才有效 -->
+      <input autocomplete="off" />
 
-特殊情况：
+      <!-- 多选，一般用于 file -->
+      <input type="file" multiple />
+    </form>
+  </body>
+</html>
+```
 
-* 行高的继承：
-  
-  * 若父元素行高是px，则子元素直接继承px
-  
-  * 若父元素行高是比例，则子元素继承比例
-    
-    ```
-    父 {
-      line-height: 1.5;
+（4）绘图
+
+canvas，用 JS 绘制 2D 图，依赖分辨率，可保存为 jpg、png，适合做游戏：
+
+```
+html中：
+<canvas id=”can” width=”500px” height=”500px”></canvas>     //给id，设置画板宽高
+Js中：
+let c=document.getElementById('can')
+    //初始化
+    let ctx = c.getContext('2d')
+    //1.填充
+    ctx.fillStyle="red" //填充色
+    //画填充矩形
+    ctx.fillRect(0,0,100,100) //起始x，y和终点x，y
+    //填充文字
+    ctx.font="50px 微软雅黑"  //字体
+    ctx.fillText("abcd",0,400)
+
+    //2、画直线，圆形，空心文字
+    //设置画笔
+    ctx.lineWidth="2"     //画笔粗细
+    ctx.strokeStyle="blue"  //画笔颜色
+    ctx.lineCap="round"  //原有的基础上在两端加上圆角
+    //直线
+    ctx.moveTo(150,150)   //起始xy
+    ctx.lineTo(200,200)   //重点xy
+    ctx.stroke()          //画线
+    //圆形
+    ctx.beginPath() 
+    ctx.arc(300,300,25,5,2*Math.PI,false) //圆心xy，半径，距起点长度，画多长，顺时针false（起点在3点钟方向）
+    ctx.stroke()
+    ctx.closePath()
+    //空心文字,可设置字体，若画笔过粗会变成实心
+ctx.strokeText('123',400,400)
+//3、裁剪图片
+    let pic=document.getElementById('pic')  //获取img标签
+    //图片加载完后再裁剪
+    pic.onload=function(){
+      //待裁剪图，裁剪起始xy宽高，裁剪后放的xy宽高（这个宽高设置不好会缩放图片）
+      ctx.drawImage(pic,0,0,260,500,100,100,200,500)
     }
-    子 {
-      font-size: 20px;
-      /*line-height = 30px*/
-    }
-    ```
 
-* 若父元素行高是百分比，则先计算具体的行高值，子元素再继承这个具体的值：
-  
-  ```
-  父 {
-    font-size: 10px;
-    line-height: 200%;
-    /*line-height = 20px*/
-  }
-  子 {
-    /*line-height = 20px*/
-  }
-  ```
 
-* a标签有自带样式，权重比继承的样式高，所以相当于不能继承。
-
-## 3 优先级
-
-与层叠性一样，优先级只影响冲突的属性。
-
-行内样式表>内部样式表>外部样式表
-
-若选择器相同，则按照层叠性；
-
-若不同，根据选择器的权重。
-
-各选择器权重：
-
-权重的大小从左到右对比
-
-| 继承和*       | 0000        |
-| ---------- | ----------- |
-| 标签/伪元素     | 0001        |
-| 类/:伪类/[]属性 | 0010        |
-| id         | 0100        |
-| 行内样式       | 1000        |
-| !important | 10000或者说无穷大 |
-
-!important修改权重：
-
-用于修改某选择器某属性的权重，CSS的属性之后分号之前加上!important
-
-```
-.box {
-  color: red !important;
-}
+fill() 填充颜色
+当绘的2d图发生变化时，需要清空整个画板，再重画
+ctx.clearRect(x1,y1,w,h) 画板起始xy，画板宽高
+当画时钟，转盘这种大圆形时,为了方便：
+ctx.transition(x,y) 将起始点从左上角，移动到xy，xy一般是圆心
+c.width  c.height 获得画板宽高，以计算半径
+整个画板可用圆角边框设置为圆形，设置背景色
+典型案例：数字时钟
+注意点：
+*圆形边缘坐标 x=r*cos角度 y=r*sin角度
+*Math.cos(弧度)  弧度=(角度/180)*PI
+*电脑xy是左下正，数学xy是左上正
+*0度是三点钟方向，0点是12点钟方向，需要加减法，取余转化
 ```
 
-!important的几个注意点：
+vg，用 xml 描述 2D 图，不依赖分辨率（即缩放不失真），可使用事件监听，适合做高清地图：
 
-* 应当尽量避免使用它，特别是自定义的css插件，要用也尽量用在全局样式
+```
+可以引入svg文件，也可以<img src=”xxx.svg”>
+也可以：
+<svg>
+    <!-- 圆形，圆心xy，半径，画笔颜色，画笔粗细，填充色 -->
+    <circle cx="50" cy="50" r="20" stroke="red" stroke-width="10" fill="blue"></circle>
+    <!-- 椭圆，圆心xy，xy半径，画笔颜色，画笔粗细，填充色 -->
+    <ellipse cx="200" cy="50" rx="20" ry="20" stroke="red" stroke-width="10" fill="blue"></ellipse>
+    <!-- 矩形，起始xy，宽高,圆角边框半径，画笔颜色，画笔粗细，填充色 -->
+    <rect x="50" y="100" width="20" height="20" rx="5" ry="5" stroke="red" stroke-width="10" fill="blue"></rect>
+    <!-- 直线 起始xy，终点xy -->
+    <line x1="100" y1="200" x2="200" y2="500" stroke="red" stroke-width="10"></line>
+    <!-- 由各点连成的折线 各个点的xy -->
+    <polyline points="10 10 20 20 30 30" stroke="red" stroke-width="5"></polyline>
 
-* 若有有多个地方同个样式使用了它，则权重大的生效
 
-* 子元素不受影响
+  </svg>
+```
 
-复合选择器的权重叠加计算：
+（5）Web Storage
 
-1. 复合的各个选择器按照十进制求和；
+本地存储，多页面可共享数据，在调试工具的 application 可以看到 loaclstorage 和 cookie。
 
-2. 没有进位，如10个标签选择器相加得到00010；
+和 cookie 一样是键值对，key、value 都是 string，区别是：
 
-3. 从左至右对比大小；
+* 网络请求时，请求头会携带 cookie，有安全隐患；大小 4KB 
 
-4. XX伪类选择器=标签+:伪类；
+* Web Storage：不会被网络请求携带，更安全；大小 4M\-5M（根据浏览器）
 
-# 五、页面布局
+两种 stroge 的区别：
 
-传统PC端网页布局的三种方式：普通流(也叫标准流/文档流)，浮动，定位。
+* local storage：永久存储，只有清除缓存、或主动调用 clear\(\) 清除才会被清除
+
+* session storage：会话存储，关闭会话（即浏览器）就清除
+
+使用：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+  <script>
+    var obj = { a: 1 };
+
+    // set get
+    sessionStorage.setItem("key", JSON.stringify(obj));
+    console.log(JSON.parse(sessionStorage.getItem("key")));
+
+    // 删除
+    sessionStorage.removeItem("key");
+
+    // 清除全部
+    sessionStorage.clear();
+  </script>
+</html>
+```
+
+（6）其他
+
+拖拽 API ，地理定位 Geolocation，Web Worker ，WebSocket
+
+# 二、CSS 基础
+
+html 标签只是一个语义化的功能，而盒子类型、样式都是由浏览器默认样式决定的，如 div ，p 就是因为默认样式是 display: block; 才会是块盒，p 默认样式由上下的 margin
+
+CSS，层叠样式表，分为：
+
+- 行内样式表：也叫内联样式表，在 html 元素中用 style 属性编写
+
+- 内部样式表；在 <style> 中编写
+
+- 外部样式表：<link> 导入的外部 .css 文件
+
+- 浏览器默认样式表：各个浏览器的默认样式
+
+优先级：默认 > 外部 > 内部 > 行内 。
+
+CSS 只有多行注释：
+
+```
+/* 多行注释 */
+```
+
+.css 文件导入另一个 .css 文件：
+
+```
+@import "./1.css";
+```
 
 ## 1 盒子模型
 
-介绍：
+（1）盒子模型
+
+盒子由 margin 、border 、padding 、content 构成，分类：
 
-每个html元素都可以看做一个盒子，这个盒子从内到外分别是content，padding，border，margin。
+* W3C 标准盒子模型：所有 html 元素都是盒子，浏览器默认样式就是这种模型：
+  
+  ```
+  .box {
+    /* 默认值，不需要特意编写 */
+    /* box-sizing: content-box; */
+  
+    /* 特点：width 、height 设置的是 content 的宽高度 */
+    /* 总宽高: 142px ，content 宽高: 100px */
+    margin: 10px;
+    border: 1px solid #000f;
+    padding: 10px;
+    width: 100px;
+    height: 100px;
+  }
+  ```
 
-分类：
-
-* 标准盒模型就是下面介绍的，若不特殊设置默认是此模型
-
-* 怪异盒模型，CSS3笔记介绍
-
-* 弹性盒模型，flex笔记介绍
-
-盒子属性：
-
-margin  padding  width  height  border
-
-盒子大小 = width/height+2*padding+2*border
-
-### 1.1 margin padding
-
-margin，padding，border都有top，bottom，left，right属性，如margin-top
-
-也可以合成一个属性写，如margin: 10px 10px 10px 10px;
-
-合成写法的值数量不同的效果：
-
-| margin: 10px;                | 全部      |
-| ---------------------------- | ------- |
-| margin: 10px 10px;           | 上下-左右   |
-| margin: 10px 10px 10px;      | 上-左右-下  |
-| margin: 10px 10px 10px 10px; | 上-右-下-左 |
-
-特殊用法：
-
-1. margin: 0 auto;
-   块元素设置了width的前提下，左右外边距设置为auto可以实现水平居中（行内元素和行内块元素通过text-align: center;实现）
-
-2. margin: 负数px;
-   margin负值的应用：当紧挨着的盒子设置边框时，若想合并边框，可以给margin-方位设置为边框大小的负值。但是当设置时hover显示边框时，由于合并边框原理是压住另一个盒子，此时边框就会显示不全。解决：全部盒子设置相对定位，而hover中设置z-index
-
-3. 未指定width时，设置padding不会加大盒子宽度。
-
-### 1.2 border属性的值
-
-行内元素最多只设置左右外边距
-
-border: border-width | border-style | border-color  没有顺序之分
-
-示例；border: 1px solid #000;
-最常用的样式：实线solid，虚线dathed，点线dotted
-border-collapse: collapse; 用来合并单元格之间的多余的边框。
-
-## 2 浮动布局：
-
-标准流的所有标签按照默认位置排列，而设置浮动后，将能根据需求排列（如一行放多个元素）。 
-
-（1）浮动特性：
-
-* *元素浮动后脱离标准流（脱标，元素浮起来了），不再保留原来位置。
-
-* 设置浮动的元素，按左或按右在一行无缝隙排列，顶部对着最近的上一个标准流盒子所在行的底部（重点，简单理解为浮动失去原位置只影响下面），若没有则顶部对齐父元素顶部，若一行放不下则另起一行。
-
-* 浮动元素具有行内块元素特点，可以设置宽高，未设置宽度的默认宽度为文本大小。
-
-* 设置浮动会脱标，但是不会压住移动上来的文字和图片，可以利用其制作文字环绕图片。
-
-* 若父元素的一个子元素设置了浮动，则其他子元素也应全部设置为浮动。
-
-（2）设置浮动：
-
-子元素：
-
-float: value; left | right;
-
-（3）清除浮动：
-
-清除浮动元素造成的影响，如为了通用性，标准流父元素不设置height，但由于子元素全浮动，height就会为0，影响后面的标准流元素，此时就需要清除浮动。
-
-清除浮动都是在写父元素的样式：
-
-1. clear: value;  left | right | both，分别为清除左浮，右浮，左右的影响。采用闭合浮动。
-
-2. 额外标签法(隔墙法)：html中最后一个子元素的后面添加一个空的块元素（如div，br等），此空盒子样式设置为 clear: both;后，父height不会为0，也不会影响后面。
-
-3. 给父元素添加overflow: hidden | auto,scroll,缺点是无法显示溢出部分。
-
-4. :after伪元素法（额外标签法的升级）：在父元素后面添加伪元素，一般给父元素一个类名clearfix。
-   
-   ```ag-0-1gv3066vgag-1-1gv3066vg
-   父元素:after {
-    content: “”;
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-   }
-   父元素 {
-    *zoom: 1; /*兼容IE6,7*/
-   }
-   ```
-
-5. 双伪元素法：3)的升级，父元素前后都添加伪元素
-   
-   ```
-   父元素:before,
-   基础选择器父元素:after {
-    content: “”;
-    display: table;
-   }
-   父元素:after {
-    clear: both;
-   }
-   父元素 {
-    *zoom: 1; /*兼容IE6,7*/
-   }
-   ```
-
-## 3 定位：
-
-将盒子定到某一位置不动，由定位模式和边偏移两部分组成。
-
-### 3.1 定位模式
-
-position: static | relative | absolute | fixed | sticky;
-
-分别为静态定位，相对定位，绝对定位，固定定位。黏性定位
-
-（1）静态定位：即无定位；为标准流。
-
-（2）相对定位：边偏移根据它的原本位置，会浮起来但是会保留原位置（即没有脱标）
-
-（3）绝对定位：边偏移根据它的最近的有绝对/相对/固定定位的祖先元素位置，直到以浏览器为父元素（若没有任何祖先，则直接以浏览器边缘为准），绝对定位后浮起来不再占有原位置（脱标）。
-子绝父相：若子元素为绝对定位，则父元素最好要相对定位（为了保留原位置），典型应用如轮播图将若干图片绝对定位到同一位置。
-
-（4）固定定位：以浏览器可视窗口为父的绝对定位，浏览器动我不动，边偏移以浏览器边缘为准，会脱标，固定定位到版心右边方法（left: 50%; margin-left: 版心宽度一半）
-
-（5）黏性定位：相当于相对定位和固定定位的混合，保留原位置（不脱标），边偏移是浏览器下滑一定程度后的边缘，当浏览器下滑到与边偏移一致时，固定不动 （之前会动）
-
-### 3.2 定位特性：
-
-1. 定位的叠放次序：z-index: value; 值为不带单位的正负整数或0，越大盒子越上面。若不设置则为auto，后来居上。
-   
-   注意点：
-   
-   * 只有设置了position，z-index才生效
-   
-   * 若设置了z-index同时也设置了浮动，则需要清除浮动z-index才生效
-   
-   * 若父元素position: relative，子元素z-index失效，父元素其他postion则正常。
-   
-   * 若祖级元素设置了z-index，则祖级的z-index优先级最高
-
-2. 设置定位后，不能再用margrin设置水平居中，可以采用：
-   水平居中：left: 50%;   margin-left: -盒子宽;
-   垂直居中：top:50%;     margin-top:-盒子高;
-
-3. 与浮动一样，设置定位后具有行内块元素特点，可以设置宽高，未设置宽度的默认宽度为文本大小。
-
-4. 与浮动不同，绝对/固定定位脱标后会完全压住文字和图片。
-
-5. 脱标的定位后，width不再自动100%，需要自行设置宽高。
-
-### 3.3 边偏移：
-
-有四个属性：
-
-top  bottom  left  right，分别是距离上下左右边的距离
-
-# 六、BFC
-
-形成独立的渲染区域，形成一个隔离的独立的容器，使得容器内每个子元素的布局都不会影响外界的布局（也不会影响父元素本身）。
-
-形成BFC的条件（符合任一条件就形成BFC）：
-
-1. 根元素以及
-
-2. float值不为默认的none
-
-3. position值不为relative
-
-4. display值不为block 如：flex，inline-flex，inline-block，grid，inline-grid，table-xxx等等
-
-5. overflow值不为默认的visible的块级元素
-
-6. contain值为如下：layout，content，paint
-
-7. 多列元素，即column-count或column-width值不为默认的auto碎
-
-常见用法：
-
-1. 清除浮动：子元素设置了浮动，父元素没有设置高度，此时父元素的高度就会塌陷。此时给父元素overflow: hidden; 使得整个父元素变成BFC元素，使得它的子元素浮动后不会影响到外界，高度不变，达到清除浮动的效果。
-
-2. 浮动元素会覆盖未浮动元素：只需要将被覆盖的元素设置为BFC，如overflow:hidden，就不会覆盖了。
-
-3. 解决外边距合并问题：若两个上下/左右排列的div分别设置了margin-top，margin-bottom，则他们之间的间距会变成top，bottom t中值较大的那一个。解决：将两个div分别放入两个BFC父元素中（注意左右排列的margin-left和margin-right不胡已出现这种情况）
-
-4. margin塌陷问题：子元素设置margin-top后，子元素不生效，反而是父元素生效了，此时父元素的margin-top=父+子。解决：给父元素设置BFC就能解决。此外，给父元素一个参照，给父元素设置上边框或上内边距也能解决。
-
-# 七、CSS其他使用
-
-## 1 精灵图：
+* CSS3 盒子模型：CSS3 提出，也叫 IE 怪异盒子模型：
+  
+  ```
+  .box {
+    box-sizing: border-box;
+  
+    /* 特点：width 、height 设置的是 border、padding、content 的宽高度 */
+    /* 总宽高: 142px ，content 高度: 78px */
+    margin: 10px;
+    border: 1px solid #000f;
+    padding: 10px;
+    width: 100px;
+    height: 100px;
+  }
+  ```
+
+可以继承父盒子的盒子模型：
+
+```
+.box {
+  box-sizing: inherit;
+}
+```
+
+JS ：
+
+```
+console.log(box.offsetWidth, "content + 2 * padding + 2 * border");
+console.log(box.clientWidth, "content + 2 * padding");
+```
+
+（2）盒子类型
+
+行内元素、块级元素的说法是老标准，准确的说法是行盒、块盒
+
+主要有行盒、块盒、行内块盒，由 display 指定：
+
+```
+div {
+  display: block;
+}
+
+span {
+  display: inline;
+}
+
+a {
+  display: inline-block;
+}
+```
+
+特点：
+
+- 只有块盒，行内快盒才可以设置 width ，height ；行盒不能设置 width、height，但可以设置 margin、border、padding，但是需要注意：
+  
+  * 行盒的 margin 只有左右有效
+  
+  * 行盒的 padding ，水平垂直都会撑开行盒自己，也会撑开父盒的宽度，但父盒的高度不会撑开
+
+- 行盒、行内块多个占一行、块盒独占一行；行盒、行内快盒内不能放快盒
+
+- 行盒内只能是行盒、行内块盒、内容；行盒和块盒不能在同一界，如果出现了这些情况，浏览器会使用匿名行盒、匿名块盒，匿名盒子不会被渲染出来；最好按规范来，避免不必要的麻烦
+
+常见标签：
+
+* 行盒：a span
+
+* 行内快盒：a image input
+
+* 块盒：div p ul li ol dl table
+
+## 2 属性
+
+属性顺序规范：布局、盒子、背景、文本、字体 。
+
+（1）字体
+
+```
+.box {
+  /* 默认 normal ，文本的特性，如倾斜 italic */
+  font-size: italic;
+
+  /* 文本粗细，string ，number 都行，默认 400 或 normal ，常用的是 700 或 bold  */
+  font-weight: bold;
+
+  /* 字体大小 */
+  font-size: 20px;
+
+  /* 行高 px、无单位、% 都行，无单位时字体大小的倍数，% 时字体大小百分比 */
+  line-height: 20px;
+
+  /* 字体 */
+  font-family: "Microsort Yahei";
+
+  /**符合写法
+   * 需要按顺序，且 font-size ，font-family 不能省略
+   * line-height 前需要加 /
+   */
+   /* font: italic bold 20px/20px "Microsort Yahei"; */
+}
+```
+
+（2）文本
+
+```
+.box {
+  /**字体颜色
+   * 只要是颜色属性，就有 4 种形式：rgb(n, n, n) ，"color" ，"#ffffff" ，"#fff"
+   * color: transparent; 全透明
+   * CSS3 新增 rgba(n, n, n, opecity) 透明度颜色
+   */
+  color: red;
+
+  /* 首行缩进 */
+  text-indent: 2em;
+
+  /* 水平对齐方式 */
+  text-align: left;
+
+  /**行盒垂直对齐的基准线，类似英文单词的 4 条线
+   * top
+   * middle
+   * baseline 基线，默认值
+   * bottom   可以让垂直排列的 img 没有空隙
+   */
+  vertical-align: baseline;
+
+  /* 一般默认 none ，不过 <a> 不是，一般也是用来去除 a 的样式 */
+  text-decoration-color: none;
+
+  /* 一般默认 none ，不过 li 不是，一般也用来去除 li 的样式 */
+  list-style: none;
+
+  /**文本引用，CSS3 新属性
+   * 分别是水平偏移，垂直偏移，半径，颜色，前两个必须有
+   */
+  text-shadow: 2px 2px 5px #000;
+}
+```
+
+（3）背景
+
+```
+.box1 {
+  /* 背景颜色 */
+  background-color: #000;
+
+  /* 背景图 */
+  background-image: url(./1.jpg);
+
+  /* 背景图是否需要平铺，默认会 */
+  background-repeat: no-repeat;
+
+    /* 背景图滚动还是固定，scroll | fixed ，默认 scroll */
+    background-attachment: fixed;
+
+  /* 距离左上角的 px ，或方位名词（如 center），若只写一个，另一个默认是 center */
+  background-position: center center;
+
+  /* 符合写法，顺序随意 */
+  /* background: #000 url(./1.jpg) no-repeat fixed center center; */
+}
+
+.box2 {
+  width: 200px;
+  height: 200px;
+
+  /**渐变背景，CSS3 新特性
+   * 百分比可以不写
+   */
+  background-image: linear-gradient(
+    to right,
+    red 0%,
+    blue 50%,
+    #000 100%
+  );
+}
+```
+
+（4）盒子属性
+
+```
+.box {
+  display: block;
+  box-sizing: border-box;
+
+  /**margin、padding 4 种写法
+   * margin: 10px;                 全部
+   * margin: 10px 10px;            上下 左右
+   * margin: 10px 10px 10px;       上 左右 下
+   * margin: 10px 10px 10px 10px;  上 右 下 左
+   */
+  /* margin、border、padding 都可以单独设置一个方向，如 margin-left */
+
+  /**
+   * 设置了左右 margin，且 auto 的 width，会压缩 content
+   * margin: 0 auto; 水平居中
+   */
+  margin: 10px 20px 10px;
+
+  /**
+   * 顺序随意，也可以拆开写 
+   * auto 的 width 的 content 会被压缩 
+   * auto 的 height，块盒的高度会撑开
+   */
+  border: 1px solid #000;
+  /* 合并多余的单元格 */
+  /* border-collapse: collapse; */
+
+  /**CSS3 新属性，圆角边框
+   * value 为圆角半径
+   * 和 margin、padding 一样的 4 种写法，从左上角开始
+   * 也可以拆开写，如 border-top-left-radius
+   */
+  border-radius: 10px;
+
+  /**
+   * auto 的 width 的 content 会被压缩 
+   * auto 的 height，块盒的高度会撑开
+   */
+  padding: 10px 20px;
+
+  /**width ，height 默认是 auto
+   * width: auto;  块盒撑满包含块（行盒，行内块盒是内容宽度）
+   * height: auto; height 即最高的子元素的 height
+   */
+  width: 100px;
+  height: 100px;
+
+  /**盒子引用，CSS3 新属性
+   * 分别是水平偏移，垂直偏移，半径，颜色，内部，前两个必须有，默然阴影在外部，内部可设 inset
+   */
+   box-shadow: 2px 2px 5px #000 inset;
+}
+
+/* margin 为负数时，时向反方向移动 */
+.box {
+  margin-left: -50px;
+}
+```
+
+5）CSS API
+
+如 rgb\(\) ，CSS3 也新增了 API：
+
+```
+.box {
+  /* 计算 */
+  width: calc(100% - 80px);
+}
+```
+
+（6）CSS 变量
+
+CSS3 新特性，也叫 CSS 自定义属性，用 \-\- 定义：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      /* 放在 <html> 中 */
+      :root {
+        --my-width: 100px;
+      }
+
+      .box {
+        /* 放在当前元素中 */
+        /* css 便令也有作用域，会一直往上找，直到 :root */
+        --my-width: 200px;
+
+        /* 使用变量 */
+        width: var(--my-width);
+
+        /* 运算 */
+        height: calc(var(--my-width) / 2);
+
+        /* 默认值，不存在该变量时适用 */
+        background-color: var(--my-color, red);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box"></div>
+  </body>
+  <script>
+    var box = document.querySelector(".box");
+
+    // 操作 css 变量
+    setTimeout(() => {
+      box.style.setProperty("--my-color", "black");
+      console.log(box.style.getPropertyValue("--my-color"));
+    }, 3000);
+  </script>
+</html>
+```
+
+## 3 选择器
+
+（1）基础选择器
+
+```
+/* 通配符选择器，选择全部 html 元素 */
+* {}
+
+/* 元素选择器，也叫标签选择器，选择所有此类标签元素 */
+div {}
+
+/* id 选择器，选择 html 标签对饮 id 的元素 */
+#app {}
+
+/* 类选择器，选择 html 元素对饮 class 的元素 */
+.box {}
+```
+
+（2）符合选择器
+
+基础选择器互相组合：
+
+```
+/* 后代选择器，选择 a 所有后代层级的 b ， */
+.box .text {}
+
+/* 子选择器，只选择 a 下一级中的 b */
+.list > .item {}
+
+/* 并集选择器，只要其中一个符合，就选中 */
+.big, .small {}
+
+/* 一般兄弟选择器，选择 a 之后的所有兄弟 b */
+div ~ p {}
+
+/* 相邻兄弟选择器，只选中 a 的下一个兄弟 b */
+span + img {}
+
+/**属性选择器
+ * 可单独使用，也可以结合其他选择器
+ * ^*& 分贝是模糊匹配开头、中间、结尾
+ */
+[href] {}
+.btn[disable] {}
+.box[data-id = "1"] {}
+.img[src &= ".jpg"] {}
+```
+
+（3）伪元素、伪类
+
+伪元素选择器，在 html 中在的选中元素里，生成一个子元素，放在最前面或最后面，但伪元素不会出现在 html 中：
+
+```
+/**
+ * 默认是行盒
+ * content 必须指定，"" 也可以
+ * CSS3 之后也可以使用 :
+ */
+.box::before,
+.box::after {
+  display: block;
+  border: 1px solid #000;
+  width: 10px;
+  height: 10px;
+  background-color: #000;;
+  content: "";
+}
+```
+
+伪类选择器，用于在特定的状态下展示特定的样式：
+
+```
+/* 鼠标经过时的样式 */
+.box:hover {}
+
+/* input 聚焦的样式 */
+input:focus {}
+
+/**链接伪类
+ * link    未访问
+ * visiter 已访问
+ * active  点击
+ */
+a:link {}
+a:visiter {}
+a:active {}
+```
+
+伪元素使用伪类：
+
+```
+.box:hover::before {}
+```
+
+（4）CSS3 新选择器
+
+```
+/* 多类选择器，选中同时具备这些 class 的元素，只限于 class */
+.box.big {}
+
+/**结构伪类选择器
+ * E:nth-child() 找到 E 的父元素，并按规则找 E 最近一级子元素
+ * n 从 0 开始，但是没有第 0 个元素
+ * -child 和 E 无关，-of-type 和 E 有关
+ */
+.item:first-child {}
+.item:first-of-type {}
+.item:last-child {}
+.item:last-of-type {}
+.item:nth-child(1) {}
+.item:nth-of-type(1) {}
+.item:nth-child(n) {}
+.item:nth-of-type(n) {}
+/* 奇数 */
+.item:nth-child(odd) {}
+.item:nth-child(2n + 1) {}
+/* 偶数 */
+.item:nth-child(even) {}
+.item:nth-child(2n) {}
+
+/* 否定伪类选择器，选择不符合条件的元素 */
+/* 选中 .item 且不是 .title 的元素 */
+.item:not(.title)
+```
+
+## 4 显示模式
+
+（1）显示、隐藏
+
+隐藏时不删除元素，保留位置，只会引起 repaint ：
+
+```
+.box {
+  /* 默认值，继承父盒子的 visibility */
+  visibility: inherit;
+
+  /* 隐藏、显示 */
+  /* visibility: hidden; */
+  /* visibility: visible; */
+
+  /* 隐藏表格行或列 */
+  /* visibility: collapse; */
+}
+
+/* 设置透明度实现，0 完全隐藏 ，1 完全显示 */
+.box {
+  opacity: 0;
+  /* opacity: 1; */
+}
+
+/* 也可以用绝对定位，放在最下面 */
+```
+
+不删除元素，不保留位置，会引起 reflow ：
+
+```
+.box {
+  display: block;
+  /* display: none; */
+}
+```
+
+删除元素，用 JS 实现，不保留位置，引起 reflow 。
+
+（2）溢出
+
+盒子溢出：
+
+```
+.box {
+  /* 默认值 */
+  overflow: visible;
+
+  /* 引出的隐藏 */
+  /* overflow: hidden; */
+
+  /* 引出的用滚动实现，auto 会在适合时添加滚动条，scroll 强制添加滚动条 */
+  /* overflow: auto; */
+  /* overflow: scroll; */
+}
+```
+
+文本溢出：
+
+```
+/* 单行 */
+.box {
+  /* 溢出文本不换行，并隐层 */
+  white-space: nowrap;      
+  overflow: hidden;       
+
+  /* 省略号 */  
+  text-overflow: ellipsis;
+}
+
+.box2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+
+  /* 多少行后开始隐藏 */
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+
+  /* 省略号 */
+  text-overflow: ellipsis;
+}
+```
+
+图片溢出：
+
+```
+/* box 宽高不固定 */
+.box > img {
+  width: 100%;
+  height: 100%;
+}
+
+/* box 宽高其中一个固定，若 box width 固定则 img width 100% ，反之 height 100% */
+.box > img {
+  width: 100%;
+}
+
+/* box 宽高固定，裁剪 img 的宽或高 */
+.box {
+  overflow: hidden;
+}
+
+,box > img {
+  width: 100%;
+}
+
+/* box 宽高不固定，不裁剪 img ，则 img 的 width ，height 更大的设置为 100% */
+.box > img {
+  width: 100%;
+}
+```
+
+## 5 变黄、过渡、动画
+
+CSS3 新特性。
+
+（1）变换
+
+transform 不会 reflow 和 repaint ，运行在合成线程，所以性能很高，不会阻塞 JS 。
+
+不会影响其他盒子的布局，因为会脱离标准流，但 transform 元素的所有后代元素都会一起变换。
+
+2D：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        border: 1px solid #000;
+        width: 100px;
+        height: 100px;
+        background-color: #000;
+        color: #fff;
+        line-height: 100px;
+        text-align: center;
+        font-size: 30px;
+      }
+
+      /* 2D */
+      .box1 {
+        /* 默认值 */
+        transform: none;
+
+        /**移动
+         * 参数为 x，y，可以是 number ，负数，也可以是 %
+         * 可以只写 x ，y 默认为 0
+         * 也可以用 translateX() translateY()
+         */
+        /* transform: translate(200px, 200px); */
+
+        /**缩放
+         * 大于 1 时放大，小于 1 是缩小
+         * 只有一个值时作用于 x，y，两个值时分别设置 x，y 的缩放
+         * 也可以用 scaleX() scaleY()
+         * 浏览器字体大小有最小限制，可以用 scale 解决
+         */
+        /* transform: scale(2); */
+
+        /**旋转
+         * 只能传一个参数，按 Z 周顺时针旋转
+         * 2d 只能 Z 轴旋转，rotateX() 这些是 3d 用的
+         */
+        /* transform: rotate(45deg); */
+        /* transform-origin: left bottom; */
+
+        /**倾斜
+         * 也可以用 skewX() skewY()
+         */
+        /* transform: skew(45deg); */
+        /* transform: skew(0, 45deg); */
+
+        /* 多重变换时，需要写成如下形式，否则后面的 transform 会覆盖前面的 */
+        transform: translate(0200px, 200px) scale(2) rotate(45deg)
+          skew(0, 45deg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box box1">2D</div>
+  </body>
+</html>
+```
+
+3D：
+
+Z 轴在屏幕内部：
+
+```
+Y
+|
+|
+|------>X
+```
+
+（2）过渡
+
+transition 实现：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        border: 1px solid #000;
+        width: 100px;
+        height: 100px;
+        background-color: #000;
+
+        /* 1s 后，用 ease 方式过渡 2s width */
+        /* transition: width 2s ease 1s; */
+
+        /* 只有过渡时间是必须写的，也可以用 ms */
+        /* transition: 2s; */
+
+        /* 多个属性的过渡，不写默认就是 all */
+        /* transition: all 2s; */
+        transition: width 2s, height 10s, background-color 1s;
+      }
+
+      .box:hover {
+        width: 200px;
+        height: 200px;
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box"></div>
+  </body>
+</html>
+```
+
+只有从数值到数值的变化，transition 才有效，如 display 从 none 到 block ，height 从 0 到 auto 的 transition 都是无效的，可以用其他办法解决。
+
+如一个下拉框，可以通过 jS 获取 auto 后的 height 数值，再修改成 0 再修改成 height ，虽然能实现效果，但是会有多次 reflow 。
+
+另一种方法是过渡 transform 的 scale ，实现简单，性能也高，但效果有一些差异：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .dropdown {
+        --selector-padding: 10px;
+        --selector-height: 30px;
+        --option-item-height: 25px;
+
+        position: relative;
+        width: 200px;
+      }
+
+      .dropdown > .selector {
+        padding: 0 var(--selector-padding);
+        border: 1px solid #000;
+        height: var(--selector-height);
+        line-height: var(--selector-height);
+        user-select: none;
+      }
+
+      .dropdown > .option {
+        position: absolute;
+        top: calc(var(--selector-height) + 5px);
+        left: 0;
+        border: 1px solid #000;
+        padding: var(--selector-padding) 0;
+        width: 100%;
+        transform: scale(0);
+        transform-origin: top;
+        transition: all 0.3s;
+      }
+
+      .dropdown > .option > .option-item {
+        padding: 0 var(--selector-padding);
+        height: var(--option-item-height);
+        line-height: var(--option-item-height);
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .dropdown > .option > .option-item:hover {
+        background-color: orange;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dropdown">
+      <div class="selector">dropdown</div>
+      <div class="option">
+        <div class="option-item">item 1</div>
+        <div class="option-item">item 2</div>
+        <div class="option-item">item 3</div>
+        <div class="option-item">item 4</div>
+        <div class="option-item">item 5</div>
+      </div>
+    </div>
+  </body>
+  <script>
+    const selector = document.querySelector(".selector");
+    const option = document.querySelector(".option");
+
+    function hiddenOption() {
+      option.style.transform = "scale(0)";
+      window.removeEventListener("click", hiddenOption);
+    }
+
+    function selectorClick(event) {
+      event.stopPropagation();
+
+      if (option.style.transform === "scale(1)") {
+        option.style.transform = "scale(0)";
+        return;
+      }
+
+      option.style.transform = "scale(1)";
+
+      window.addEventListener("click", hiddenOption);
+    }
+
+    selector.addEventListener("click", selectorClick);
+  </script>
+</html>
+```
+
+
+
+（3）动画
+
+分为触发型、自动型：
+
+* transition 只能制作触发型的动画，且只能规定 2 个状态的变化
+
+* animation 触发型、自动型都可以，且可以规定多个状态的变化
+
+animation 通过 keyframs（关键帧）设置的状态进行动画，如下是一个自动型的动画：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        border: 1px solid red;
+        width: 100px;
+        height: 100px;
+        border-right-color: red;
+        animation: box-move 3s alternate infinite;
+      }
+
+      @keyframes box-move {
+        /* from 可以省略 */
+        /* 可以用 n% 替代 from，to 来设置多个状态 */
+
+        from {
+          transform: translate(0);
+        }
+
+        to {
+          transform: translate(200px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box"></div>
+  </body>
+</html>
+```
+
+## 6 其他
+
+（1）用户界面样式
+
+```
+.box {
+  /* 光标样式 */
+  cursor: pointer;
+}
+```
+
+（2）CSS 三角
+
+```
+.item1 {
+  border: 50px solid transparent;
+  border-left-color: black;
+  width: 0;
+  height: 0;
+}
+```
+
+（3）精灵图：
 
 将大量小图片合到一张大图片，一次请求就能获取大量图片，能减少对服务器的请求，减少服务器压力。
 
@@ -653,11 +1476,11 @@ top  bottom  left  right，分别是距离上下左右边的距离
 </body>
 ```
 
-## 2 字体图标
+（4）字体图标
 
-看似是图标，实际是文字，可以设置字体文本类样式
+看似是图标，实际是文字，可以设置字体文本类样式。
 
-图标库：https://icomoon.io/            https://www.iconfont.cn/
+图标库：[https://icomoon.io/](https://icomoon.io/) [https://www.iconfont.cn/](https://www.iconfont.cn/)
 
 引入使用示例：
 
@@ -681,450 +1504,904 @@ top  bottom  left  right，分别是距离上下左右边的距离
 </body>
 ```
 
-## 3 CSS三角，梯形，圆形
+# 三、属性计算
+
+计算后，每个元素所有的 CSS 属性都会有 value ，且 value 都是绝对单位，如 em 变 px ，颜色都变成 rgb\(\) 。
+
+根据默认样式表、作者样式表计算，过程：
+
+* 确定声明值：没有冲突的属性直接是结果
+
+* 层叠冲突：
+  
+  * 比较虫咬行：行内样式表 \> 内部样式表 \> 外部样式表 \> 默认样式表，此外一些属性重要性也有区别，如使用 flex: 1; 后 width 失效
+  
+  * 比较优先级：根据权重比较选择器的优先级
+  
+  * 比较源次序：若还是有冲突，则后面的属性、选择器覆盖前面的
+
+* 继承：若还有无 value 的属性，就继承，一般文字、文本属性可以继承
+  
+  * line\-height 继承：px 和比例直接继承，百分比会在父元素计算成 px 后再继承
+
+* 使用默认值：若还有无 value 的属性，就使用默认值
+  
+  * 符合属性会覆盖前面的属性，如：
+    
+    ```
+    .box {
+      font-weight: 700;
+    
+      /* 符合属性没有写 font-weight ，所以使用默认值 400 覆盖前面的 700 */
+      font: 50px "Microsort Yahei";
+    }
+    ```
+
+（1）选择器的权重
+
+Specificity，也叫特殊性、特定性，权重从高位开始比较，如 0100 大于 0010 。
+
+符合选择器的权重计算：各个位分开计算，十进制求和，且无进位。
 
 ```
-选择器 {
-  width: 0;
-  height: 0;
-  border-top: 100px solid red;
-  border-bottom: 100px solid blue;
-  border-left: 100px solid gray;
-  border-right: 100px solid black;
+/* 0 0 0 0 ，* > + ~ */
+* {}
+
+/* 0 0 0 1 ，标签，伪元素 */
+#app {}
+
+/* 0 0 1 0 ，类、伪类、属性 */
+.box {}
+:hover {}
+[href] {}
+
+/* 0 1 0 0 ，id */
+div {}
+
+/* 1 0 0 0 ，行内样式 */
+
+/**1 0 0 0 0 或无穷大
+ * 应当尽量避免使用、不好维护
+ * important 互相冲突了，就比较权重，用权重大的 important
+ * 子元素继承时，只会继承 value ，不继承 important 
+ */
+.box {
+  color: red !important;
 }
 ```
 
-通过将其中一个如bottom的px设置为0，再设置其他方位的px，就可以获得任意大小的直角三角形。与矩形结合能得到梯形。
+```
+/* 0 0 2 0 */
+.box:hover {}
+.box > .item {}
+.box[href] {}
 
-通过以下代码可以获得等腰三角形
+/* 0 1 1 0 */
+#app > .box {}
+
+/* 0 0 12 0 */
+.a .b .c .d .e .f .g .h .i .j .k .l .m {}
+```
+
+# 四、视觉格式化模型
+
+根据各个盒子的几何信息（大小、位置）进行布局。
+
+## 1 包含块
+
+包含块（container block），设置百分比的 margin、border、padding、width 时，是基于包含块的宽度，百分比 height 基于包含块的高度；浮动、绝对定位也是基于包含块的。
+
+分为两类：
+
+* 初始包含块：inital container block ，即根元素 \<html\> 所在的包含块，即视口 viewport，左上角是浮动、定位的参照物
+
+* 非根元素包含块，有以下几种情况：
+  
+  * 标准流、浮动、定位（static、relative、sticky）的包含块是最近的祖先块盒的 content
+  
+  * 定位 fixed 的包含块是 viewport
+  
+  * 定位 absolute 的包含块是最近的非 static 祖先块盒的 padding 区（根元素 \<html\> 默认定位 relative）
+
+absoulte 、fixed 在找到包含块之前，遇到了以下情况的盒子，则这个盒子的 padding 就成为包含块：
+
+* transform 或 perspective 不为 none
+
+* will\-change 为 transform 或 perspective
+
+* contain: paint;
+
+* filter 不为 none，或 will\-change 为 filter （只在 firefox 有效）
+
+## 2 布局
+
+（1）常规流
+
+也叫标准流、普通流、流式布局、百分比布局，即快盒独占一行，行盒、行内快盒一行多个：
 
 ```
-选择器 {
-width: 0;
-height: 0; //宽高必须为0
- border: 50px solid transparent; /*四条边框先设置全透明，px控制大小*/
- border-left-color: black;       /*选择一个三角*/
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        border: 1px solid #000;
+        width: 300px;
+        height: 100px;
+        background-color: #000;
+      }
+
+      .item {
+        border: 1px solid red;
+        width: 30%;
+        height: 30%;
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="item"></div>
+      <div class="item"></div>
+    </div>
+  </body>
+</html>
+```
+
+（2）浮动
+
+浮动元素会脱离标准流，浮动起来，不保留原位置，浮动元素按顺序排列在包含块中，若包含块宽度不够放，则浮动元素会排列至下一行。
+
+虽然会脱标，但不会压住一上来的文本和图片。
+
+浮动元素会自动转为 inline-block ：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        border: 1px solid #000;
+        width: 300px;
+        height: 100px;
+        background-color: #000;
+      }
+
+      .item {
+        float: left;
+        border: 1px solid red;
+        width: 30px;
+        height: 30px;
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="item">123</div>
+      <div class="item">123</div>
+    </div>
+  </body>
+</html>
+```
+
+通常都是希望父元素不设置 height ，而由子元素决定父元素的 height ，但设置浮动后，父元素的 height 会变为 0 ，所以这时候就需要清除浮动（清除浮动元素造成的影响）：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        /* 兼容低版本 IE */
+        *zoom: 1;
+
+        border: 1px solid #000;
+        width: 300px;
+        background-color: #000;
+      }
+
+      /**
+       * 也可以只用一个伪元素，用两个更严谨
+       * 也可以直接在 html 写一个标签并设置 clear ，但不推荐
+       */
+      .box::before,
+      .box::after {
+        display: block;
+        /* 清除左右浮动，也可以只清除仪表，如 clear: left; */
+        clear: left;
+        visibility: hidden;
+        content: "";
+      }
+
+      .item {
+        float: left;
+        border: 1px solid red;
+        width: 30px;
+        height: 30px;
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="item">123</div>
+      <div class="item">123</div>
+    </div>
+  </body>
+</html>
+```
+
+也可以直接把父元素变成 BFC ，就能清除浮动。
+
+（3）定位
+
+将盒子定到某一位置不动，由定位模式和边偏移两部分组成：
+
+* 定位通过 position 指定，默认为 static ，即静态定位
+
+* 边偏移通过 top、right、bottom、left 指定，表示距包含块的距离
+
+代码：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    .box {
+      position: relative;
+      border: 1px SOLID #000;
+      width: 500px;
+      height: 3000px;
+      background-color: #000;
+    }
+
+    .item {
+      border: 1px SOLID RED;
+      width: 100px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      font-size: 20px;
+      background-color: RED;
+    }
+
+    /* 相对定位，保留位置，不脱标 */
+    .item1 {
+      position: relative;
+      top: 50px;
+      left: 50px;
+    }
+
+    /**绝对定位
+     * 不保留位置，脱标，会转为 block 盒
+     * auto 的 width 为内容宽度
+     * 包含块为最近的非 static 盒子，所以一般父元素会设置 relative ，即子绝父相
+     */
+    .item2 {
+      position: absolute;
+      top: 50px;
+      right: 50px;
+    }
+
+    /**固定定位
+     * 不保留位置，脱标，会转为 block 盒
+     * auto 的 width 为内容宽度
+     * 包含块为浏览器 viewport
+     */
+    .item3 {
+      position: fixed;
+      top: 0;
+      right: 0;
+    }
+
+    /**粘性定位
+     * relative 基础上，在父元素内 fixed
+     * 必须设置 top 才有效
+     */
+    .item4 {
+      position: sticky;
+      top: 0;
+      left: 15%;
+    }
+  </style>
+  <body>
+    <div class="box">
+      <div class="item item1">relative</div>
+      <div class="item item2">absolute</div>
+      <div class="item item3">fixed</div>
+      <div class="item item4">sticky</div>
+    </div>
+  </body>
+</html>
+```
+
+z-index ：
+
+当定位元素层叠到一起时，可以用 z-index 设置层叠的优先级：
+
+```
+/**
+ * 只有设置了非 static 的 position ，z-index 才有效
+ * 若设置了浮动，需要清除浮动 z-index 才有效
+ * 若父元素 position 为 relative ，则子元素 z-index 失效
+ */
+.item {
+  position: absolute;
+  z-index: 999;
 }
 ```
 
-还可以&gt和&lt
+层得上下文：
 
-圆形先准备正方形盒子，然后border-radius: 高一半;非正方形也会变成左右边圆弧。
+z-index 时基于包含块的，若包含块的祖先元素也设置了 z-index ，可以看成两个 z-index 相加。
 
-## 4 用户界面样式（鼠标指针等）：
+（4）flex 布局
 
-即用户操作的样式（如光标的形状变化）
-
-（1）鼠标样式：
-
-cursor: value; value为default,pointer,move,text,not-allowed
-分别是小白光标(默认)，小手，移动(十字架)，文本(竖线)，禁止
-
-（2）取消表单默认蓝色轮廓线：outline: none或0;
-
-（3）防止文本域textarea被拉大：resize: none;
-
-## 5 vertical-align
-
-vertical-align: baseline | top | middle | bottom;
-分别是基线，顶部，中线，底部对齐
-
-用来设置图片，文字，表单的垂直对齐方式（只适用于行内元素，行内块元素）
-
-行内块元素img默认基线对齐，下面会有空隙：
-
-可以设置vertical-align的顶中底，也可以转换成块元素display: block; 解决
-
-## 6 溢出文字省略号表示：
-
-单行文本：
+又叫弹性布局，伸缩布局等。父元素是弹性容器，子元素是弹性盒子。
 
 ```
-选择器 {
-  white-space: nowrap;      /*强制转为一行*/
-  overflow: hidden;         /*隐藏溢出文字*/
-  text-overflow: ellipsis; /*显示省略号*/
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        margin: 50px 0;
+        border: 1px solid #000;
+        padding: 10px;
+      }
+
+      .item {
+        border: 1px solid #000;
+        width: 60px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+      }
+
+      .box1 {
+        /**
+         * 子元素会转换成 block 盒，水平显示，但 width，height 会默认设置为内容宽高
+         * 设置 display: flex; 后，float、clear、vertical-align 失效
+         * 若没有设置 align-items ，且子元素也没有设置 height ，则子元素 height 会撑满父元素
+         * 上述情况若父元素也没有设置 height ，则父元素 height 时子元素内容高度
+         */
+        display: flex;
+
+        /**主轴排列方式
+         * flex-start     左排列，默认值
+         * flex-end       右编列
+         * center         居中
+         * space-around   均分
+         * space-evenly   均分，且空隙一样大
+         * space-between  两边到边缘，中间均分
+         */
+        justify-content: center;
+
+        /**侧轴排列方式
+         * stretch  默认值，撑满父元素
+         * flex-start ，flex-end，center
+         * 子元素中可用 align-self 单独设置
+         */
+        align-items: center;
+
+        /**轴向
+         * 默 x 为主轴，y 周为侧轴
+         * 设置主轴，默然为 row
+         */
+        /* flex-direction: column; */
+      }
+
+      .box2 {
+        display: flex;
+      }
+
+      .box2 > .item-flex {
+        /**
+         * 只要设置了 flex ，width，flex-wrap 就无效
+         * 设置 flex 的盒子，均分剩余的 content width ，value 为占用的份数
+         * flex: none; 去掉 flex
+         */
+        flex: 1;
+      }
+
+      .box2 > .item-fixed {
+        /* 设置排列优先级，默认 0 ，大的会排列在小的后面 */
+        order: 1;
+      }
+
+      .box3 {
+        display: flex;
+        height: 100px;
+
+        /**换行
+         * flex 布局默认不换行，空间不够会压缩子元素的 width
+         * 若不换行，又不想压缩 width ，可以在子元素设置 flex-shrink: 0;
+         */
+        flex-wrap: wrap;
+
+        /* direction，wrap 符合写法 */
+        /* flex-flow: column wrap; */
+
+        /**多行的侧轴排列方式
+         * stretch  默认值
+         * 其他和 justify-content 一样
+         */
+        align-content: space-around;
+      }
+
+      .box3 > .item-big {
+        width: 40%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box box1">
+      <div class="item">1</div>
+      <div class="item">2</div>
+      <div class="item">3</div>
+    </div>
+
+    <div class="box box2">
+      <div class="item item-fixed">1</div>
+      <div class="item item-flex">2</div>
+      <div class="item item-flex">3</div>
+    </div>
+
+    <div class="box box3">
+      <div class="item item-big">1</div>
+      <div class="item item-big">2</div>
+      <div class="item item-big">3</div>
+      <div class="item item-big">4</div>
+    </div>
+  </body>
+</html>
+```
+
+（5）grid 布局
+
+也叫网格布局、栅格布局。
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        margin: 50px 0;
+        border: 1px solid #000;
+        height: 300px;
+      }
+
+      .item {
+        border: 1px solid #000;
+        line-height: 50px;
+        text-align: center;
+        font-size: 30px;
+      }
+
+      .box1 {
+        /* 子元素转为 block 盒子 */
+        display: grid;
+
+        /**列栅格
+         * 1 个 value ，排列 1 个
+         * 可以使用 repeat(3, 1fr)
+         * 子元素可以不用设置 width ，会自动沾满整个栅格，而栅格的高是内容高度
+         * 可以设置 px ，其他的 fr 均分，fr 的 value 是占用的份数
+         */
+        /* grid-template-columns: 1fr 1fr 1fr; */
+        /* grid-template-columns: 1fr 200px 1fr; */
+        grid-template-columns: repeat(3, 1fr);
+
+        /**行栅各
+         * 格rid-template-rows 优先级高，剩余未指定的 grid-auto-rows 才生效 
+         * 子元素可以不用设置 height ，会自动沾满整个栅格，而栅格的宽是内容宽度
+         */
+        /* grid-template-rows: repeat(3, 1fr); */
+        /* grid-auto-rows: 10px 10px 10px; */
+
+        /* 栅格水平、水质排列方式，没有设置 grid-template-columns、grid-template-rows 才需要考虑 */
+        /* justify-content: center; */
+        /* align-content: center; */
+
+        /**
+         * 除了四个边缘外，栅格之间的间距
+         * gap 是简写
+         * gap: row col;
+         * gap: row-and-col;
+         */
+        gap: 10px;
+        /* grid-row-gap: 10px; */
+        /* grid-column-gap: 10px; */
+        /* grid-gap: 10px; */
+      }
+
+      .box2 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+
+        /* grid-template-areas:
+          "areaname areaname"
+          "areaname areaname"; */
+      }
+
+      .box2 > .item:first-child {
+        /**合并栅格
+         * 左闭右开，只差 1 可以只写简写成 grid-column; 2;
+         * grid-column 是 grid-column-start 、grid-column-end 的简写
+         */
+        /* 布局到第 2 列并不合并，布局到第 1 行并合并一个栅格 */
+        grid-column: 2 / 3;
+        grid-row: 1 / 3;
+
+        /* 也可以命名，在父元素中布局合并栅格 */
+        /* grid-area: areaname; */
+      }
+
+      .box3 {
+        /* 响应式布局，minmax() 为栅格的最小、最大宽度 */
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box box1">
+      <div class="item">1</div>
+      <div class="item">2</div>
+      <div class="item">3</div>
+      <div class="item">4</div>
+      <div class="item">5</div>
+    </div>
+
+    <div class="box box2">
+      <div class="item">1</div>
+      <div class="item">2</div>
+      <div class="item">3</div>
+      <div class="item">4</div>
+      <div class="item">5</div>
+    </div>
+
+    <div class="box box3">
+      <div class="item">1</div>
+      <div class="item">2</div>
+      <div class="item">3</div>
+      <div class="item">4</div>
+      <div class="item">5</div>
+    </div>
+  </body>
+</html>
+```
+
+## 3 BFC
+
+块级格式化上下文（block formating context），让标准流的块盒形成独立的渲染区域，
+
+\<html\> 默认是 BFC 。
+
+同一个 BFC 中的垂直排列块盒，上下 margin 会合并：
+
+* 若两个盒子的最近一个祖先 BFC 元素是同一个，就属于同一个 BFC 中
+
+* 若某个 BFC 脱离了标准流，那这个 BFC 就从最近一个祖先 BFC 中脱离出来了 
+
+设置 BFC ：
+
+```
+/**
+ * 只要有其中一个，就能形成 BFC
+ * 还有喝多属性可以设置，不过这些最常用
+ */
+ .box {
+  /* 不为 none、block */
+  /* display: inline-block; */
+
+  /* 绝对定位 */
+  /* overflow: hidden; */
+
+  /* 不为 static、relative */
+  /* position: absolute; */
 }
 ```
 
-多汗文本（有较大的兼容性问题）：
+（1）非父子块盒上下 margin 合并
+
+两个垂直相邻的块盒，上面的 margin-bottom 会和下面的 margin-top 合并，原因是两个块盒都处于 \<html\> 的 BFC 中；
 
 ```
-overflow: hidden;  
-text-overflow: ellipsis;
-display: -webkit-box;         /*弹性伸缩盒子*/
--webkit-line-clamp: 2;        /*第几行省略号*/
--webkit-box-orient: vertical; /*垂直居中*/
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        border: 1px solid #000;
+        width: 50px;
+        height: 50px;
+        background-color: #000;
+      }
+
+      /**margin 合并规则
+      * 两个正数：Math.max(a, b)
+      * 两个负数：Math.min(a, b)
+      * 一正一负：a + b
+      */
+      .box1 {
+        margin-bottom: 50px;
+        /* margin-bottom: -40px; */
+        /* margin-bottom: 30px; */
+      }
+
+      .box2 {
+        margin-top: 50px;
+        /* margin-top: -40px; */
+        /* margin-top: -20px; */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box box1"></div>
+    <div class="box box2"></div>
+  </body>
+</html>
 ```
 
-## 7 图片放置方案
+解决方法是，可以把其中一个块盒用 BFC 容器包裹，这样一个在 \<html\> 的 BFC 中，另一个在新的 BFC 中，就不会合并 margin 了：
 
 ```
-<div class="img-box"><img /></div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .container {
+        overflow: hidden;
+        background-color: #000;
+      }
 
-//1.盒子宽高都不固定，或宽高其中一个固定，一个不固定（若固定宽，img的width:100%，若固定高，img的height:100%），不固定的被图片撑开
-//2.盒子宽高都固定，图片多出的裁剪
-.img-box {
+      .box {
+        width: 50px;
+        height: 50px;
+        background-color: red;
+      }
+
+      .box1 {
+        margin-bottom: 50px;
+      }
+
+      .box2 {
+        margin-top: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="box box1"></div>
+    </div>
+    <div class="box box2"></div>
+  </body>
+</html>
+```
+
+（2）父子块盒的上下 margin 塌陷问题
+
+若父元素 border，padding 都没有设置，会造成父子盒子同事设置 margin-top 时，父元素的 margin-top 塌陷的情况，margin\-bottom 同理：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      /**margin 塌陷
+       * 子元素 margin-top 无效
+       * 父元素的 margin-top 和 子元素的 margin-top 合并，规则和上下块盒 margin 合并一样
+       * 即使父元素没有设置 margin-top ，只要子元素设置了，就会塌陷
+       **/
+      .box {
+        margin-top: 50px;
+        width: 100px;
+        height: 100px;
+        background-color: #000;
+      }
+
+      .item {
+        margin-top: 20px;
+        width: 50px;
+        height: 50px;
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="item"></div>
+    </div>
+  </body>
+</html>
+```
+
+两种解决方法：
+
+* 父元素设置 BFC ，这样子元素和父元素所处的 \<html\> 的 BFC 就不是同一个了
+
+* 子元素设置浮动或绝对定位实现 BFC ，脱离标准流，和父元素 BFC 就不是同一个了
+
+（3）浮动和 BFC
+
+标准流中，父元素 auto 的 height 不会计算浮动元素的 height ，而 BFC 会，所以 BFC 可以清除浮动。
+
+BFC 也不会覆盖浮动元素压住：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .box {
+        overflow: hidden;
+        background-color: #000;
+        color: #fff;
+      }
+
+      .nav {
+        float: left;
+        width: 50px;
+        height: 50px;
+        background-color: red;
+      }
+
+      /**content 设置 BFC 后
+       * content 就不会被浮动的 nav 压住
+       * 此时 content 会自带 margin-left ，即 content 到父元素左边缘的距离
+       * 若自己设置的 margin-left 小于到父元素左边缘的距离，是无效的，如果像控制 margin ，可以设置浮动元素的 margin-right ，更方便
+       */
+      .content {
+        overflow: hidden;
+        height: 100px;
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="nav"></div>
+      <div class="content"></div>
+    </div>
+  </body>
+</html>
+```
+
+## 4 居中
+
+（1）行盒、行内快盒
+
+```
+.box {
+  width: 100px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+}
+
+/* border-box ，line-height 需要减去 border、 padding */
+.box {
+  box-sizing: border-box;
+  border: 1px solid #000;
+  padding: 10px 0;
+  width: 100px;
+  height: 50px;
+  line-height: 28px;
+  text-align: center;
+}
+
+/* border-box 计算 line-height 比较麻烦，也可以直接用 flex */
+.box {
+  box-sizing: border-box;
+  border: 1px solid #000;
+  padding: 10px 0;
+  width: 100px;
+  height: 50px;
   display: flex;
-  justify-cntent: center;
-  align-items: center;
-  overflow: hidden;
+  justify-content: center;
 }
-.img-box img {
-  width: 100%;  /*或者height: 100%;*/
-}
-//3.盒子宽高都固定，图片多出的尽量不裁剪
-.img-box {
+```
+
+（2）块盒
+
+```
+/* flex 单行水平垂直居中 */
+.box1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
 }
-/*若 宽>高 */
-.img-box img {
-  width: 100%;
+
+/* flex 多行水平垂直居中 */
+.box2 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
 }
-/*若 高>宽 */
-.img-box img {
-  height: 100%;
+
+/* 相对于父元素，只有水平居中，适合 PC 端版心居中 */
+.box3 {
+  margin: 0 auto;
 }
-```
 
-## 8 居中总结
-
-### 8.1 文本居中
-
-text-align: center; 文本水平居中
-
-line-height: 盒子高度; 文本垂直居中
-
-### 8.2 盒子居中
-
-（1）margin实现水平居中
-
-margin: 0 auto;
-
-（2）
-
-margin配置定位或translate实现
-
-```
-/*父盒子*/
-.father {
+/* 绝对定位 */
+.box4 {
   position: relative;
-  width: 200px;
-  height: 200px;
   border: 1px solid #000;
+  width: 200px;
+  height: 100px;
 }
-/*子盒子*/
-.son {
+
+.box > .item {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 100px;
-  height: 100px;
   border: 1px solid #000;
+  width: 50px;
+  height: 50px;
 
-  /*方式一，写死
-  margin-top: -50px;
-  margin-left: -50px;
-  */
-  /*方式二，translate自动计算
-  transform: translate(-50%,-50%);
-  */
-  /*方式绝对定位偏移都为0，margin自动就能水平垂直居中
+  /* 方式一，推荐 */
+  transform: translate((-50%, -50%));
+
+  /* 方式二，写死，不推荐 */
+  /* margin-top: -25px; */
+  /* margin-left: -25px; */
+
+  /* 方式三，不推荐 */
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
   margin: auto;
-  */
 }
 ```
 
-（3）flex实现
+## 5 响应式布局
 
-```
-/*单行*/
-父元素 {
-  display:
-  flex; justify-content: center;
-  align-items: center;
-}
+## 1 适配
 
-/*多汗*/
-父元素 {
-  display:
-  flex-wrap: wrap;
-  flex; justify-content: center;
-  align-contgent: center;
-}
-```
+（1）视口
 
-# 八、CSS3新特性
-
-在PC端浏览器中，这些新特性都有兼容性问题。移动端则没有。
-
-css有css1，css2，csss2.1，css3这几个版本，所有的浏览器几乎都支持了css2，而css2.1以后IE浏览器就要考虑兼容性了，如IE6和IE7支持部分css2.1，所以这里说的CSS3新特性是从泛指css2.1开始支持的新特性。
-
-目前，CSS3仍然处于发展阶段，不断发布新特性。
-
-## 1 新属性
-
-（1）文本类
-
-文本阴影
-
-```
-text-shadow: h-shadow(必写) v-shadow(必写) | blur | color; 使用与盒子阴影一样。
-```
-
-（2）背景类
-
-半透明效果：
-
-```
-background: rgba(r,g,b,a)，a为透明度（0-1），0全透明，1不透明
-```
-
-渐变背景色
-
-```
-background-image: linear-gradient(to right,red,rgba(0,255,0,0.8),blue)
-第一个参数可以省略，默认为 to bottom
-颜色参数可以有任意个，可以使用rgba()和transparent
-```
-
-（3）盒子类
-
-圆角边框：
-
-```
-border-radius: 
-值为像素或百分比（width的%）的半径，可以跟1-4个值:
-2个时为对角
-4个时分别为左上顺时针到左下
-也可以如border-top-left-radius设置单独圆角。
-```
-
-盒子阴影
-
-```
-box-shadow: h-shadow(必写) v-shadow(必写) | blur | spread | color | inset;
-分别是
-水平位置(px)
-垂直位置(px)
-模糊距离(px,0(实)-1(虚))
-尺寸(px)
-颜色(一般用rgba设置半透明)
-内或外阴影(默认外，可设inset内)
-```
-
-（4）CSS API
-
-滤镜
-
-```
-filter: 函数();
-最常用的模糊处理：blur( xpx )，x越大越模糊，0为不模糊。
-```
-
-宽度自动计算
-
-如：width: calc(100%-80px); 可以永远比父少80px，+-*/均可
-
-1.7 过渡：
-
-```
-transition: cssname time line delay
-分别是过渡的属性名，花费时间(单位s必须写) 运动曲线(默认ease，可省) 延时(默认0s，可省)
-如transition: height 2s ease 1s; 1s后开始，在2s内完成height属性以ease曲线的过渡。
-
-多条属性必须这样写：
-transition: height 2s ease 1s,width 2s ease 1s; ease和延时可省。
-
-若全部属性都需要，则可以：
-transition: all 2s ease 1s;
-```
-
-（5）transiform平面转换
-
-```
-transform: none; 没有任何转换效果
-(1) translate
-transform: translate(x,y); 移动盒子，可以只写一个x，xy值可以是数值，px，百分比(百分之宽高)，正/负往右下/左上
-transform: translate(x,y) 2d
-transform: translate3d(x,y,z) 3d
-transform: translateX(x) 
-transform: translateY(y) 
-transform: translateZ(z) 3d
-定位左上都50%后，transform: translate(-50%,-50%); 即可水平垂直居中。
-与margin区别：margin会影响其它盒子，而transilate不会
-
-(2) scale
-transform: scale(a); 缩放，a值>1/<1，放大/缩小，负数当成整数
-transform: scale(a); 2d，xy同时缩放a倍
-transform: scale(x,y); 2d，x，y各自缩放x倍，y倍
-transform: scale3d(x,y,z); 3d,xyz各自缩放
-transform: scaleX(x) transform: scaleY(y) transform: scaleZ(z) 3D，单独缩放xyz
-
-(3) rotate
-transform: rotate(adeg) 顺时针旋转a度
-transform: rotate(adeg) 2d
-transform: rotate3d(x,y,z,deg) 3d
-transform: rotateX(adeg) transform: rotateX(adeg) transform: rotateX(adeg) 3d
-transform-orgin: left bottom: 设置需旋转点，默认center
-
-(4) skew
-transform: skew(xdeg,ydeg); 2d，倾斜
-transform: skewX(xdeg) transform: skewY(ydeg) 2d  
-
-(5) 多重转换
-transform: translate() rotate()
-旋转会改变移动的x轴方向，所以一般移动在旋转之前才能水平移动
-```
-
-## 2 新选择器
-
-以下示例的E表示选择器
-
-（1）结构伪类选择器
-
-根据文档结构选择，常用于选择父元素下的子元素，
-
-注意：
-
-1. 没有第0个孩子，孩子从第一个开始。
-
-2. E最后跟父或子都可以，但最好是跟子元素。
-
-```
-（1）先给所有孩子标好序，再找第几个，再看与:前面是否匹配  
-E:first-child {} 选择父的第一个孩子
-E:last-child {} 选择父的最后一个孩子
-E:nth-child(n) {} 选择父的第n个孩子
-
-（2）只在:前面指定的元素中标好序，再找第几个。
-E:first-of-type {} 选择父的第一个孩子
-E:last-of-type {} 选择父的最后一个孩子
-E:nth-of-type(n) {} 选择父的第n个孩子,n从1开始
-
-（3）n可以是数字，关键字，公式
-数字：整数
-关键字：even odd，选出所有偶数或奇数
-公式：如n，2n，3n+2，n从0开始计算。
-2n偶数，2n+1奇数，n+5第五个开始，-n+5前五个
-
-（4）权重：伪类0010+E权重
-```
-
-（2）否定伪类选择器
-
-选中不符合条件的元素
-
-```
-:not(E) {
-  /* 选中E以外的元素 */
-}
-```
-
-（3）多类选择器
-
-```
-.class1.class2 {
-  /* 选中同时具备这两个类名的元素 */
-}
-```
-
-## 3 新盒子模型
-
-怪异盒模型
-
-```
-//默认的盒子大小计算方式，加不加都一样，padding，border会撑大盒子，大小=w/h+padding+border
-box-sizing: content-box;
-//CSS3的盒子模型，盒子大小始终是width，padding，border不会撑大盒子，大小=width，但是注意当padding+border > w/h，就会撑大盒子。
-box-sizing: border-box;  
-```
-
-盒子宽度总结（高度以此类推）：
-
-宽度都不计算margin
-
-offsetWidth为整个盒子宽度，clientWidth为可视内容宽度，scrollWidth为实际内容宽度
-
-|             | content-box              | border-box               |
-| ----------- | ------------------------ | ------------------------ |
-| offsetWidth | width+2倍padding+2倍border | width                    |
-| clientWidth | width+2倍padding          | width-2倍border           |
-| scrollWidth | width                    | width-2倍border-2倍padding |
-
-## 4 动画
-
-```
-//显示时从左往右显示，消失时从右往左消失的动画
-//类名任取,有该类名得到动画效果
-.come {
-  animation: hhh 1s;
-}
-.go {
-  //reverse翻转，所以只定义来就可以定义走
-  animation: hhh 1s reverse;
-}
-//配置动画，也在style里
-@keyframes hhh{
-  //起点与终点
-  from{
-    //宽度变为0
-    transform: translateX(-100%)
-  },
-  to{
-    //宽度不变
-    transform: translateX(0px)
-  }
-}
-```
-
-# 九、移动端布局
-
-## 1 基本
-
-### 1.1 与PC端的不同：
-
-- 不用设置版心，px与物理像素一一样。
-
-- 移动端浏览器基本没有兼容性问题，可以放心使用H5C3新特性。
-
-- 一些标签在移动端各浏览器都有各自样式，为了统一各浏览器的标签样式，通常使用github上的normalize.css进行初始化。
-
-- 为了防止用户过渡缩放，移动端页面要设置最小/最大宽度，一般最小宽度为320px，最大宽度看需求
-  
-  ```
-  body {
-    min-width: 320px;
-    max-width: 640px;
-  }
-  ```
-
-### 1.2 分辨率：
-
-屏幕真实的分辨率是物理分辨率，px是逻辑分辨率，PC端是1:1的，而移动端中，物理:px都是n:1，这叫物理像素比，
-window.devicePixelRatio 获取当前的物理像素比
-
-因此，图片放到移动端中，会放大n倍而模糊，所以在开发中，拿到图片先要将它缩小n倍再放到页面中，它会自动方放大n倍，就能不营销图片清晰度。因此，准备图片应当按照物理像素比来，叫n倍图。
-
-缩小图片是用软件工具缩小，而不是写代码
-
-### 1.3 移动端单位
-
-除了pc端的px和 %，移动端还有em，rem，vh，vw单位
-x em 数值是最近且有该属性的祖元素字体大小的x倍
-x rem 数值是html标签的对应样式属性的x倍，若html标签未指定样式，则是浏览器样式的x倍
-vw/vh，可视窗口的宽/高分成100份，1个vw/vh占一份，如100vw就是与可视窗口一样宽，50vw就是一半宽（可视窗口就是整个手机屏幕）
-
-### 1.4 视口
-
-视口是浏览器显示页面的屏幕区域。手机默认都有一个布局视口，是尽量显示整个PC端页面，手指缩放的形式，很不方便，后来就有了视觉视口，显示部分PC端页面，手指左右滑动的形式。
+视口（viewport），浏览器显示页面的屏幕区域。手机默认都有一个布局视口，是尽量显示整个PC端页面，手指缩放的形式，很不方便，后来就有了视觉视口，显示部分 PC 端页面，手指左右滑动的形式。
 
 现在使用的是理想视口，页面宽度即视口宽度，通过视口标签指定：
 
@@ -1132,361 +2409,94 @@ vw/vh，可视窗口的宽/高分成100份，1个vw/vh占一份，如100vw就是
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ```
 
-指定视口宽度为设备宽度，其他属性可以设置缩放比例以及是否可缩放
+指定视口宽度为设备宽度，其他属性可以设置缩放比例以及是否可缩放。
 
-### 1.5 移动端开发方案
+（2）分辨率
 
-  独立页面：流式布局，flex布局，rem布局
-同个页面：响应式布局
-
-流式布局（百分比布局）：
-
-现在很少用了。
-将宽度都设置为百分比，这样宽度就会随屏幕大小而变化。
-一般要设置最小宽度（320px）和最大宽度
-一般将body宽度设置为100%，最小320px，最大根据需要，为了方便在PC端查看还要设置水平居中。
-
-## 2 flex布局
-
-又叫弹性布局，伸缩布局等
-
-### 2.1 基本使用
+屏幕真实的分辨率是物理分辨率，px 是逻辑分辨率，PC端是 1 \: 1 的，而移动端中，物理 \: px = n \: 1，这叫物理像素比：
 
 ```
-ul {
-  display: flex;
-}
-/*flex: 1; 是非必要的*/
-li {
-  flex: 1;
-}
+// 获取当前的物理像素比
+console.log(window.devicePixelRatio);
 ```
 
-- 子元素不管是行内元素还是块级元素，都能设置宽度。
+因此，图片放到移动端中，会放大 n 倍而模糊，所以在开发中，拿到图片先要将它缩小 n 倍再放到页面中，它会自动方放大 n 倍，就能不营销图片清晰度。因此，准备图片应当按照物理像素比来，叫n倍图。
 
-- 效果是水平展示，flex:1;是均分视口宽度（各占一份的意思，可不写）。
+缩小图片是用软件工具缩小，而不是写代码。
 
-- 不脱标。
+（2）单位
 
-- flex布局是在剩余空间中，给子项分配空间，减去margin，边框和有宽度的盒子就是剩余空间
+em：
 
-- display:felx;使得float,clear,vertical-align属性失效，flex:1;使得width，flex-wrap失效
-
-- flex布局缺点：一般高度定死，字体大小无法岁屏幕缩放，而这些可以通过适配方案解决。
-
-- 由于设置了flex: 1; 后width失效，所以在需要flex:1;同时需要设置下划线长度或背景色宽度等需求时，可以在里面再放一个div，来设置div的width
-
-### 2.2 属性
-
-flex父元素叫弹性容器，子元素叫弹性盒子
-
-主轴和侧轴，默认x轴为主轴，y轴为侧轴，若设置y为主轴，则x为侧轴
-
-flex默认不换行，若超过长度会改变子项大小强行塞入一行
-
-（1）父元素属性
-
-1. display: flex; 所有子元素在主轴上排列显示且不换行
-
-2. 设置子元素在主轴上的排列方式
-   
-   justify-content: xxx;
-   
-   | flex-start    | 默认，左边开始                  |
-   | ------------- | ------------------------ |
-   | flex-end      | 右边开始                     |
-   | center        | 实现水平居中                   |
-   | space-around( | 均分主轴，缝隙各自用所以中间缝隙是两侧缝隙两倍大 |
-   | space-between | 两个子项到边缘，两侧无缝隙，剩余子项平分剩余空间 |
-   | space-evenly  | 均分主轴，共用缝隙一样大             |
-
-3. 设置侧轴上子项的位置（限单行）
-   
-   align-items: xxx;
-   
-   | strech     | 默认，若没有设置子元素高度，子元素会拉伸父元素一样高 |
-   | ---------- | -------------------------- |
-   | flex-start | 上边开始                       |
-   | flex-end   | 下边开始                       |
-   | center     | 垂直居中                       |
-
-4. 设置侧轴上子项的位置（限多行）
-   
-   align-content: xxx;
-   
-   属性与justify-content一样，多了个strech(默认)与align-items的一样
-
-5. 设置主轴方向
-   
-   flex-direction: row(默认) | column | row-reverse | column-reverse
-
-6. 设置换行
-   
-   flex-wrap: nowrap(默认) | wrap
-   
-   flex默认不换行，子项太多会压缩宽度以保证在一行显示。且每行的所有元素高度相同
-
-7. 主轴方向，换行复合写法
-   
-   flex-flow: column wrap
-
-（2）子元素属性
-
-1. flex: 1; 伸缩比属性，让子元素占一份
-   
-   如有三个孩子a，b，c，flex分别设置为1,2,1，就共4份，a c各占一份，b占2份
-   
-   注意：flex优先级比width高，会使width失效
-   
-   利用flex是分配剩余空间的特性，实现圣杯布局（两侧固定px，中间自适应）：
-   
-   两侧给固定宽度px，只给中间设置flex:1; 剩余空间分成1份而中间独占这一份，同时为了避免过多的缩小，可以给父元素设置min-width，max-width
-
-2. align-self: xxx; xxx与父元素的align-items一样，单独设置子项的侧轴排列方式
-
-3. order: 正负整数(默认0); 设置该子项的排列顺序，数值越大越靠前，相同数值哦按原本顺序
-
-### 2.3 flex布局常用实例
+当前元素 font\-size 的倍数：
 
 ```
-/*圣杯布局，左右固定宽度，中间flex:1自动适配*/
-.left, .right {
-  width: 100px;
-}
-.middle {
-  flex: 1;
-}
-
-/*分栏布局，一行x个元素，width: (100/x)% */
-.father {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.son {
-  width: 50%;
-}
-/*分栏布局，每个item有图片+文字(如商品列表)，若图片大小不同，可以使用下面的方案*/
 .box {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-}
-.item {
-  display: flex;
-  align-items: center;
-  position: relative;
-  width: 45%;
-  .img {
-    width: 100%;
-    padding-bottom: 30vw;
-  }
-  .info {
-    position; absolute;
-    bottom: 0;
-  }
+  /* 2em === 40px */
+  width: 2em;
+  font-size: 20px;
 }
 ```
 
-## 3 多媒体查询
+rem：
 
-要实现不同屏幕大小来修改html标签的字体大小，需要使用多媒体查询（CSS3）
+root em，CSS3 新增，与 em 不同的是只基于 \<html\> 的 font\-size ，可配合多媒体查询实现进一步适配。
 
 ```
 html {
-  font-size: 15px;
+  /* 浏览器默认一般是 16px */
+  font-size: 16px;;
 }
-选择器 {
-  xxx: 2rem;
+
+.box {
+  /* 32px */
+  width: 2rem;
 }
 ```
 
-当设备符合条件时就适用里面的css代码
+vw，vh：
 
-媒体类型有：all（全部），screen（屏幕），print（打印机）
-
-媒体特性即条件，screen媒体特性有：width，min-width（相当于>=），max-width（相当于<=）
-
-注意根据css的层叠性来决定多媒体查询的顺序
-
-如：当宽度小于320px时
+viewport 宽度为 100vw ，vh同理，会随着 viewport 的变化自动适配，通常 vw 用的比较多。
 
 ```
-media screen and (max-width:320px){
-  选择器 {
-    //css
+.box {
+  width: 50vw;
+  height: 50vw;
+}
+```
+
+## 2 布局
+
+一般用流式布局、flex 布局。
+
+为了避免过多的缩放，可以限制最大最小的 width ：
+
+```
+body {
+  max-width: 1920px;
+  min-width: 360px;
+}
+
+.box {
+  max-width: 100px;
+  min-width: 50px;
+}
+```
+
+多媒体查询，可以根据不同视口宽度，设置不同的样式：
+
+```
+/* 视口宽度在 350px 到 750px 之间时，以下样式适用 */
+@media screen and (min-width: 375px) and (max-width: 750px) {
+  body {
+      background-color: red;
   }
 }
 ```
 
-screen可省略，简写如下：
+## 3 移动端的历史遗留问题
 
-```
-@media (...){
- //css
-}
-```
-
-多个条件可用and链接
-
-```
-@media (...) and (...){}
-```
-
-引入资源：
-
-rem和多媒体查询可以实现字体，高度等的适配，也可以实现不同屏幕适用不同的布局，如果适配的样式太多，可以将不同屏幕给不同的css文件，再引入资源：
-
-link标签里面的属性： mediatype="media screen and (min-width:320px)" 复合条件就使用对应的css文件。
-
-## 4 移动端适配
-
-### 4.1 em和rem
-
-都是单位。
-
-em是CSS3之前就有的，它的大小为当前元素的font-size的x倍数，若当前元素没有设置font-size，则子元素的font-size继承父元素，即em是父元素font-size的x倍。若父元素没有设置，则会一直找到html标签
-
-```
-xxx {
-  font-size: 10px;
-  width: 2em;  /* 20px */
-}
-```
-
-rem（root em），CSS3新增，剞劂了em的缺陷，x rem 数值是html标签的字体大小的x倍，若html标签未指定样式，则是浏览器样式的x倍。所有的浏览器默认font-size一般是16px。
-
-rem适配就是通过只给html标签的字体大小设置px，给其他元素样式设置rem，当屏幕大小变化时只需要多媒体查询修改html标签的px，rem就能根据html标签的样式自动适配。
-
-注意，不管是em还是rem，html都只设置font-size，其他css属性都是根据这个适配，如width，height
-
-```
-html {
-  font-size: 15px;
-}
-选择器 {
-  xxx: 2rem;
-}
-```
-
-rem适配方案
-
-- 方案一：rem+多媒体查询+less，例：
-  
-  设计稿宽750px，需求分15份，最小屏幕320px
-  
-  1.less文件a，编写多媒体查询，分为x个屏幕区间，字体大小为 屏幕宽px / 15
-  
-  2.less文件b，引入a，按照屏幕750px进行开发，如设计稿图片宽100px，则将 其宽度（100/(750/15)=2），设置为 width: 2rem;
-  
-  3.这样，各个屏幕就能根据2rem进行适配
-
-- 方案二：rem+flexible.js+vscode插件cssrem/less
-  
-  不用再写多媒体查询，flexible.js已经给各种大小的屏幕的html字体大小设置为：屏幕宽px / 10
-  
-  按750px设计稿设置100px宽的图片时，100/(750/10)=1.33 width: 1.33rem
-  
-  如果不适用less，可以用cssrem，在写代码的px时就可以代码提示成对应的rem，但是注意，remcss默认是html的font-size是16，需要在首选项中设置为（750/10）=75
-
-### 4.2 vw和vh
-
-vw会适配，但是vh不会（慎用）
-
-它们是相对于视口的单位（宽，高），将视口划分成100粉，如5vw即5%的视口宽度
-
-与流式布局的百分比区别：流式布局的百分比是相对于父元素，而vw，vh是相对于当前视口。
-
-由于是根据视口给的宽高，这样不管屏幕怎样变化都会自动适配，比rem方便太多了。
-
-- 只适用于移动端，PC端完全不兼容
-
-- 由于缩放一般都是缩放宽度而不缩放高度，所以vh很少用，一般不管width还是height，都是用vw。
-
-- 设计稿转化成vw，vh
-  
-  设计稿一般给750px，它是二倍图，需要缩小原来的1/2，缩小后，如图中的一个盒子宽度为37.5px，则 37.5/375*100=10，所以 width: 10vw; 也可以借助一些工具直接量出来，由于有大量除法也可以用less计算或vscode插件px2vw
-
-### 4.3 设计稿
-
-一般设计稿宽度为750px，即iphone6/7/8的尺寸（屏幕像素/物理像素 = 375px/750px），当然也有可能不是750px。
-
-设计稿上标注的px需要自己转化为对应的适配单位：
-
-假设设计稿上各处标注的px为n，设计稿总宽度为total
-
-vw = n / total
-
-## 5 响应式布局
-
-使一套页面根据不同终端屏幕大小（PC,pad,phone）响应式的改变布局。不需要另外开发移动端页面。但是这种布局方式很少用了，但需要了解。
-
-- 原理
-  
-  通过多媒体查询实现，根据屏幕大小划分为四个档位，<768px(超小屏幕，如手机)，>=768px && <992px(小型屏幕，如pad)，>=992px && <1200px(中等屏幕，如PC显示器)，>=1200px(宽屏，如宽屏显示器)
-
-- 响应式布局容器
-  
-  为了简便，用一个父元素包裹需要响应式的子元素，用多媒体查询来改变该容器的宽度（四个档位宽度分别改为 100%，750px，970px，1170px），子元素也可以响应式的修改。
-
-- 移动端框架——bootstrap
-  
-  常用于开发响应式页面，也能做移动端页面
-  
-  bootstrap有响应式容器，通过栅格系统实现响应式，不需要多媒体查询来修改容器宽度
-  
-  基本使用：
-  
-  bootstrap的每行共分为12列
-  
-  ```
-  <!-- 分别在宽屏，中屏，小屏，超小屏中，每个元素占3，4,6,12份，使得一行显示4,3,2,1个元素 -->
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">1</div>
-        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">2</div>
-        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">3</div>
-        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">4</div>
-      </div>
-    </div>
-    <!-- 列可以嵌套列，被嵌套的列又分为12份 -->
-    <div class="container">
-      <div class="row">
-        <div class="col-md-6">
-          <div class="col-md-4">1</div>
-          <div class="col-md-4">2</div>
-          <div class="col-md-4">3</div>
-        </div>
-      </div>
-    </div>
-    <!-- 设置列偏移（左偏），偏移会占用份数，如下是实现各占3份的两个元素贴向两侧 -->
-    <div class="container">
-      <div class="row">
-        <div class="col-md-3">1</div>
-        <div class="col-md-3 col-md-offset-6">2</div>
-      </div>
-    </div>
-    <!-- 列排序，改变排列顺序 -->
-    <div class="container">
-      <div class="row">
-        <div class="col-md-4 col-md-push-8">本来是左，后面会推到右</div>
-        <div class="col-md-8 col-md-pull-4">本来是右，后面会拉到左</div>
-      </div>
-    </div>
-    <!-- 响应式工具，实现显示隐藏，若隐藏了，则不再占用份数 -->
-    <div class="container">
-      <div class="row">
-        <div class="col-md-4 hidden-md">我只在中屏时隐藏</div>
-        <div class="col-lg-6 visible-lg">我只在宽屏时显示</div>
-      </div>
-    </div>
-  ```
-  
-  其他详见文档
-
-## 6 移动端的历史遗留问题
-
-### 6.1 移动端click事件300ms延迟：
+（1）移动端click事件300ms延迟
 
 原因：移动端浏览器一般都有双击缩放或双击xxx的场景，为了监听出双击，在点击第一次后，若300ms内再次点击，就是双击。
 但是大部分情况下，300ms都是很难被用户接受的
@@ -1495,342 +2505,218 @@ vw = n / total
 
 ```
 npm install fastclick --save
-//main.js
+// main.js
 import FastClick from 'fastclick'
 FastClick.attack(document.body)
 ```
 
-还可以用tap代替click，一般移动端的框架都会内置tap事件：
+# 五、CSS 预处理器
 
-移动端有太多复杂的功能是click监听不到的，例如，触摸、按住和轻滑。这时候就要用tap方法了。click事件是点击放开之后才触发的，所以时间上会有延迟，大概200-300ms这样，可是我们在移动端的话就比较追求速度，所以就不能出现说有延迟的情况。所以用tap来代替click事件的话，对于针对移动设备的产品都适合。而且，tap还有一个特点就是『事件穿透』，就是你执行完绑定的tap事件之后呢，如果下面如果绑定了其他事件或者是本身就存在点子事件的话，也会默认触发。
+有 less 和 sass：
 
-### 6.2 移动端滚动问题
+* 区别是定义变量，less 用 @ ，sass 用 \$
 
-移动端浏览器滚动会有一些问题如没有惯性滚动，但也只出现在移动端浏览器，小程序/app则没有这个问题。
+* scss 时 sass 的高版本
 
-滚动会使用第三方库，如better-scroll
-
-npm install better-scroll --save //若是引用的better-scroll.js文件，是new bscroll()
-
-基本使用
+以下就以 less 为例：
 
 ```
-/*
-使用规则：
-1.大盒子里放有且只能一个小盒子，在小盒子里放滚动的元素
-2.大盒子设置高度以此限定滚动区域，并设置over-flow:hidden;隐藏超出
-3.import bscroll from 'better-scroll'
-4.vue中因为以下代码需要在有模板才生效，所以需要写在创建模板结束的生命周期函数mounted()内
-5.这里使用ref而不推荐dcument.querySelector('.类名')，因为有多个scroll时会冲突
-*/
-
-const scroll = new bscroll(this.$refs.refname,{    //大盒子需要属性 ref="refname"
-  //可选属性
-  //参数1，默认为0， 0/1不监听位置，2监听，但脱手惯性时不监听，3惯性时也监听
-  probeType: 0 | 1 | 2 | 3,    
-  //参数2，默认false一些点击事件会失效，所以最好true
-  click: false | true,        
-  //参数3，上拉，默认false
-pullUpLoad: false | true    
-})
-//监听坐标，需要probeType:2 | 3  position为位置信息
-scroll.on('scroll',position => {})     
-//监听上拉到底部，需要pullUpLoad:true  拉到最底部时的事件，默认执行一次，与scroll.finishPullUp()配合可以多次
-scroll.on('pullingUp',() => {
-  scroll.finishPullUp()
-})        
-//ms可不传默认0，在ms内到x，y位置，0,0为顶部    
-scroll.scrollTo(x,y,ms)    
+npm install -g less
 ```
 
-封装成vue组件：
+解析成 \.css ：
 
 ```
-/*
-1.与axios一样依赖性很强，为了方便以后管理维护代码，将以上代码封装成.vue文件，使用时注册该组件使用
-2.probeType和pullUpLoad需要传入
-3.外部调用scroll对象时最好先判断scroll对象是否为空
-*/
-<template>
-  <div class="wrapper" ref="wrapper">
-    <div class="content">
-      <slot></slot>
-    </div>
-  </div>
-</template>
+lessc ./1.less ./1.css
+```
 
-<script>
-  import bscroll from 'better-scroll'
+less 中导入其他 less 和 css ：
 
-  export default {
-    data(){
-      return {
-        scroll: null
-      }
-    },
-    props: {
-      probeType:Number,
-      pullUpLoad:Boolean
-    },
-    mounted(){
-      this.scroll = new bscroll(this.$refs.wrapper,{
-        probeType: this.probeType,
-        click: true,
-        pullUpLoad: this.pullUpLoad
-      }),
-      this.scroll.on('scroll',position => {
-        this.$emit('showBackTop',position)
-      }),
-      this.scroll.on('pullingUp',() => {
-        this.$emit('pullUpLoad')
+```
+@import "./1.less";
+```
 
-      })
+注释：
+
+```
+// 单行注释不会出现在生成的 css 中
+/* 多行注释会保留 */
+```
+
+变量：
+
+```
+// less
+@my-color: #000;
+@pre: .box;
+
+.box {
+  color: @my-color;
+}
+
+@{pre}-title {
+  color: @my-color;
+}
+```
+
+```
+/* css */
+.box {
+  color: #000;
+}
+.box-title {
+  color: #000;
+}
+```
+
+变量运算，最终单位是最早出现的单位：
+
+```
+// less
+@my-width: 10 + 20px;
+@my-height: 20em + 20 + 40px;
+
+.box {
+  width: @my-width;
+  height: @my-height;
+}
+```
+
+```
+/* css */
+.box {
+  width: 30px;
+  height: 80em;
+}
+```
+
+选择器嵌套：
+
+```
+// less
+// & 时上一级选择器，选择器中 & 只能出现一次
+.box {
+  font-size: 20px;
+
+  .item {
+    color: #000f
+  }
+
+  &:hover {
+    color: #000f
+  }
+
+  &.big {
+    color: #000f
+  }
+}
+```
+
+```
+/* css */
+.box {
+  font-size: 20px;
+}
+.box .item {
+  color: #000f;
+}
+.box:hover {
+  color: #000f;
+}
+.box.big {
+  color: #000f;
+}
+```
+
+函数：
+
+```
+// less
+// 没有参数时，括号可以省略
+.my-flex(@width) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: @width;
+}
+
+.my-border(@a, @b, @c) {
+  border: @arguments;
+}
+
+.my-height(@type) when(@type = big) {
+  height: 100px;
+}
+
+.my-height(@type) when(@type = small) {
+  height: 50px;
+}
+
+.box {
+  // 调用时必须加上括号
+  .my-flex(200px);
+  .my-border(1px, solid, #000);
+  .my-height(big);
+}
+```
+
+```
+/* css */
+.box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  border: 1px solid #000;
+  height: 100px;
+}
+```
+
+循环：
+
+```
+// less
+.my-for(@i) when (@i > 0) {
+  .my-padding-@{i} {
+    padding: @i * 10px;
+  }
+  .my-for(@i - 1);
+}
+
+.my-for(3);
+```
+
+```
+/* css */
+.my-padding-3 {
+  padding: 30px;
+}
+.my-padding-2 {
+  padding: 20px;
+}
+.my-padding-1 {
+  padding: 10px;
+}
+```
+
+多媒体查询：
+
+```
+// less
+.box {
+  @media screen and (max-width: 750px) {
+    .nav {
+      display: none;
     }
   }
-</script>
-
-<style scoped>
-  .wrapper {
-    position: absolute;
-    top: navbar高度
-    bottom: tabbar高度;
-
-    left: 0;
-    right: 0;
-    overflow:hidden;
-  }
-</style>
-//父组件中获取滚动组件实例对象，来调用scrollTo，refresh
-```
-
-注意事项：
-
-注意事项
-
-1. 无法滚动bug
-   由于scroll对象创建后会根据网页内容有一个初始高度，而发生网络请求后显示请求的图片，高度变高，但scroll高度不会刷新，就会无法滚动。
-   
-   解决方法：一旦加载一张图片，就使用scroll.refresh()刷新高度
-   在显示图片的组件里，img标签绑定事件 @load="" 并定义自定义事件，home组件刷新高度 ，但是此时home组件和该组件会涉及到非父子组件之间的通信，可以用vuex或事件总线解决。
-   优化：防抖动，不用每次加载完图片都调用refresh()
-
-2. 跳转bug，与1同理，都是图片未加载完，高度需要refresh，跳转的位置才会正确
-
-3. better-scroll的滚动是基于自身的可滚动区域，scroll.on('scroll',e=>{})坐标e随自己的可滚动区域而不是window
-
-4. betterscroll的高度是整个可滚动区域的高度而不是当前展示的滚动区域高度，设置top、bottom时需注意
-
-5. better-scroll组件内的子组件的绝对定位、固定定位和黏性定位会有bug（相对定位正常）
-   
-   - 绝对定位，就算scroll组件没有相对定位，绝对定位也是以scroll组件为父元素，而更下一级以后的组件则正常，但都以scroll组件为根
-   
-   - 固定定位完全失效，不再以浏览器视口为父，而是以scrill组件为父，所以会随着滚动而滚动
-   
-   - 黏性定位完全失效，解决方法：多弄一个该子组件在scroll组件外，绝对定位到顶部，需要时再显示
-
-6. offsetTop不准问题（不是betterscroll带来的问题，本身就有），原因是上面有图片未加载完，需要@load监听才能获得最终的offsetTop
-
-7. betterscroll结核的bug，数据确实保存了，但是滚动位置与原来不同：
-   
-   首先要知道betterscroll的两个特点，一是脱手会惯性滚动，二是滚到顶部或底部会有弹簧效果的滚动
-   
-   使用了且监听scroll事件，出现的问题：
-   
-   ①、当手指滑动/惯性滚动/弹簧滚动的同时切换路由时，scroll事件会一直调用且Y坐标为0（activated()和beforeRouteLeave()获取到的也是0），所以路由再切换回来时，就会自己滚到顶部。
-   
-   ②、当上拉加载更多的同时切换路由，若还在加载中，则scroll会一直调用直到加载完成，与情况1不同的是Y是正确的当前位置，但是路由切换回来时还是会回到顶部
-   
-   解决思路：
-   
-   * 用变量a保存Y值，scroll事件函数获取Y值时，如果得到了0，就不赋值给a，否则就把Y值赋值给a
-   
-   * deactivated()中，scrollTo(0,a)，使滚动停止；但是处于弹簧效果时没用，因为此时a的值还是在弹簧效果内，所以scrollTo(0,0)，以确保Y不处于弹簧效果
-   
-   * activated()中，scrollTo(0,a)，但是必须在前面refresh一下，否则还是会缓慢滚动顶部
-     
-     ```
-     ...
-     deactivatedY: 0
-     ...
-     onMounted(){
-       let scroll = new bscroll({
-         probeType: 3,
-         click: true,
-         pullUpLoad: true  
-       })
-       scroll.on('scroll',e => {
-         this.deactivatedY = e.y == 0 ? this.deactivated : e.y  
-       })
-       ...
-     }
-     activated(){
-       scroll.refresh()
-       scroll.scrollTo(0,deactivatedY)
-     }
-     deactivated(){
-       scrollTo(0,0)
-     }
-     ```
-
-8. 若betterscroll内的组件有切换展示数据的功能，每类数据有多有少，展示出来的高度就不同且滚动过的距离也不同，为了用户体验，应当监听scroll事件，给每类数据都保存一个Y值，切换数据的同时scrollTo()，典型应用如多种类型的商品列表
-   
-   或者另一种更好的方案，每次切换都滚动到数据最开始展示的地方，实现比较简单
-
-9. 回滚bug，当在图片未加载完成前滚动或scrollTo到该图片后面，则当图片加载完后，此时滚动区域refresh后被撑高，就会回滚一段距离，距离就是图片的高度，目前无法解决。
-
-10. 不要重复new bscroll，除非是需要使用多个betterscroll
-
-# 十、CSS预处理语言
-
-## 1 less
-
-less（动态样式语言），一种CSS预处理语言。
-使用类似css的语法，为css提供了动态语言的特性，如变量，函数，运算，继承等，方便css的管理与维护
-引入，三种方法：
-
-```
-(1) CDN
-<link rel="stylesheet/less" href="css/1.less">
-<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/3.10.0-beta/less.min.js"></script>
-（2）下载安装koala编译器，编译less成css，再引入css
-（3）node
-npm install –g less@latest  全局安装最新版本
-```
-
-lessc 查看电脑是否有less
-lessc xxx.less xxx.css 在xxx.less文件目录下执行，将less编译成css
-
-基本语法：
-
-导入其他less文件：
-
-```
-@import “xxx.less”  //后缀名可以省略
-```
-
-注释，用//注释编译后不保留，/**/编译后保留：
-
-```
-//000
-/*123*/
-```
-
-变量声明，样式混合：
-
-```
-/* 变量 */
-@hhh:200px;
-.hhh {
-  font-size: @hhh;
-}
-
-/* 混合 */
-.mixin {
-  .hhh();
 }
 ```
 
-运算，运算结果的单位是表达式中，最早出现的单位：
-
 ```
-@cm: 1 + 5cm + 10mm;   /* 7cm 单位类型相同 */
-@pp: 1 + 3px  -2cm;    /* 2px  单位类型不同，忽略后面的cm */
-@pr1: 5%;
-@pr2: @pr1 * 2;       /* 10% 表达式可以使用变量 */
-```
-
-嵌套：
-
-```
-/* less */
-.father {
-  color: red;
-  .child {
-    font-size: 500px;
-  }
-}
-
 /* css */
-.father {
-  color: red;
-}
-.father .child {
-  font-size: 500px;
-}
-```
-
-& 福选择器标识符：
-
-配合嵌套使用
-
-```
-/* less */
-.box1 { 
-  &:hover {
-    background-color: red;
+@media screen and (max-width: 750px) {
+  .box .nav {
+    display: none;
   }
 }
-
-.ul li {
-  &.box2 {
-    color: red;
-  }
-}
-
-/* css */
-.box1:hover {
-  background-color: red;
-}
-}
-
-.ul li.box2 {
-  color: red;
-}
 ```
-
-嵌套中 &> 和 > 的效果一样。
-
-其他
-
-```
-//函数
-.xxx {}  等价于  .xxx(){}  都用.xxx()调用
-可以带默认参数 .xxx(@aaa:…) {}  没有实参时使用默认值
-@arguments 与 js的arguments类似
-
-
-//规则嵌套，编译后冒泡
-.box {
-  @media (...){样式} 编译 @media (...){.box {样式}}）
-  @media (...){      编译 @media (...) and (...) {.box {}}
-    @media (...) {}
-  }
-}
-
-
-
-//函数,less内置了很多函数，实参可传入变量
-.box {
-  width: percentage(0.5);
-} 
-//其他函数 
-//saturate(颜色,百分比) 加深或淡化颜色
-//lighten(颜色，百分比) 颜色亮度
-//spin(颜色,百分比)     颜色旋转角度
-```
-
-## 2 sass
-
-与less语法基本相同。
-
-还有scss，是sass的高级版本。
-
-区别：
-
-* less用@定义变量，sass变量用$定义
-
-* less基于JavaScript，在客户端处理，sass基于Ruby，在服务端处理，
-
-* 在less中仅允许循环数值，而在sass中可以遍历任何类型的数据
-
-* less有Preboot，sass有Compass

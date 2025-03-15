@@ -1,42 +1,5 @@
-#include<iostream>
-#include<queue>
-#include<stdlib.h>
-using namespace std;
-#define MAX_VERTEX 100
-#define VEX 8;
 
-int gData[8][8] =
-{ 0,1,0,0,0,0,0,0,
-1,0,1,0,0,0,0,0,
-0,1,0,1,0,0,0,0,
-0,0,1,0,1,1,0,0,
-
-0,0,0,1,0,1,1,0,
-0,0,0,1,1,0,1,1,
-0,0,0,0,1,1,0,1,
-0,0,0,0,0,1,1,0 };
-
-//ÁÚ½Ó¾ØÕó
-typedef struct GraphMartix
-{
-	int vexnum;
-	char vertex[MAX_VERTEX];
-	int edge[MAX_VERTEX][MAX_VERTEX];
-}GraphMartix;
-
-void creatGraphMartix(GraphMartix &G,int n)
-{
-	G.vexnum = n;
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
-			G.edge[i][j] = gData[i][j];
-	for (int i = 0; i < n; i++)
-	{
-		G.vertex[i] = 'A'+i;
-	}
-}	
-
-/*-------------------------------------±éÀúÁÚ½Ó¾ØÕó--------------------------------------------*/
+/*-------------------------------------ï¿½ï¿½ï¿½ï¿½ï¿½Ú½Ó¾ï¿½ï¿½ï¿½--------------------------------------------*/
 
 void BFS(GraphMartix G,bool isVisit[],int n)
 {

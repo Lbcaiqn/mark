@@ -519,6 +519,14 @@ export default {
 </template>
 ```
 
+v\-model 默认监听 input 事件，每次输入就会重新执行 render 函数，虽然会有 diff 算法提高性能，但 input 执行非常频繁，有时就会有一些卡顿。
+
+解决方法，实际应用中表单其实只需要获取最后一次输入的结果就行：
+
+* 使用 \.lazy 修饰符改为绑定 change 事件，当 enter 或失焦才执行
+
+* 使用防抖
+
 （4）计算属性、watch
 
 ```
@@ -2583,7 +2591,11 @@ Vue2 的最后一个版本，已经可以使用 Vue3 特性，2.7 版本主要�
 
 响应式，即数据修改，依赖该数据的函数重新执行，这些函数包括 render、computed、watch、watchEffect 。
 
-Vue2，使用 Object\.defineProperty 实现：
+核心是建立数据和函数之间的联系，JS 中只有 Object\.defineProperty 和 Proxy 可以实现，且都只能用于对象。
+
+#### 5.1.1 Vue2 响应式
+
+Vue2，使用 Object\.defineProperty监听 data 对象实现：
 
 * 先用 Object\.defineProperty 把 data 第一层代理到 this ，方便以后直接用 this 访问数据，不需要递归
 
@@ -2605,7 +2617,7 @@ Vue2，使用 Object\.defineProperty 实现：
   
   * computed 是惰性（lazy）的，只有在用到时才进行依赖收集；只有 computed 依赖的数据修改了，computed 变为脏数据（dirty），computed 才会重新执行，数据没修改则使用缓存 value
 
-简单实现：
+实现：
 
 ```
 // type ------------------------------------------------------------------------------------
@@ -3000,86 +3012,476 @@ const vm = new Vue({
 });
 ```
 
-Vue3 的响应式：
+#### 5.1.2 Vue3 响应式
 
-ref 用 Object\.defineProperty 实现，reactive 用 Proxy 实现（ref 处理引用类型时，底层会使用 reactive）：
+使用 Proxy 实现；
 
-* Proxy 可以拦截所有的对象基本操作（包括增加、删除属性、数组 push 等，Set、Map 等操作）：
+* Proxy 可以拦截对象基本操作，如 obj\.key ，arr\.push\(\) 最终都会转换成基本操作 get\(\) 、set\(\)
 
 * Proxy 的性能更高：
   
-  * 同一个嵌套数据，Object\.defineProperty 会递归每一个属性，而 Proxy 虽然也会递归，但处理引用类型就够了，只不过 Proxy 在开始时容易出现响应式丢失，如取出 Proxy 对象中的基本类型属性，可以用 toRef 解决4
+  * Vue2 在初始化就递归便利每一个 key 并使用  Object\.defineProperty ；Vue3 的 Proxy 只需要处理引用类型，且响应式是 lazy 的，只有 get 到 key 才会做响应式
   
-  * Vue3 可以根据需要定义响应式数据，不想 Vue2 全部放在 data 中；reactive的递归是 lazy 的，只有用到了某个深度的属性，才会处理这个深度的响应式
+  * Vue2 所有数据都在 datat 中，都做响应式，不过可以用冻结解决；而 Vue3 可以根据需要定义响应式数据
 
-Vue3 底层会用 Reflect 代替 Object 的操作，这里只是简单实现：
+实现：
+
+Vue3 的响应式模块是一个单独的包。
 
 ```
-// 判断是否是引用类型
-const isPointer = (value) => {
-  return ["[object Object]", "[object Array]"].includes(
-    Object.prototype.toString.call(value)
-  );
+// utils.js
+
+export function isObject(value) {
+  return typeof value === "object" && value !== null;
+}
+
+export function isProxy(value) {
+  return Object.prototype.toString.call(value) === "[object Proxy]";
+}
+
+// 判断两个 value 是否相
+// 等，is() 相等时为 true 可以得到更具有实际意义的结果
+// true false false true
+// console.log(+0 === -0, Object.is(+0, -0), NaN === NaN, Object.is(NaN, NaN));
+export function isChange(oldValue, newValue) {
+  return !Object.is(oldValue, newValue);
+}
+```
+
+```
+// operate.js
+
+export const TrackOpType = {
+  GET: "get",
+  HAS: "has",
+  ITERATE: "iterate",
 };
 
-// Proxy 配置项
-const proxyHandler = {
-  /**参数
-   * target：调用 get 的那个对象/数组
-   * property：key
-   * receiver：整个 proxy 对象
-   */
-  // 对象调用、数组下标访问
-  get: (target, property, receiver) => {
-    console.log(`get ${String(property)}`);
-    return target[property];
-  },
+export const TriggerOpType = {
+  SET: "set",
+  ADD: "add",
+  DELETE: "delete",
+};
+```
 
-  // set 时回调，第 3 个参数变成 newValue
-  // 修改、添加 key
-  set: (target, property, newValue) => {
-    console.log(`set ${String(property)}`, newValue);
+```
+// effect.js
 
-    // 新数据需要再做一次响应式
-    target[property] = toProxy(newValue);
+import { TrackOpType, TriggerOpType } from "./operate.js";
 
-    return true;
-  },
+// effect 执行 fn ，fn 执行触发数据的 get ，get 中 track 收集 activeEffect
+/**之所以不直接吧 fn 作为依赖而是加一层，是因为在 trigger 时，可能会改变依赖关系
+ * const obj = { a: 1, b: 2, c: 3 };
+   const p1 = reactive(obj);
+   function run() {
+     if (p1.a === 1) console.log(p1.b);
+     else console.log(p1.c);
+   }
+   effect(run);
+   p1.a = 123;
+ */
+let activeEffect = null;
+const activeEffectStack = [];
 
-  // delete 时回调，只有 2 个参数
-  deleteProperty: (target, property) => {
-    console.log(`delete ${String(property)}`);
-    delete target[property];
-    return true;
-  },
+// 默认的调度器，实现异步更新和防止多次 trigger 相同的 fn
+const defaultScheduler = function () {
+  Promise.resolve().then(() => {
+    this();
+  });
 };
 
-const toProxy = (data) => {
-  // 判断 proxy 对象时会报错，刚好用来规避已经是 proxy 的对象不再做响应式
-  try {
-    if (!isPointer(data)) return data;
-  } catch {
-    return data;
+export function effect(fn, options = {}) {
+  options.lazy = options.lazy || false;
+  options.scheduler = options.scheduler || defaultScheduler;
+
+  const effectFn = function () {
+    try {
+      activeEffect = effectFn;
+      activeEffectStack.push(effectFn);
+
+      activeEffect.options = options;
+
+      // 多对多关系，deps -> fn ,fn -> deps
+      activeEffect.deps = [];
+
+      return fn();
+    } finally {
+      activeEffectStack.pop();
+      const len = activeEffectStack.length;
+      activeEffect = len ? activeEffectStack[len - 1] : null;
+    }
+  };
+
+  if (!options.lazy) effectFn();
+  else return effectFn;
+}
+
+function cleanFnDeps(effectFn) {
+  if (!effectFn || !effectFn.deps) return;
+
+  for (const dep of effectFn.deps) dep.delete(effectFn);
+  effectFn.deps.length = 0;
+}
+
+// track --------------------------------------------------------------------
+// 数据结构，Vue 中没有 TypeMap ，多了这一层在 trigger 时会比 Vue 更精确，避免不必要的 trigger ，但会多一些内存消耗
+// type Deps = Set(Function);
+// type TypeMap = Map<Operater, Deps>;
+// type PrpsMap = Map<string | Symbol, TypeMap>;
+// type TargetMap = WeakMap<Object, PropsMap>;
+const targetMap = new WeakMap();
+
+let shouldTrack = true;
+
+export function pauseTrack() {
+  shouldTrack = false;
+}
+
+export function resumeTrack() {
+  shouldTrack = true;
+}
+
+const INTERATE_KEY = Symbol('iterate_key"');
+export function track(target, type, key) {
+  if (!shouldTrack || !activeEffect) return;
+
+  // console.log("track " + type, key);
+
+  let propsMap = targetMap.get(target);
+  if (!propsMap) {
+    propsMap = new Map();
+    targetMap.set(target, propsMap);
   }
 
-  let proxyData = Array.isArray(data) ? [] : {};
+  if (!key) key = INTERATE_KEY;
+  let typeMap = propsMap.get(key);
+  if (!typeMap) {
+    typeMap = new Map();
+    propsMap.set(key, typeMap);
+  }
 
-  // 递归
-  for (const key in data) proxyData[key] = toProxy(data[key]);
+  let deps = typeMap.get(type);
+  if (!deps) {
+    deps = new Set();
+    typeMap.set(type, deps);
+  }
 
-  // 先递归再 new Proxy 是为了防止递归时触发设置好的 get、set ，同时顺便深拷贝原始数据
-  proxyData = new Proxy(proxyData, proxyHandler);
+  deps.add(activeEffect);
+  activeEffect.deps.push(deps);
+}
 
-  return proxyData;
+// trigger -------------------------------------------------------------------------
+// trigger 类型对应需要的 track 类型
+const triggerTypeMap = {
+  [TriggerOpType.SET]: [TrackOpType.GET],
+  [TriggerOpType.ADD]: [TrackOpType.GET, TrackOpType.HAS, TrackOpType.ITERATE],
+  [TriggerOpType.DELETE]: [
+    TrackOpType.GET,
+    TrackOpType.HAS,
+    TrackOpType.ITERATE,
+  ],
 };
 
-const obj = { a: 1, item: [0, { b: 2 }, { c: 3 }], deepObj: { d: 4 } };
+function getEffectFns(target, type, key) {
+  const result = new Set();
+  if (!target || !type || !key) return result;
 
-const proxyData = toProxy(obj);
+  const propsMap = targetMap.get(target);
+  if (!propsMap) return result;
 
-proxyData.deepObj.d = 555;
-proxyData.deepObj.dd = 555;
-delete proxyData.deepObj.dd;
+  /**add、delete 会影响长度，所以 iterate 也需要 trigger
+   * const p1 = reactive({ a: 1 });
+     function run() {
+       for (const i in p1) console.log("for");
+     }
+     effect(run);
+     console.log("\n");
+     p1.newProps = 123;
+   */
+  const keys = [key];
+  if ([TriggerOpType.ADD, TrackOpType.DELETE].includes(type))
+    keys.push(INTERATE_KEY);
+
+  for (const k of keys) {
+    const typeMap = propsMap.get(k);
+    if (!typeMap) continue;
+
+    const trackTypes = triggerTypeMap[type];
+    for (const t of trackTypes) {
+      const deps = typeMap.get(t);
+      if (!deps) continue;
+
+      for (const dep of deps) result.add(dep);
+    }
+  }
+
+  return result;
+}
+
+export function trigger(target, type, key) {
+  // console.log("trigget " + type, key);
+
+  const effectFns = getEffectFns(target, type, key);
+  for (const fn of effectFns) {
+    // 防止在 trigger 时 track 相同的依赖，导致栈溢出，如 state.a = state.a + 1
+    if (fn === activeEffect) continue;
+
+    // 先在所有 deps 中 clean 这个依赖，避免多余的依赖关系，执行 fn 后会再次建立依赖关系
+    // cleanFnDeps 配合 defaultScheduler 异步更新，能实现多个数据同时 trigger 同一个依赖时，只执行最后一次
+    cleanFnDeps(fn);
+
+    // 使用调度器执行 fn
+    fn.options.scheduler.call(fn);
+  }
+}
+```
+
+```
+// handlers.js
+
+import { track, pauseTrack, resumeTrack, trigger } from "./effect.js";
+import { reactive } from "./reactive.js";
+import { isObject, isChange } from "./utils.js";
+import { TrackOpType, TriggerOpType } from "./operate.js";
+
+const RAW = Symbol('raw"');
+const arrayInstcumentation = {};
+
+/**数组使用查找方法时若查找的是引用，如：
+ * const obj = { a: 1 };
+   const arr = reactive([ 1, 2, obj] );
+   console.log(arr.includes(obj));
+ * 输出 false ，正确应该输出 true
+ * 原因是 obj 是原始对象，而 arr 中的 obj 变成了 Proxy 对象，引用不同
+ */
+["includes", "其他查找方法"].forEach((method) => {
+  arrayInstcumentation[method] = function (...args) {
+    // 方法一：查找时吧原始对象转化成 Proxy
+    // ...
+
+    // 方法二：Vue 采用的方式，先再代理中找一遍，找不到再去原始对象找，优点是适用性强=，缺点是需要多余的便利
+    const result = Array.prototype[method].apply(this, args);
+    if (result < 0 || result === false) {
+      // this[RAW] 得到原始对象
+      return Array.prototype[method].apply(this[RAW], args);
+    }
+    return result;
+  };
+});
+
+// 数组使用这些方法时，会 get length 并 track，但框架应该避免这种意外的 track
+["push", "pop", "unshfit", "shift", "split"].forEach((method) => {
+  arrayInstcumentation[method] = function (...args) {
+    pauseTrack();
+    Array.prototype[method].apply(this, args);
+    resumeTrack();
+  };
+});
+
+// 拦截基本操作 .get
+function get(target, key, receiver) {
+  if (key === Symbol.toStringTag) return "Proxy";
+  if (key === RAW) return target;
+
+  track(target, TrackOpType.GET, key);
+
+  // 数组方法处理
+  if (Array.isArray(target) && arrayInstcumentation.hasOwnProperty(key)) {
+    return arrayInstcumentation[key];
+  }
+
+  const result = Reflect.get(target, key, receiver);
+  if (isObject(result)) return reactive(result);
+  return result;
+}
+
+// 拦截基本操作 .hasProperty ，如使用 in
+function has(target, key) {
+  track(target, TrackOpType.HAS, key);
+
+  return Reflect.has(target, key);
+}
+
+// 拦截基本操作 .ownKeys，如使用 for...in
+function ownKeys(target) {
+  track(target, TrackOpType.ITERATE);
+
+  return Reflect.ownKeys(target);
+}
+
+// 拦截基本操作 .set ，如修改、添加
+function set(target, key, value, receiver) {
+  const oldValue = target[key];
+  const oldLenth = Array.isArray(target) ? target.length : undefined;
+  const type = target.hasOwnProperty(key)
+    ? TriggerOpType.SET
+    : TriggerOpType.ADD;
+
+  const result = Reflect.set(target, key, value, receiver);
+  if (!result) return result;
+
+  // 只有 add 或新旧数据不同的 set 才需要 trigger
+  if (type === "add" || isChange(oldValue, value)) {
+    trigger(target, type, key);
+
+    /**数组特殊情况一：当设置数组元素超过原本的 length 时，或者类似这种隐式修改 length 的情况
+     * const arr = reactive([ 1, 2 ]);
+       arr[10] = 123;
+     * 只 track add 10 ，length 变长但并没有 track set length
+       原因是 JS 源码中对数组的这种操作会调用：
+       Object.defineProperty(arr, "10", { value: 123 });
+       但这种方式本身就不会触发 Proxy 的 set
+     */
+    const newLenth = Array.isArray(target) ? target.length : undefined;
+    if (Array.isArray(target) && newLenth !== oldLenth) {
+      if (key !== "length") trigger(target, TriggerOpType.SET, "length");
+      else {
+        /**数组特殊情况二：当主动变小 length 事，删除的元素不会触发 delete
+         * const arr = reactive([ 1, 2, 3 ]);
+         arr.length = 1;
+         */
+        for (let i = newLenth; i < oldLenth; i++)
+          trigger(target, TriggerOpType.DELETE, i.toString());
+      }
+    }
+  }
+
+  return result;
+}
+
+// 拦截基本操作 delete
+function deleteProperty(target, key) {
+  const hasKey = target.hasOwnProperty(key);
+  if (!hasKey) return true;
+
+  const result = Reflect.deleteProperty(target, key);
+  if (result) trigger(target, TriggerOpType.DELETE, key);
+
+  return result;
+}
+
+export const handlers = {
+  get,
+  has,
+  ownKeys,
+  set,
+  deleteProperty,
+};
+```
+
+```
+// reactive.js
+
+import { isObject, isProxy } from "./utils.js";
+import { handlers } from "./handlers.js";
+
+// 防止同一个原始对象重复使用 Proxy，提高效率
+export const targetMap = new WeakMap();
+
+export function reactive(target) {
+  // 如果不是引用类型，或者已经是 Proxy 了，就直接 return
+  if (!isObject(target) || isProxy(target)) return target;
+  // 如果源引用 target 已经被 Proxy 代理过了，就直接 return
+  if (targetMap.has(target)) return targetMap.get(target);
+
+  const proxy = new Proxy(target, handlers);
+  targetMap.set(target, proxy);
+
+  return proxy;
+}
+```
+
+```
+// ref.js
+
+import { reactive } from "./reactive.js";
+import { track, trigger } from "./effect.js";
+import { TrackOpType, TriggerOpType } from "./operate.js";
+import { isObject, isChange } from "./utils.js";
+
+export function ref(value) {
+  return {
+    get value() {
+      track(this, TrackOpType.GET, "value");
+
+      if (isObject(value)) value = reactive(value);
+      return value;
+    },
+
+    set value(newValue) {
+      if (!isChange(value, newValue)) return;
+      if (isObject(newValue)) newValue = reactive(newValue);
+
+      value = newValue;
+      trigger(this, TriggerOpType.SET, "value");
+    },
+  };
+}
+```
+
+```
+// computed.js
+
+import { effect } from "./effect.js";
+import { track, trigger } from "./effect.js";
+import { TrackOpType, TriggerOpType } from "./operate.js";
+
+function normalizeParamece(options) {
+  let getter, setter;
+
+  if (typeof options === "function") {
+    getter = options;
+    setter = () => {};
+  } else {
+    getter = options.get;
+    setter = options.set;
+  }
+
+  return { getter, setter };
+}
+
+export function computed(options) {
+  const { getter, setter } = normalizeParamece(options);
+
+  // lazy 执行，只有 .value 才执行 computed
+  const effectFn = effect(getter, {
+    lazy: true,
+    scheduler: () => {
+      /**依赖数据变化时，只需要修改 dirty
+       * computed 依赖的数据变化时会重新执行，但如果 computed 都没有 .value 的话，
+         不管依赖数据是否变化，computed都不会执行
+       */
+      dirty = true;
+
+      trigger(result, TriggerOpType.SET, "value");
+    },
+  });
+
+  // 必报数据
+  let oldValue,
+    dirty = true;
+
+  const result = {
+    get value() {
+      // computed 自身也是数据，也需要 track
+      track(result, TrackOpType.GET, "value");
+
+      // 缓存，只有 computed 依赖的数据变化，才重新执行 computed
+      if (dirty) {
+        oldValue = effectFn();
+        dirty = false;
+      }
+
+      return oldValue;
+    },
+
+    set value(newValue) {
+      setter(newValue);
+    },
+  };
+
+  return result;
+}
 ```
 
 ### 5.2 虚拟 DOM、diff 算法

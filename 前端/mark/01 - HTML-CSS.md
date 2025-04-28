@@ -74,13 +74,13 @@ html 内容默认不换行。多个空格默认只显示一个。
 <img src="" alt="" /> 单标签，不换行
 ```
 
-| src    | 图像路径，必选属性                                    |
-| ------ | -------------------------------------------- |
-| alt    | 替换文本，图片不能正常显示时，显示的文本                         |
-| title  | 显示文本，鼠标移动到图片时显示的文本                           |
-| border | 设置边框                                         |
-| width  | width和height只修改一个时另一个等比缩放，两个都改可能会扭曲图片，一般只改一个 |
-| height | 同上                                           |
+| 属性           | 描述                                           |
+| ------------ | -------------------------------------------- |
+| src          | 图像路径，必选属性                                    |
+| alt          | 替换文本，图片不能正常显示时，显示的文本                         |
+| title        | 显示文本，鼠标移动到图片时显示的文本                           |
+| border       | 设置边框                                         |
+| width、height | width和height只修改一个时另一个等比缩放，两个都改可能会扭曲图片，一般只改一个 |
 
 超链接：
 
@@ -91,13 +91,16 @@ html 内容默认不换行。多个空格默认只显示一个。
 <a href="#">超链接</a>  不换行
 ```
 
-属性：
-
-| href   | 必选属性，跳转网址(外部链接)或自己html路径(内部链接)，#表示不跳转(空链接),文件或者压缩包(下载链接)。#id(锚点链接，需要在待跳转的标签中添加 id=”id名”) |
+| 属性     | 描述                                                                                       |
 | ------ | ---------------------------------------------------------------------------------------- |
+| href   | 必选属性，跳转网址(外部链接)或自己html路径(内部链接)，#表示不跳转(空链接),文件或者压缩包(下载链接)。#id(锚点链接，需要在待跳转的标签中添加 id=”id名”) |
 | target | 跳转方式，默认为_self当前页面打开，_blank为新窗口打开                                                         |
 
 （3）表格
+
+* 块级元素：table、tr、thead、tbody
+
+* 行内快元素：th、td
 
 ```
 <!DOCTYPE html>
@@ -154,16 +157,17 @@ html 内容默认不换行。多个空格默认只显示一个。
 </html>
 ```
 
-table 属性：
-
-| align        | 整个表格页面对齐位置，left，center，right |
+| table 属性     | 描述                           |
 | ------------ | ---------------------------- |
+| align        | 整个表格页面对齐位置，left，center，right |
 | cellpadding  | 单元格和其内容的距离                   |
 | border       | 边框宽度                         |
 | cellspacing  | 每个单元格之间的距离                   |
-| width和height | 宽和高                          |
+| width、height | 宽、高                          |
 
 （4）列表
+
+都是块级元素：
 
 ```
 <!DOCTYPE html>
@@ -200,6 +204,10 @@ table 属性：
 
 一个表单由表单域、表单控件、提示信息组成。表单域是包含所有表单控件和提示信息的区域。
 
+* 块级元素：form、select、option
+
+* 行内快元素：input、button、textarea
+
 ```
 <!DOCTYPE html>
 <html lang="en">
@@ -210,50 +218,96 @@ table 属性：
   </head>
   <body>
     <form action="">
-      <input type="text" />
-      <input type="radio" />
+      <div>
+        <input type="text" />
+        <button disabled>button</button>
+      </div>
+
+      <div>
+        <textarea rols="50" cols="50"></textarea>
+      </div>
+
+      <div>
+        <!-- label 效果是只要点击了 label 的内容就能选中 radip 、checkbox -->
+
+        <label for="radio-id-1">
+          <input type="radio" id="radio-id-1" name="radios" />
+          <span>radio 1</span>
+        </label>
+
+        <label for="radio-id-2">
+          <input type="radio" id="radio-id-2" name="radios" />
+          <span>radio 1</span>
+        </label>
+      </div>
+
+      <div>
+        <label for="checkbox-id-1">
+          <input type="checkbox" id="checkbox-id-1" />
+          <span>agree</span>
+        </label>
+      </div>
+
+      <select>
+        <option value="1">options 1</option>
+        <option value="2" selected>options 2</option>
+      </select>
     </form>
   </body>
 </html>
 ```
 
+| form 属性 | 描述         |
+| ------- | ---------- |
+| action  | 提交的后端 url  |
+| method  | 提交的 method |
+| name    | form name  |
+
+| input type | 描述                        |
+| ---------- | ------------------------- |
+| text       | 文本框                       |
+| password   | 密码框                       |
+| hidden     | 隐藏的文本框                    |
+| radio      | 单选框                       |
+| checkbox   | 复选框                       |
+| button     | 普通按钮、按钮也有单独的标签 \<button\> |
+| submit     | 提交按钮                      |
+| reset      | 重置按钮，重置所有表单值              |
+| image      | 图片形式的按钮                   |
+| file       | 文件上传按钮                    |
+
+| input 属性         | 描述                              |
+| ---------------- | ------------------------------- |
+| value            | 表单值                             |
+| name             | 只有相同 name 的 radio 才能实现单选        |
+| id               | 唯一 id ，通常配合 \<label\>           |
+| checked、selected | radio、checkbox 是否选中、option 是否选中 |
+| disabled         | 是否禁用、\<button\> 也有该属性           |
+
+表单应该都放在 form 中，可以避免很多问题，如搜索功能：
+
 ```
-<form>表单域</form>
-属性：
-action：提交的后台地址
-method：提交方式
-name：表单域的名字
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- 错误做法，监听 button 的 click 事件，需要处理很多问题，如 enter 也要触发、中文输入 enter 问题等等 -->
+    <div>
+      <input type="text" />
+      <button>搜索</button>
+    </div>
 
-输入表单元素
-<input type="">  单标签，不换行，type必须有
-属性：
-type的值：
-text:文本框，password:*密码，
-radio:单选框，checkbox:复选框
-button:普通按钮，submit:提交按钮，提交后台，reset:重置按钮，所有表单恢复默认值
-image:图像形式的提交按钮
-file:上传文件，hidden:隐藏的表单
-其中button也有单独的标签，常用属性disabled=”disabled”  无法点击按钮
-
-name：相同name的radio才能生效爱哦单选，同一组选择框应当都是相同的name
-id：id是唯一的，通常与label标签搭配使用
-value：表单的默认显示文本
-checked=”checked”：选择框默认被选上
-maxlength：值为正整数，表单文本的最大长度
-
-<label for=”绑定的表单id”>文本</label>
-效果：点击label包含的文本，绑定的表单会生效。
-
-下拉表单元素
-<select>
-<option></option>
-       ...
-      <option></option>
-</select>
-option的属性，selected=”selected”则默认被选上。
-
-文本域元素
-<textarea>默认显示文本</textarea> 属性cols，rows设置宽高
+    <!-- 正确做法，只要监听 form 的 submit 事件就能解决上述问题 -->
+    <form action="">
+      <input type="text" />
+      <input type="submit" value="搜索" />
+    </form>
+  </body>
+</html>
 ```
 
 ## 2 HTML5
@@ -319,15 +373,14 @@ option的属性，selected=”selected”则默认被选上。
 </html>
 ```
 
-video 属性：
-
-| src           | 路径                                                                         |
+| video 属性      | 描述                                                                         |
 | ------------- | -------------------------------------------------------------------------- |
-| width和height  | 宽高，单位px或%                                                                  |
+| src           | 资源路径                                                                       |
+| width、height  | 宽、高，单位 px 或 %                                                              |
 | autoplay      | 是否自动播放（默认不）                                                                |
 | muted         | 是否静音播放（默认不静音），可以解决谷歌浏览器强制不能自动播放的问题                                         |
 | controls      | 是否显示播放控件，即播放，音量，全屏等按钮                                                      |
-| loop          | 循环播放（默认只播放一次的                                                              |
+| loop          | 是否循环播放（默认只播放一次的                                                            |
 | preload       | 是否预先加载视频，设置了autoplay则忽略该属性（auto：预加载，none：不预加载，metadata：只预加载元数据如大小、时间、第一帧等） |
 | poster=“图片路径” | 视频等待加载时的封面                                                                 |
 
@@ -1385,8 +1438,6 @@ transition 实现：
   </script>
 </html>
 ```
-
-
 
 （3）动画
 

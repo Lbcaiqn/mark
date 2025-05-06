@@ -380,6 +380,26 @@ git config –global user.email “...”
 git config –global user.name “...”
 ```
 
+若使用了代理，git 的端口号要和代理的一致：
+
+查看代理端口号：控制面板 \- 网络和 internet \- internet 选项 \- 连接 \- 局域网设置 。
+
+```
+# 查看 git 是否配置了代理
+git config --global --get http.proxy
+git config --global --get https.proxy
+
+# 若存在，且端口号和代理不一样，就删除
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+
+# 配置 git 代理
+git config --global http.proxy 127.0.0.1:7890
+git config --global https.proxy 127.0.0.1:7890
+```
+
+
+
 提交到远程库之前，必须先要配置远程库链接：
 
 ```

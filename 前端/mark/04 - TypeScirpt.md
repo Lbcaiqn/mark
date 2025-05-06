@@ -1794,3 +1794,5 @@ tsconfig.json，虽然JSON文件不能写注释，但是tsconfig.json可以写�
 * compilerOptions.noImplicitAny: true，开启后，不再允许隐式any，除非手动设置类型为any变为显式any
 
 * compilerOptions.strictNullChecks: true，开启后，不再允许所有类型都可以赋值为undefined和null，若想赋这两个值，必须是联合类型，如 number | undefined，或者使用类型断言，如 as number
+
+123

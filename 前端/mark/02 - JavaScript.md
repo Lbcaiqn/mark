@@ -1,4 +1,6 @@
-# 一、ES5
+# 一、JS
+
+（1）ES5
 
 JS 是面向对象的脚本语言，组成：
 
@@ -16,9 +18,33 @@ JS 书写位置：
 
 * 外部式，<script src=”xxx.js”>此处不能写代码</script>，
 
-## 1 变量、数据类型、运算符
+（2）ES6
 
-（1）注释、输入输出
+这里说的 ES6 语法，包含 ES6 之后各个新版本的特性（ES6 - ES13）。
+
+需要考虑浏览器的兼容性，若 node 不支持，就升级更高版本的 node 。
+
+babel ：奖惩 ES6 以上语法和 TypeScript 转化为 ES5 代码的工具。
+
+关于新特性：
+
+自从 TC39 进程指定以来，新特性提案阶段就比 ECMA 版本更为重要，因为某个 ECMA 版本发布的新特性不一定全部能用，未正式发布的新特性也可能可以使用，能不能用得看这个新特性是否处于第4个提案阶段。
+
+ECMA 新特性的指定分为 4 个阶段，当处于第 4 阶段的新特性才能正式使用。如果想看这些正式可用的新特性有哪些，可访问：
+
+```
+https://github.com/tc39/proposals/blob/main/finished-proposals.md
+```
+
+如果想看正在开发测试中的新特性，可以访问：
+
+```
+https://github.com/tc39/ecma262/blob/main/README.md
+```
+
+## 1 基本
+
+注释、输入输出
 
 ```
 // 单行注释
@@ -40,33 +66,93 @@ console.log(aaa);
 aaa[0].value = 456;
 ```
 
-（2） 变量，数据类型，运算符
+### 1.1 变量
 
-变量、数据类型，数据类型只有 8 种，7 个基本类型 \+ 1 个引用类型；
+var ，没有快级作用域：
 
 ```
-// 变量
-var a = 1;
+// undefined ， 变量提升，相当于把声明放在了最前面，所以不报错
+console.log(b);
 
-// 等价于 window.b = 2;
-b = 2;
+var a;
 
-// undefined
-var c;
+// 设计缺陷，重复声明不报错
+var b = 1;
+var b = 2;
 
-// 命名
-var $a_1;
+var c = 3, d = 4;
 
-/**数据类型
- * 基本数据类型：Number String Boolean null undefined （ES6 以上还有 Symbol BigInt）
- * 引用数据类型：Object（Array、Function 等都是 Object）
- * 字面量：如 {a: 1}
- * undefined 和 null 的区别：
-   * undefined 不是关键字，而 null 是
-   * undefined 表示无值，null 表示空引用
-   * 转为 number ，undefined 是 NaN ，null 是 0
-   * typeof ，undefined 时 undefined ，null 是 Objct
- */
+// 与 C 唯一不同是还可以用 $
+var e = a_1$;
+
+// undefined 2 3 4 ，未初始化值就为 undefined
+console.log(a, b, c, d);
+
+// 10 ，没有快级作用域
+for (var i = 0; i < 10; i++);
+console.log(i);
+```
+
+ES6 新特性，let 、const ，具有块级作用域：
+
+- let 声明变量
+
+- const 声明常量，必须初始化且初始化后就无法修改，但如果是引用类型，堆内存的数据是可以修改的
+
+let 、const 也会变量提升，但在声明之前是暂时性死区（TDZ），不允许使用：
+
+```
+// err ，暂时性死区
+try {
+  console.log(a, b);
+} catch {
+  console.log("err");
+}
+
+let a = 1;
+const b = 2;
+const arr = [123];
+
+// err ，const 无法修改
+try {
+  b = 5;
+  arr = [];
+} catch {
+  console.log("err");
+}
+
+// 456 ，可以修改堆内存数据，const 只是无法修改 arr 的地址
+arr[0] = 456;
+console.log(arr[0]);
+
+// 0 ，let、const 有块级作用域
+let i = 0;
+for (let i = 0; i < 10; i++);
+console.log(i);
+```
+
+### 1.2 数据类型
+
+（1）ES5 类型
+
+数据类型只有 8 种，7 个基本类型 \+ 1 个引用类型；
+
+* 基本类型：number、string、boolean、null、undefined、以及 ES6 以后的 Symbol、BigInt
+
+* 引用类型：Object、数组、函数等都是对象
+
+null 和 undefined 区别：
+
+* null 是关键字，而 undefined 不是
+
+* null 通常表示空引用，而 undefined 表示未定义、空值
+
+* null 转 number 为 0 ，undefined 转 number 为 NaN
+
+* null 用 typeof 判断为 object ，而 undefined 判断正常
+
+```
+// 声明 -----------------------------------------------------------------------------
 var t1 = 123;
 var t2 = "asdf";
 var t3 = true;
@@ -78,6 +164,7 @@ var t6_arr = [123, "asdf", true];
 // JS 是弱类型语言，赋值可以使其他数据类型
 t1 = true;
 
+// PS -----------------------------------------------------------------------------------
 // Number 可以是整数、小数等
 var n = 3.1415926;
 // NaN 表示非数字
@@ -95,6 +182,20 @@ console.log("asdf".length, 123 + "");
 // 访问 String
 var str = "asdf";
 console.log(str.charAt(0), str.charCodeAt(0), str[0]);
+
+// ES6 新特性，模板字符串，可以保留换行符，可以嵌入表达式 ----------------------------------------
+var nnn = 12;
+var s1 = `
+  ${nnn}${1 + 2}4
+`;
+// 1234 且保留换行符
+console.log(s1);
+
+// ES12 新特性，数字分隔符，解决长数字的可读性问题 -----------------------------------------
+var a1 = 12_34;
+var a2 = 123_4;
+// 都是 true
+console.log(1234 === a1, a1 === a2);
 ```
 
 循环引用，自己引用了自己：
@@ -104,7 +205,456 @@ var obj1 = { a: 1 };
 var obj2 = { a: 2, myself: obj1 };
 ```
 
-运算符：
+（2）ES6 基本类型
+
+ES6 新特性，基本类型 Symbol：
+
+- 值唯一，且不可见，可用来解决命名冲突问题
+
+- 无法算术运算，比较运算只能用 == \!= === \!== 比较、可以逻辑运算
+
+```
+// 声明 ---------------------------------------------------------------------------------
+const s1 = Symbol();
+const s2 = Symbol();
+
+// 这个字符串并不是值，只是一个说明，用于注释，字符串相同的 Symbol 也是不同的
+const s3 = Symbol("asdf");
+const s4 = Symbol("asdf");
+
+// 用函数对象创建，当传入的字符串相同时，两个 Symbol 就相同
+const s5 = Symbol.for();
+const s6 = Symbol.for("123");
+const s7 = Symbol.for("123");
+
+// false "Symbol()" ，值唯一，且不可见
+console.log(s1 === s2, s1);
+// false "Symbol(asdf)"
+console.log(s3 === s4, s3);
+// false false true
+console.log(s5 === s6, s5 === s7, s6 === s7, "\n");
+
+// "asdf" ， ES10 新特性，可以查看 Symbol 的描述字符串
+console.log(s3.description, "\n");
+
+// 应用 -----------------------------------------------------------------------------------
+const obj = {
+  // 自定义独一无二的 key
+  [Symbol("asdf")]: 123,
+
+  // 内置 Symbol ，一些 JS 底层会调用这些 key
+  [Symbol.hasInstance]: 123,
+};
+
+console.log(obj);
+```
+
+ES11 新特性，基本类型 BigInt，用于存放更大的数字，不过只能是整数：
+
+```
+// 声明，只能是整数
+const a = 123n;
+const b = BigInt(456);
+const c = BigInt("789");
+
+// err 2n 1 <BigInt 只能和 BigInt 、string 算术运算
+try {
+  console.log(1n + 1);
+} catch {
+  console.log("err");
+}
+console.log(1n + 1n, 1n + "", "\n");
+
+// 1 ，强制转为 number 时需要注意边界
+console.log(Number(1n), "\n");
+
+// true false true false
+console.log(2n == 2, 2n === 2, 2n > 1, 2n > 2);
+```
+
+### 1.3 类型判断、转换
+
+（1）判断数据类型
+
+```
+// typeof ，有设计缺陷，null 、Array 、Set 、Map 、WeakSet、WeakMap 都直接判断成 "object" ，而 function 则判断为 "function"
+
+// "number" "string" "boolean" "undefined" "symbol" "bigint"
+console.log(
+  typeof 1,
+  typeof "'",
+  typeof true,
+  typeof undefined,
+  typeof Symbol(),
+  typeof 1n
+);
+
+// 都是 "object"
+console.log(
+  typeof null,
+  typeof [],
+  typeof new Set(),
+  typeof new Map(),
+  typeof new WeakSet(),
+  typeof new WeakMap()
+);
+
+class Person {}
+// 都是 "function"
+console.log(typeof (() => {}), typeof Person);
+```
+
+```
+// true
+console.log(Array.isArray([]));
+```
+
+```
+// toString ，所有类型都能正常判断
+
+// "[object Undefined]" , 都是这种格式
+console.log(Object.prototype.toString.call(undefined));
+
+// 自定义输出结果
+const obj = { a: 1 };
+obj[Symbol.toStringTag] = "MyType";
+// "[object MyType]"
+console.log(Object.prototype.toString.call(obj));
+
+// 默认情况下 Symbol.toStringTag 是 undefined ，但 async 函数就有设置
+// AsyncFunction
+console.log(async function () {}[Symbol.toStringTag]);
+```
+
+```
+// 判断是否是 Proxy
+
+// 方法一，拦截 new ，可以做复杂的逻辑，如判断是第几层 Proxy --------------------------------------
+Proxy = new Proxy(Proxy, {
+  construct(target, argsList) {
+    const result = new target(...argsList);
+
+    const originType = Object.prototype.toString
+      .call(result)
+      .slice(1, -1)
+      .split(" ")[1];
+
+    result[Symbol.toStringTag] = `Proxy.${originType}`;
+
+    return result;
+  },
+});
+
+const p = new Proxy([1, 2, 3], {});
+const pp = new Proxy(p, {});
+
+// [object Proxy.Proxy.Array] 表示代理两次的 Array
+console.log(Object.prototype.toString.call(p));
+
+// 方法二 ---------------------------------------------------------------------------------
+// const p = new Proxy(
+//   { a: 1 },
+//   {
+//     get(target, key) {
+//       if (key === Symbol.toStringTag) return "Proxy";
+//       return target[key];
+//     },
+//   }
+// );
+// "[object proxy]"
+// console.log(Object.prototype.toString.call(p));
+```
+
+（2）数据类型转换
+
+类型转换规则：
+
+- 原始值转原始值：
+  
+  ```
+  /**规则
+   * 转为 number：
+     - boolean: true -> 1 ，false -> 0
+     - string: "" " " "\n" -> 0，"3.14" -> 3.14 ，" 2 " -> 2 ，"1 2" -> NaN ，
+               "2n" -> NaN ，"true" -> NaN ，"2n" -> NaN
+     - undefined -> NaN ，null -> 0
+     - Symbol：无法转换，强制类型转换都不行
+     - BigInt：需要注意边界问题
+  
+   * 转为 string：
+     - 3.14 -> "3.14" ，true -> "true" ，NaN -> "NaN" ，null -> "null" ，
+       undefined -> "undefined"
+     - Symbol：无法隐式转换，但是强制类型转换可以
+     - BigInt：2n -> "2"
+  
+   * 转为 boolean
+     - 非空值意义时转为 true：如 1 ，"asdf"" ，包括 Symbol
+     - 具有空值、否定意义时转为 false ，如 0 ，"" ，" " ，NaN ，null ，undefined
+   */
+  ```
+
+- 引用类型转原始值：
+  
+  ```
+  /**规则
+   * 按照 Symbol.toPrimitive > valueOf > toString 的优先级调用这些函数，其中 valueOf 和 toString 在原型链上有
+   * 上一步转为原始值后， 再进行原始值到原始值的类型转换
+   * 特殊情况：转为 boolean 直接全部转为 true ，包括空数组、空对象
+   */
+  // 自定义这 3 个函数 ----------------------------------------------------------------
+  var obj1 = {
+    [Symbol.toPrimitive]: function () {
+      // 必须 re turn 原始值 ，否则在运算时直接报错，不再去找 valueOf 和 toString
+      return 123;
+    },
+  };
+  
+  var obj2 = {
+    valueOf: function () {
+      // 自定义 valueOf 不必须 return 原始值，若 return 引用，运算时也不会报错，会直接忽略这次执行结果，这是历史遗留问题
+      // 因此 return 引用时，忽略，会再去调用 toString
+      return 456;
+    },
+  };
+  
+  var obj3 = {
+    toString: function () {
+      // 自定义 toString 必须 return 原始值，否则运算时直接报错
+      return 789;
+    },
+  };
+  
+  // 124 457 790
+  console.log(obj1 + 1, obj2 + 1, obj3 + 1, "\n");
+  
+  // 默认的 valueOf 和 toString ---------------------------------------------------------
+  // valueOf 都是返回自己，所以一般默认的 valueOf 都无效，会再去找 toString
+  var objValueOf = Object.prototype.valueOf,
+    arrValueOf = Array.prototype.valueOf,
+    funcValueOf = Function.prototype.valueOf,
+    setValueOf = Set.prototype.valueOf,
+    mapValueOf = WeakSet.prototype.valueOf,
+    weakSetValueOf = Map.prototype.valueOf,
+    weakMapValueOf = WeakMap.prototype.valueOf;
+  
+  var obj = {},
+    arr = [],
+    func = function () {},
+    set = new Set(),
+    map = new Map(),
+    weakSet = new WeakSet(),
+    weakMap = new WeakMap();
+  
+  // 都是 true
+  console.log(
+    objValueOf.call(obj) === obj,
+    arrValueOf.call(arr) === arr,
+    funcValueOf.call(func) === func,
+    setValueOf.call(set) === set,
+    mapValueOf.call(map) === map,
+    weakSetValueOf.call(weakSet) === weakSet,
+    weakMapValueOf.call(weakMap) === weakMap,
+    "\n"
+  );
+  
+  // toString ，Array 和 Function 重写了 toString
+  var objToString = Object.prototype.toString,
+    arrToString = Array.prototype.toString,
+    funcToString = Function.prototype.toString,
+    setToString = Set.prototype.toString,
+    mapToString = Map.prototype.toString,
+    weakSetToString = WeakSet.prototype.toString,
+    weakMapToString = WeakMap.prototype.toString;
+  
+  // "[object Array]"
+  console.log(objToString.call({}), "\n");
+  
+  // “【object Set】” 等,没有重写 toString ，都是 Object.prototype 的 toString
+  console.log(setToString.call(new Set([])));
+  console.log(mapToString.call(new Map([])));
+  console.log(weakSetToString.call(new WeakSet([])));
+  console.log(weakMapToString.call(new WeakMap([])), "\n");
+  
+  // "" "0" "1" "1,2"
+  console.log(arrToString.call([]));
+  console.log(arrToString.call([0]));
+  console.log(arrToString.call([2]));
+  console.log(arrToString.call([1, 2]));
+  
+  // "(a) => a" ，即整个函数的内容
+  // ES10 新特性，会保留空格和换行符
+  console.log(
+    funcToString.call((a) => a),
+    "\n"
+  );
+  ```
+
+表达式运算中的隐式类型转换：
+
+任何运算的双方都必须是原始值，否则将会隐式类型转换，运算结果也是一个原始值：
+
+```
+/**算术运算 ---------------------------------------------------------------------------
+ * 除了 string 外的原始值运算，全部转为 number ：
+   - NaN 和任何 number 运算都为 NaN ，包括 NaN 自己
+   - Symbol 无法算术运算；BigInt 只能和 BigInt、String 算术运算
+ * 有 string 和引用类型参与的运算：
+   - 加法运算：全部转为 string ，引用类型转为原始值后再转为 string ，进行字符串拼接
+   - 其他运算：全部转为 number ，引用类型转为原始值后再转为 number ，进行算数运算
+ */
+// NaN NaN
+console.log(NaN + 1, NaN + NaN);
+
+// NaN 1
+console.log(undefined + 1, null + 1);
+
+// "21" "2n" "3.14" "true" "undefined" "null" "NaN"
+console.log(
+  2n + "1",
+  "2n" + "1",
+  3.14 + "",
+  true + "",
+  undefined + "",
+  null + "",
+  NaN + ""
+);
+
+// "1" "21" "1,21" "[object Object]123" "() => {}123" "null" "NaN"
+console.log(
+  [] + 1,
+  [2] + 1,
+  [1, 2] + 1,
+  {} + 123,
+  (() => {}) + 123,
+  [] + null,
+  [] + NaN
+);
+
+// NaN -1 -1 1 1.14 1 NaN 1
+console.log(
+  "2n" - 1,
+  "" - 1,
+  " " - 1,
+  " 2 " - 1,
+  "3.14" - "2",
+  "2" / 2,
+  "1" - NaN,
+  "1" - null
+);
+
+// -1 2 NaN NaN NaN 123,5
+console.log(
+  [] - 1,
+  [2] - 0,
+  [1, 1] - 1,
+  {} - 1,
+  (() => {}) - 1,
+  "123" + [4, 5]
+);
+
+// err ，Symbol 无法算术运算，BigInt 只能和 BigInt、String 算术运算
+try {
+  // console.log(Symbol() + 1, "\n");
+  // console.log(0n + 1, "\n");
+  console.log(Symbol() + "", "\n");
+} catch (err) {
+  console.log("err\n");
+}
+
+/** 比较运算 ----------------------------------------------------------------------------
+ * 类型相同时，直接比较 value （相同引用类型则比较地址），不会类型转换；类型不同时，全部转为 number ：
+   - 引用类型先转为原始值，再转为 number
+ * 特殊情况：
+   - NaN 和任何数值比较都为 false ， 包括和 NaN 自己
+   - undefined == null 不转为 number ，直接返回 true
+   - Symbol 只能比较是否相等，与其他值比较都是 false
+ */
+// true
+console.log("true" == "true");
+
+// false true
+console.log(NaN == NaN, undefined == null);
+
+// false false false
+console.log("false" == false, "false" == true, undefined == NaN);
+
+// true false
+console.log([0] == false, [0] == [0], "\n");
+
+// 逻辑运算，全部转为 boolean ------------------------------------------------------------
+if (
+  1 &&
+  -1 &&
+  1.0 &&
+  1n &&
+  "false" &&
+  Symbol() &&
+  [] &&
+  {} &&
+  (() => {}) &&
+  !(0 || -0 || 0.0 || 0n || NaN || "" || undefined || null) &&
+  !![]
+) {
+  console.log("boolean\n");
+}
+```
+
+包装类中的隐式类型转换：
+
+```
+const str1 = "asdf";
+
+// str 生成一个临时包装类 String 对象，吧 "a" 设置为 “1”
+str1.a = "1";
+
+// undefined ，str 和临时生成的 String 包装类不是同一个
+console.log(str1.a);
+
+// 同理，生成了临时包装类 String 对象，而且 String 也部署了 iterator
+const [s1, s2] = str1;
+// "a" "s"
+console.log(s1, s2);
+
+const str2 = new String("asdf");
+str2.a = "1";
+// 1
+console.log(str2.a);
+```
+
+强制类型转换：
+
+都不改变原始数据：
+
+```
+var n = 1;
+var str = "3.14";
+
+// "1" "1"
+console.log(n.toString(), String(n));
+
+// 3 3.14 3.14
+console.log(Number.parseInt(str), Number.parseFloat(str), Number(str));
+
+// 都是 false
+console.log(Boolean(null), Boolean(undefined), Boolean(NaN), Boolean(""));
+
+// 都是 true
+console.log(Boolean([]), Boolean({}));
+
+// "Symbol()" "Symbol(123)" true ， SYMbol 只能强制转换为 string 、boolean
+console.log(String(Symbol()), String(Symbol("123")), Boolean(Symbol()));
+
+// err
+try {
+  console.log(Number(Symbol()));
+} catch (err) {
+  console.log("err");
+}
+```
+
+### 1.4 运算符
+
+（1）ES5
 
 中断运算的运算结果是中断的结果，而不像 C 语言中是 Boolean ：
 
@@ -124,190 +674,417 @@ console.log("123" == 123, "123" === 123);
 console.log("123" != 123, "123" !== 123);
 ```
 
-n 运算符，判断 key 是否存在于 Object 中，会涉及判断到原型上：
-
-```
-var arr = [5, undefined, 7];
-var obj = { a: 1 };
-Object.prototype.c = 123;
-
-// true ，key 即 index ， 0 1 2 都是 true ，3 就是 false 了
-console.log(0 in arr);
-
-// true true
-console.log("a" in obj, "c" in obj);
-```
-
 其他和 C 一样。
 
-（3）流程控制
+（2）ES6
 
-使用循环时，需要注意var会被提升成全局变量（闭包或 let 、const 解决）。
+扩展运算符：
 
-```
-var arr = [1, 2, 3];
-
-for (var key in arr) console.log(key);
-
-// this 可不传，默认为 arr
-arr.forEach(function (value, key, arr) {
-  console.log(arr, key, value);
-}, this);
-```
-
-其他与C语言一样。
-
-## 2 对象
-
-（1）基本使用
+转化成逗号分隔的列表，具备 iterator 接口的数据类型才可使用：
 
 ```
-// 创建 -------------------------------------------------------------------------------
-// 构造函数创建，过程：bnew Object() -> 修改 this -> 执行构造函数 -> return this
-function Obj(n) {
-  this.a = n;
+const arr1 = [1, 2, 3];
 
-  // 默认返回值
-  // return this;
+// 用于函数 ---------------------------------------------------------------------
+// 简化传参
+function func1(a, b, c) {
+  console.log(a, b, c, "\n");
 }
-var obj1 = new Obj(123);
 
-// 字面量创建，底层会调用 new Object()
-var obj2 = {
-  a: 1,
+// 1 2 3
+func1(...arr1);
 
-  // key 的引号可以省略，如果是复杂的 key 则必须加引号
-  "b.b.b": 2,
+// 用于数组等有 iterator 接口的数据结构 --------------------------------------------
+// 构建新的数组，也能实现浅层深拷贝
+const arr2 = [...arr1, 4, ...arr1];
 
-  // 都是匿名函数
-  func: function () {
-    console.log("func");
-  },
-};
+// 数组去重
+const arr3 = [...new Set([...arr2])];
 
-// 调用、添加、删除属性 ----------------------------------------------------------------
-// 调用
-console.log(obj1.a, obj1["a"]);
-// undefined ， 调用没有的属性得到 undefined
-console.log(obj1.aaa);
-// err ，无法从 undefined 中调用任何属性
-// console.log(o.a);
+// [1, 2, 3, 4, 1, 2, 3]
+console.log(arr2);
 
-// 删除
-delete obj1.a;
+// [1, 2, 3, 4]
+console.log(arr3, "\n");
 
-// 添加到对象自身
-obj1.b = 3;
-obj1["c"] = 3;
+// ES9 新特性，对象字面量也可以使用，但不是基于迭代器 ---------------------------------------
+const obj = { a: 1, b: 2, c: 2 };
 
-// 添加到圆形
-obj1.__proto__.d = 4;
-Obj.prototype.e = 5;
-
-// 添加 static 属性
-Obj.f = 6;
-
-// true
-console.log(obj1.__proto__ == Obj.prototype);
-```
-
-对象的 key 只能是 string 或 Symbol ，如果是其他类型则会转为 string ：
-
-```
-var obj = {};
-var arr = [];
-
-// 等价于 obj["[object Object]"] = "obj"
-obj[{ a: 1 }] = "obj";
-// "obj"
-console.log(obj["[object Object]"]);
-
-// 等价于 arr["0"] = 123
-arr[0] = 123;
-// 123
-console.log(arr[0]);
-```
-
-（2）Reflect 反射
-
-ES6 新特性，对象的任何操作，都会转化成浏览器的内部方法，数组、函数等也是对象，对其的操作也会转化成内部方法。这些方法开发者无法使用，ES5 无法使用这些方法的。
-
-```
-const obj = {};
-
-// 等价于 set(obj, "a") ，此时 key 一定是 string
-obj.a = 1;
-
-// 等价于 set(obj, "b") ，不同的是如果 key 可能不是 string ，就会强制类型转换成 string
-obj["b"] = 2;
-
-// 调用内部方法 defineProperty
-Object.defineProperty(obj, "c", { value: 3 });
-
-// 等价于 get(obj, key)
-console.log(obj.a, obj["b"], obj.c, "\n");
-```
-
-
-
-而 Reflect 就有这些内部方法：
-
-```
-const obj = {};
-
-// Reflect 使用这些内部方法时，会 try...catch 处理是否处理成功，返回布尔值
-// 第三个参数为 this 指向
-Reflect.set(obj, "a", obj);
-
-// undefined ，没有圆形
-console.log(Reflect.prototype);
-
-// 但是具备 OBJECT 的 static 方法
-// Object 圆形上的方法渐渐地也部署成 static 方法了，因此 Reflect 也有
-console.log(Reflect.hasOwnProperty, "\n");
-```
-
-Reflect 应用场景：
-
-```
-// 简化内部操作 -----------------------------------------------------------------------
-const obj = { a: 1 };
-
-Object.defineProperty(obj, "b", {
-  value: 2,
-  enumerable: false,
-});
-
-// ["a"] ，keys 方法内部会判断并过滤掉非枚举 key ，再调用 ownKeys
-console.log(Object.keys(obj));
-// ["a", "b"] ，如果不想要 keys 的操作，就可以直接使用 ownKeys
-console.log(Reflect.ownKeys(obj), "\n");
-
-// 修改 this ------------------------------------------------------------------------
+// 扩展 key: value ，相同的 key ，后面会覆盖前面的
 const o = {
-  a: 1,
-  get b() {
-    return this.a;
+  ...obj,
+  c: 33,
+  ...arr1,
+};
+
+// err ，扩展对象得到的是 key: value ，不能给数组使用
+try {
+  const a = [...o];
+} catch {
+  console.log("err");
+}
+
+// 1 2 33 1 2 3
+console.log(o.a, o.b, o.c, o["0"], o["1"], o["2"]);
+```
+
+其他：
+
+```
+// ES7 ，幂运算 **
+const a = 2 ** 3;
+// 8
+console.log(a), "\n";
+
+// ES11 ，可选链运算符 ? ，当从 undefined 中调用时，直接返回 undefined ，而不报错
+// ES5 处理这种问题只能先判断是否存在，非常麻烦
+let obj, arr, func;
+obj?.a;
+arr?.[0];
+func?.();
+
+// ES11 ，空值合并运算符 ?? ，类似 || 但限制更大，只有 null、undefined 才会执行后面代码
+// 1 2 0 false ""
+console.log(null ?? 1, undefined ?? 2);
+console.log(0 ?? 3, false ?? 4, "" ?? 5, "\n");
+
+// ES12 ，逻辑赋值运算符，中断结果会赋值给变量
+let a1 = true,
+  a2 = false,
+  a3 = null;
+// 1 2 3 1 2 3
+console.log((a1 &&= 1));
+console.log((a2 ||= 2));
+console.log((a3 ??= 3));
+console.log(a1, a2, a3);
+```
+
+### 1.5 迭代器
+
+ES5 流程控制除了循环多了 for\.\.\.in 、forEach 外，其他与 C 一样。迭代器是 ES6 新特性。
+
+（1）解构赋值
+
+将数组、对象中的元素/属性一次赋值给多个变量，若变量多余数组元素、或变量是对象中不存在的属性，则值为 undefined 。
+
+数组解构实现基于迭代器，而对象解构不是。
+
+可以使用 rest 参数，但只能放在最后面且只能有一个，其中对象在 ES9 后才允许使用 rest 参数：
+
+```
+// 数组解构赋值，和顺序有关，可以设置默认值，可以连续解构 ------------------------------------
+const arr = [1, 3, 5, [7, 9]];
+
+// 1 3 5 7 9 undefined 10
+const [a, b, c, [d, e], f, g = 10] = arr;
+console.log(a, b, c, d, e, f, g);
+
+// 1 3 [5, [7, 9]]
+const [a1, b1, ...c1] = arr;
+console.log(a1, b1, c1, "\n");
+
+// 对象解构赋值，和顺序无关，可以设置默认值，可以起别名，可以连续解构 ---------------------
+const obj = {
+  name: "asdf",
+  age: 18,
+  other: {
+    o1: 123,
   },
 };
 
-const p = new Proxy(o, {
-  get(t, k, r) {
-    console.log(k);
+// 18 asdf 123 undefined false
+const {
+  age: myAge,
+  name,
+  other: { o1 },
+  sex,
+  isDelete = false,
+} = obj;
+console.log(myAge, name, o1, sex, isDelete);
 
-    // return t[k];
-    return Reflect.get(t, k, r);
-  },
+// 18 {age: 18, other: { o1: 123 }} ，可以实现属性过滤
+const { name: myName, ...keys } = obj;
+console.log(myName, keys, "\n");
+
+// 函数参数、返回值解构 --------------------------------------------------------------
+function func1(options) {
+  const { type } = options;
+  console.log(type);
+
+  return [0, 1];
+}
+
+// 此时必须传实参，或者设置默认值，因为从 undefined 解构是语法错误
+function func2({ a, ...keys }) {
+  console.log(a, keys, "\n");
+}
+
+// "asdf" 1 2
+const [r1, r2] = func1({ type: "asdf" });
+console.log(r1, r2);
+
+// 123 {type: "asdf"}
+func2({
+  a: 123,
+  type: "asdf",
 });
 
-// "b" ，没有 a 是因为 this 只想的是 o ，而不是 p
-// "b" "a" ，使用 Reflect 修改 this 为 p 后就可以了
-p.b;
+// 复杂数据的解构 -----------------------------------------------------------------
+const data1 = [{ a: 1, b: 2 }];
+const data2 = { list: [3, 4] };
+
+const [{ a: dataA, b: dataB }] = data1;
+const {
+  list: [dataC, dataD],
+} = data2;
+
+// 1 2 3 4
+console.log(dataA, dataB, dataC, dataD);
 ```
 
+（2）for\.\.\.of
 
+具备 iterator 接口的数据类型才可使用 。除了 Object 外都有 iterator 接口。
 
-（2）函数
+for\.\.\.of 、forEach 、for\.\.\.in 异同：
+
+- 遍历出的 key 输出结果的类型都是 string
+
+- 除了 Map 用 for\.\.\.of 、forEach 外，其他情况都无法遍历出 Symbol key
+
+- for\.\.\.in 遍历出 key ，for\.\.\.of 和 forEach 遍历出 value
+  
+  - forEach 还可以传入第二、三个参数，得到 key 和原始引用
+  
+  - 对于 Map ，for... 遍历 Map 得到 key ，for\.\.\.of 得到 [key, value] 。forEach 则得到 value
+
+- for\.\.\.in 可以遍历出原型链上的自定义属性；for\.\.\.of 、forEach 不可以
+
+- 使用场景：
+  
+  - Array 、Object 、Set 、Map 均可以用 for\.\.\.in ；遍历 Set 、Map 只能遍历出原型链上的自定义属性，无法遍历自身的属性
+  
+  - for\.\.\.of 、forEach 无法便利 Object ；Array 、Set 、Map 则可以
+  
+  - WeakSet 、WeakMap 由于是弱引用所以无法以任何形式遍历
+  
+  - map\(\) 等方法只有 Array 可以用
+
+示例：
+
+```
+const arr = [1, undefined, 3];
+arr[Symbol("arr_sym")] = "arr_sym";
+arr.__proto__.arrKey = 4;
+arr.__proto__[Symbol("arr_proto_sym")] = "arr_proto_sym";
+
+const obj = { a: 1, b: undefined, c: 3, [Symbol("obj_sym")]: "obj_sym" };
+obj.__proto__.objKey = 4;
+obj.__proto__[Symbol("obj_proto_sym")] = "obj_proto_sym";
+
+const set = new Set([1, undefined, 3]);
+set[Symbol("set_sym")] = "set_sym";
+set.__proto__.setKey = 4;
+set.__proto__[Symbol("set_proto_sym")] = "set_proto_sym";
+
+const map = new Map([
+  ["a", 1],
+  ["c", 3],
+  [Symbol("map_sym"), "map_sym"],
+]);
+map.__proto__.mapKey = 4;
+map.__proto__[Symbol("map_proto_sym")] = "map_proto_sym";
+
+/**for...in ，便利 key ---------------------------------------------------------------
+ * 无法便利出 Symbol key
+ * 会遍历出圆形链上的自定义属性
+ * Set 、Map 只能便利出原型链上的自定义属性，自己身上的无法遍历
+ */
+// "0" "1" "2" "arrKey" "objKey"
+for (const i in arr) console.log("for...in arr", i);
+console.log("\n");
+
+// "a" "b" "c" "objKey"
+for (const i in obj) console.log("for...in obj", i);
+console.log("\n");
+
+// "setKey" "objKey"
+for (const i in set) console.log("for...in set", i);
+console.log("\n");
+
+// "mapKey" "objKey"
+for (const i in map) console.log("for...in map", i);
+console.log("\n");
+
+/**for...of ，便利出 value --------------------------------------------------------------
+ * 除了 Map 外都无法遍历出 Symbol key ，Map 遍历出 [key, value]
+ * 只能遍历有 iterator 接口的数据结构，Object 无法使用
+ * 无法遍历原型链上的属性
+ */
+// 1 undefined 3
+for (const i of arr) console.log("for...of arr", i);
+console.log("\n");
+
+// err
+try {
+  for (const i of obj) console.log("for...of obj", i);
+} catch {
+  console.log("err");
+}
+console.log("\n");
+
+// 1 undefined 3
+for (const i of set) console.log("for...of set", i);
+console.log("\n");
+
+// "mapKey" "objKey"
+for (const i of map) console.log("for...of map", i);
+console.log("\n");
+
+/**froEach ，便利出 value ---------------------------------------------------
+ * Map 遍历出 key
+ * 其他和 for...of 都一样
+ *
+ */
+// 1 2  "map_sym"
+map.forEach((i) => console.log("forEach map", i));
+console.log("\n");
+
+// 数组特有遍历方法
+arr.map((i) => console.log("arr.map", i));
+```
+
+（3）迭代器
+
+ES6 提供了 iterator 接口，为不同的数据结构提供统一的访问机制，只有 Object 没有 iterator 接口，其他都有，如 Array、伪数组、String、Set、Map 等
+
+数组解构赋值是按顺序解构出来的，因为底层实现使用的迭代器，扩展运算符和 for\.\.\.of 也只有具备 iterator 接口的数据结构才能使用。
+
+一般 iterator 接口是各数据结构的原型对象中的一个方法：
+
+```
+[Symbo.iterator] : function(){}
+```
+
+原理与使用
+
+迭代器中有一个 next() 方法，作用是返回当一个对象，对象的内容为当前 value 和是否结束，得到这个信息后，移动到下一个元素：
+
+```
+const arr = [1, 2, 3];
+const arrIterator = arr[Symbol.iterator]();
+
+/* {value: 1, done: false}
+ * value：当前元素
+ * done：是否到达 end
+ */
+console.log(arrIterator.next());
+
+// {value: 2, done: false}
+console.log(arrIterator.next());
+// {value: 3, done: false}
+console.log(arrIterator.next());
+
+// {value: undefined, done: truye}  结束
+console.log(arrIterator.next());
+```
+
+当 done 为 true 时，迭代结束。总体上指针在 begin 到 end 是一个左闭右开的区间。
+
+（4）自定义遍历数据
+
+例如给某个对象单独部署 iterator 接口，使其可以使用 for\.\.\.of ，且 for\.\.\.of 的遍历规则是自定义的：
+
+```
+const o = {
+  name: "asdf",
+  arr: [1, 2, 3],
+  [Symbol.iterator]() {
+    let index = 0;
+    const _this = this;
+
+    return {
+      next() {
+        // 这里 this指向 o
+        if (index < _this.arr.length)
+          return { value: _this.arr[index++], done: false };
+        else return { value: undefined, done: true };
+      },
+    };
+  },
+};
+
+// 1 2 3
+for (i of o) console.log(i);
+```
+
+直接给 Object 部署 iterator 接口也可以，例如用数组解构赋值的语法按顺序结构对象：
+
+```
+Object.prototype[Symbol.iterator] = function () {
+  // 直接借助 Array 的 iterator 也可以，自己写也可以
+  return Object.keys(this)[Symbol.iterator]();
+};
+
+const [n1, n2] = { a: 1, b: 2 };
+console.log(n1, n2);
+
+for (const i of { a: 1, b: 2 }) console.log(i);
+```
+
+### 1.6 异常处理
+
+当代码出错时，会报错并终止运行，可以使用异常处理使报错后不终止运行：
+
+```
+try {
+  出错了;
+  console.log("出现异常后，try 中后续代码不会执行，直接进入 catch");
+
+  // 也可以手动抛出异常
+  // throw "myErr";
+} catch (err) {
+  console.log("err\n");
+}
+
+// ES9 新特性，catch 可以不 用传入参数
+try {
+} catch {}
+
+// ES9 新特性，新增 finally ，无论是否异常都会执行，且就算 return 、breaqk 、continue 后也会执行
+function test(value) {
+  try {
+    if (value) throw "err";
+    console.log("ok");
+    return "res";
+  } catch {
+    console.log("err");
+  } finally {
+    console.log("finally");
+  }
+}
+
+// ok finally res
+console.log(test(false), "\n");
+// err finally undefined
+console.log(test(true), "\n");
+
+// finally
+for (let i = 0; i < 10; i++) {
+  try {
+    break;
+    // continue;
+  } finally {
+    console.log("finally");
+  }
+}
+```
+
+## 2 函数
+
+### 2.1 函数、作用域
+
+（1）基本
 
 函数也是对象，调用函数本质就是执行了这个函数对象的 call 方法，因此由 call 方法的对象就是一个函数。
 
@@ -317,7 +1094,7 @@ p.b;
 // 具名函数
 function func1() {
   // 可以在 function 内部定义 function ，内部函数只能在外部函数内使用
-  // 不要在 if 等块级作用域声明函数，ECMA 并没有这个标准，不同浏览器的运行逻辑不同
+  // 不要在 if 等块级作用域声明块级函数，ECMA 并没有这个标准，不同浏览器的运行逻辑不同
   function func11() {
     P;
   }
@@ -386,19 +1163,2329 @@ function sum(a, b) {}
 
 立即执行函数：
 
-是匿名函数，不用调用，会立即执行，只执行一次，内部会形成独立的作用域，var 就不会和外部冲突了：
+是匿名函数，不用调用，会立即执行，只执行一次，内部会形成局部作用域，可以解决 var 没有快级作用域的问题，也可以防止多个 JS 文件的 var 冲突：
 
 ```
 (function () {
-  console.log("方式一");
+  console.log("123");
 })();
 
+// 0
+var i = 0;
 (function () {
-  console.log("方式二");
+  for (var i = 0; i < 10; i++) {}
+})();
+console.log(i);
+```
+
+（2）作用域、预编译
+
+三种作用域：
+
+- 全局作用域
+
+- 局部作用域，即函数内部
+
+- 块级作用域，if 、for 等内部，let 、const 具有块级作用域，而 var 没有。
+
+预编译，也叫与解析，JS 运行分为预编译和编译运行两部分。在预编译阶段，会有变量提升和函数提升，作用是吧 var 声明和函数声明的代码放到当前作用域的最前面：
+
+- var 只提升声明，不提升赋值；let、const 也会提升，只不过在声明之前是暂时性死区：
+  
+  ```
+  // undefined 10
+  console.log(a);
+  var a = 10;
+  console.log(a);
+  
+  // err
+  try {
+    console.log(b);
+  } catch {
+    console.log("err\n");
+  }
+  let b = 10;
+  
+  // 10 ，由于 var 没有块级作用域，所以 var 当前处于全局作用域
+  for (var i = 0; i < 10; i++) {}
+  console.log(i);
+  
+  // 0
+  let j = 0;
+  for (let j = 0; j < 10; j++) {}
+  console.log(j, "\n");
+  
+  // err ，因为 funcVar 提升的位置是它的当前作用域，也就是局部作用域
+  try {
+    console.log(funcVar);
+  } catch {
+    console.log("err");
+  }
+  
+  // undefined 10
+  function func() {
+    console.log(funcVar);
+    var funcVar = 10;
+    console.log(funcVar);
+  }
+  func();
+  ```
+
+- 函数也只提升声明，只有具名函数会提升，连 var 定义的匿名函数都不会提升：
+  
+  ```
+  // 1
+  func();
+  function func() {
+    console.log(1);
+  }
+  
+  // err
+  try {
+    notNameFunc();
+  } catch {
+    console.log("err\n");
+  }
+  var notNameFunc = function () {};
+  
+  //  2，内部函数也会提升到当前作用域最前面
+  function f() {
+    func();
+    function func() {
+      console.log(2);
+    }
+  }
+  f();
+  ```
+
+注意事项：
+
+- 浏览器全局 this 为 window ，node 全局 this 为 {} ；浏览器 globalThis 为 window ，node 中 globalThis 为 node 全局对象：
+  
+  ```
+  console.log(this, globalThis);
+  ```
+
+- 全局作用域中，具名函数和 var 声明的变量、var 声明的匿名函数，在浏览器中会加到 window 中（let、const 不会），node 则不会加到 {} 和 node 全局对象中：
+  
+  ```
+  var a = 1;
+  let b = 2;
+  const c = 3;
+  
+  function func1() {}
+  var func2 = function () {};
+  let func3 = function () {};
+  const func4 = function () {};
+  
+  // 1 undefined unfined func1 func2 undefined unfined
+  try {
+    // 浏览器环境
+    console.log(
+      window.a,
+      window.b,
+      window.c,
+      window.func1,
+      window.func2,
+      window.func3,
+      window.func4
+    );
+  } catch {
+    // {}、undefined ，node 环境
+    console.log(
+      this,
+      globalThis.a,
+      globalThis.b,
+      globalThis.c,
+      globalThis.func1,
+      globalThis.func2,
+      globalThis.func3,
+      globalThis.func4
+    );
+  }
+  ```
+
+- 若声明变量时没有使用 var 、let 、const ，此时必须赋值，否则报错；浏览器会吧变量放到 window 中，node 会放到 globalThis 中。
+  
+  严格模式下，这种情况浏览器和 node 都会直接报错：
+  
+  ```
+  // 下面的情况等价于 window.xxx = value 或 globalThis.xxx = value
+  
+  // err ，必须赋值
+  try {
+    a;
+  } catch {
+    console.log("err");
+  }
+  
+  a = 1;
+  func = function () {};
+  
+  function func1() {
+    b = 2;
+  }
+  func1();
+  
+  // func1 必须运行，b 才会加到 window、globalThis 中
+  // 1 2 func ，当然调用时 window、globalThis 可以省略
+  try {
+    console.log(window.a, window.b, window.func);
+  } catch {
+    console.log(globalThis.a, globalThis.b, globalThis.func);
+  }
+  ```
+
+（3）作用域链
+
+用于查找变量，先从自己作用域开始，直到全局，找不到就是 undefined 。规则：
+
+- 内部可以访问外部变量，反之不行；访问的是最近一级作用域的变量
+
+- 只与定义函数时有关，与调用无关：
+  
+  ```
+  function func1() {
+    var a = 1;
+  
+    return function () {
+      console.log(a);
+    };
+  }
+  
+  function func2() {
+    var a = 2;
+    func1()();
+  }
+  
+  // 1
+  func2();
+  ```
+
+- 由于 JS 是解释型语言，所以下面代码不会报错：
+  
+  ```
+  function func() {
+    console.log(a);
+  }
+  
+  const a = 1;
+  
+  // 1
+  func();
+  ```
+
+### 2.2 ES6 函数
+
+（1）形参
+
+rest 参数，也叫剩余参数：
+
+用于接收不定数量的参数，必须放在最后面且只能有一个，接收后是一个数组，可以替代 arguments ：
+
+```
+function func(a, b, ...args) {
+  console.log(a, b, args);
+
+  // true
+  console.log(args.__proto__ === Array.prototype);
+}
+
+// 1 2 [3, 4, 5]
+func(1, 2, 3, 4, 5);
+```
+
+```
+// 可以利用 rest 参数获取回调函数需要几个参数
+function func(fn) {
+  fn(1, 2);
+}
+
+// 2
+func((...args) => console.log(args.length));
+```
+
+形参默认值：
+
+当未传入参数，或者传入 undefined 时，就使用默认值：
+
+```
+function func1(a = 5) {
+  console.log(a);
+}
+
+// 5
+func1();
+
+// 默认参数可以放在除了 rest 的任何位置，但最好往后靠，才比较明确 -----------------------------
+function func2(a, b, c = 3) {
+  console.log(a, b, c);
+}
+
+function func3(a, b = 2, c) {
+  console.log(a, b, c);
+}
+
+// 1 2 3
+func2(1, 2);
+
+// 1 2 undefined
+func3(1, 2);
+
+// 默认值也可以是一个表达式 ------------------------------------------------------------
+function double(n) {
+  return n * 2;
+}
+
+// 正常使用，只有在未传入参数或传入 undefined 时，表达式才会执行
+function func4(a, b = double(a)) {
+  console.log(a, b);
+}
+
+/*形成了暂时性死区，就类似于下面代码，无法再 b 声明前使用 b 
+ * let a = double(b);
+   let b;
+ */
+function func5(a = double(b), b) {
+  console.log(a, b);
+}
+
+// 1 2
+func4(1);
+
+// 1 undefined ，传入了非 undefined 参数，double(b) 未执行
+func5(1);
+
+// err
+try {
+  func5();
+} catch {
+  console.log("err");
+}
+```
+
+```
+// 引用类型作为默认值
+function func(str, options = {}) {
+  const defaultOptions = {};
+  options = { ...defaultOptions, ...options };
+}
+```
+
+函数的 length 的设计是为了获取函数至少需要的参数数量，所以会忽略 rest 参数和默认值参数，只获取第一个默认值参数前面的参数数量：
+
+```
+function func(a, b = 1, ...args) {}
+
+// 1
+console.log(func.length);
+```
+
+ES5 的 arguments 使用很不方便，尽量用 rest 参数替代：
+
+- 外部不知道 argument 需要使用剩余参数
+
+- argument 保存了所有参数，需要分割；arguments 是伪数组
+
+另外 arguments 也有设计上的问题，在修改刑参时会同步修改 arguments ，之所以没有修复这个 bug ，是因为考虑到老项目的兼容问题，所以退出了严格模式，有了 ES6 新语法后，使用这些函数新语法就说明是新项目了，就不用使用严格模式：
+
+```
+// 非严格模式下，修改形参会同步影响到 arguments ，这是非常不合理的
+function func1(a) {
+  // "use strict";
+
+  a = 5;
+
+  // 5
+  console.log(arguments[0]);
+}
+
+// 但只要用了默认值或 rest 参数。在非严格模式下也会恢复正常
+function func2(a, b = 5) {
+  a = 5;
+
+  // 1
+  console.log(arguments[0]);
+}
+
+func1(1);
+func2(1);
+```
+
+ES8 新特性，函数可以喝数组、对象一样，最后面加一个逗号而不报错了：
+
+```
+function func(a, b, ) {}
+func(1, 2, );
+```
+
+（2）箭头函数
+
+在 ES6 之前，function 既可以作为普通函数封装代码，又可以作为构造函数来实例化对象，这实际上是 JS 设计上的缺陷，作为面向对象的语言，应该把这两个功能在语法上区分开来，消除函数的二义性。
+
+箭头函数就是解决方案之一（另一个是 class ）。
+
+与普通函数的区别：
+
+- 只能定义匿名函数
+
+- 没有 arguments，因为 rest 参数是更好的替代
+
+- 由于设计初衷是为了消除二义性，所以箭头函数不能作为构造函数，不能 new、没有原型、没有自己的 this ，使用 this 其实就是在作用域链中找到的
+
+```
+const func1 = (a, b) => {
+  return a + b;
+};
+
+// 形参只有一个时，可以省略 () ，函数体只有一条语句时，可以省略 {} ，此时就是 return 这条语句
+// 若没有形参，则必须加上 ()
+const func2 = a => a * 2;
+const func3 = () => 123;
+
+// 上述情况若 return对象，则需要加上 () ，避免语法错误
+const func4 = () => ({ a: 1 });
+```
+
+（3）标签模板
+
+函数调用结合模板字符串的一种新的函数调用方式。标签指的就是函数，在函数调用后面的模板字符串会按照规则作为函数的实参：
+
+```
+const func = (a) => {
+  console.log(a);
+};
+
+// 相当于 func([`111`]);
+func`111`;
+```
+
+其他情况：
+
+```
+const func = (str, a, b) => {
+  console.log(str, a, b, "\n");
+};
+
+const a = "aaa",
+  b = 25;
+
+// func(["q", "w", "e"], a, b);
+func`q${a}w${b}e`;
+
+// func(["q", "w", ""], a, b);
+func`q${a}w${b}`;
+
+// func(["", "w", ""], a, b);
+func`${a}w${b}`;
+
+// func(["q", "", ""], a, b);
+func`q${a}${b}`;
+
+// func(["", "", ""], a, b);
+func`${a}${b}`;
+
+// func(["q", "w", "e", "r"], b, b, b);
+func`q${b}w${b}e${b}r`;
+```
+
+ES9 新特性，若模板字符串中有错误的转义字符，不再报错，而是把这个转义字符变成 undefined ，且可以从 raw 看到原始字符串：
+
+```
+function tag(strs) {
+  // undefined
+  console.log(strs[0]);
+
+  // "\\unicode and \\u{55}";
+  console.log(strs.raw[0]);
+}
+
+tag`\unicode and \u{55}`;
+```
+
+### 2.3 函数式编程
+
+（1）纯函数
+
+相同的输入都能得到同样的结果，且无副作用的函数就是纯函数：
+
+- 如 Array 的 push 会修改原数组，那么每次得到的输出就不一样，就不是纯函数
+
+- 无副作用，即不会修改外部作用域的变量，没有定时器、修改 DOM 等异步操作
+
+```
+// 纯函数
+function func1(a, b) {
+  return a + b;
+}
+
+// 非纯函数
+let a = 0;
+function func2() {
+  // 返回值依赖外部变量，而外部变量是不确定的，可能会被修改
+  return a + 1;
+}
+function func3(arr) {
+  // 修改了外部作用域的 arr ，产生了副作用
+  arr[0] = 1;
+}
+
+function func3() {
+  // 副作用
+  setTimeout(() => {});
+}（2）高阶函数
+```
+
+形参或返回值是 function 的函数，就是高阶函数，其中作为形参的函数称为回调函数
+
+```
+function func1(fn) {
+  fn();
+}
+
+function func2() {
+  return function () {};
+}
+
+function func3(fn) {
+  fn();
+  return function () {};
+}
+
+// 纯粹的函数式编程中没有对象，但 JS 混合了多种编程思想，所以 JS 中这样也算高阶函数
+function func4(options) {
+  options.fn();
+}
+```
+
+（3）惰性函数
+
+当函数中某些逻辑只需要执行一次时，就可以写成惰性函数，提高性能：
+
+```
+function nextTick(callback) {
+  if (Promise) {
+    nextTick = function (callback) {
+      Promise.resolve().then(callback);
+    };
+  } else {
+    nextTick = function (callback) {
+      setTimeout(() => callback);
+    };
+  }
+
+  // 执行修改后的函数
+  nextTick(callback);
+}
+```
+
+```
+// 另一种方式，在项目最开始就判断，缺点是会增加初始化时间
+const nextTick = ((callback) => {
+  if (Promise) return (callback) => Promise.resolve().then(callback);
+  else return (callback) => setTimeout(() => callback);
 })();
 ```
 
-（3）数组
+（4）闭包
+
+编译原理的概念，只要函数形成了嵌套，且内部函数使用了外部函数的资源，那么内部函数就变成了闭包，即使外部函数被垃圾回收了，闭包使用的资源依然存在，这是非常合理的，因为内部函数还在使用就不应该被垃圾回收。
+
+直到闭包函数也被垃圾回收了，闭包的资源才会被垃圾回收：
+
+- 优点：缓存资源；也可以在外面按照自己的规则访问函数的私有资源
+
+- 缺点：不会被垃圾回收，使用不慎就会加大内存消耗，低版本 IE 则会内存泄漏，解决方法是把不适用的闭包设为 null
+
+```
+const func1 = (...args) => {
+  let num = 0;
+
+  // 内部函数使用了形参和 num ，这两个变量都不会被垃圾回收
+  return () => console.log(args[0]++, num++);
+};
+
+const func2 = (...args) => {
+  let num = 0;
+
+  // z这样也是函数嵌套，这种方式通常用来实现私有资源，只给外部提供 get 方法访问资源
+  return {
+    getNum: () => console.log(args[0]++, num++),
+  };
+};
+
+const func3 = () => {
+  const a = 1;
+
+  // 这也是函数嵌套，也形成了闭包，只不过内部函数没有被外部使用，已经被垃圾回收了
+  const func = () => a;
+};
+
+let f1 = func1(0),
+  f2 = func2(0);
+
+// 0 0 0 0
+f1();
+f2.getNum();
+
+// 1 1 1 1 ，
+f1();
+f2.getNum();
+
+// 手动回收闭包
+f1 = null;
+f2.getNum = null;
+```
+
+（5）面向切面编程
+
+将函数的核心功能和非核心功能分开，在适当的时候可以给有核心功能的函数添加一些非核心功能；
+
+实现方式一：
+
+```
+function AOP(fn, before, after) {
+  return function (...args) {
+    before?.call(this, ...args);
+    fn?.call(this, ...args);
+    after?.call(this, ...args);
+    ``;
+  };
+}
+
+// -----------------------------------------------------------------------------
+const obj = {
+  func1() {
+    console.log("func1");
+  },
+
+  func2(a, b) {
+    console.log("func2", a, b);
+  },
+};
+
+const func1 = AOP(
+  obj.func1,
+  function (...args) {
+    console.log("func1 before", this === obj, ...args);
+  },
+  function (...args) {
+    console.log("func1 after", this === obj, ...args);
+  }
+);
+
+// func1 before true
+// func1
+// func1 after true
+func1.call(obj, "\n");
+
+const func2 = AOP(
+  obj.func2,
+  function (...args) {
+    console.log("func2 before", this === obj, ...args);
+  },
+  function (...args) {
+    console.log("func2 after", this === obj, ...args);
+  }
+);
+
+// func2 before true 1 2
+// func2 1 2
+// func2 after true 1 2
+func2.call(obj, 1, 2);
+```
+
+实现方式二：
+
+```
+Function.prototype.before = function (beforeFn) {
+  const fn = this;
+
+  return function (...args) {
+    beforeFn.call(this, ...args);
+    fn.call(this, ...args);
+  };
+};
+
+Function.prototype.after = function (afterFn) {
+  const fn = this;
+
+  return function (...args) {
+    fn.call(this, ...args);
+    afterFn.call(this, ...args);
+  };
+};
+
+// -------------------------------------------------------------------------------
+const obj = {
+  test(...args) {
+    console.log("test", this === obj, ...args);
+  },
+};
+
+const fullTest = obj.test
+  .before(function (...args) {
+    console.log("before", this === obj, ...args);
+  })
+  .after(function (...args) {
+    console.log("after", this === obj, ...args);
+  });
+
+// before true 1 2
+// test true 1 2
+// after true 1 2
+fullTest.call(obj, 1, 2);
+```
+
+（6）柯里化
+
+处理一个原函数，固化其某些参数（即闭包这些参数），并生成一个新函数，新函数只需要传入剩下的参数即可。柯里化通尝将多参函数转化为参数更少的函数或单参函数。
+
+如果一个函数需要被使用多次，且其中某些参数是不变的，就可以使用柯里化，后续只需要使用新生成的函数，传入剩下的参数即可：
+
+```
+function currv(fn, ...preArgs) {
+  return (...args) => {
+    const totalArgs = [...preArgs, ...args];
+
+    // 如果参数足够 fn 使用，就调用 fn
+    if (totalArgs.length >= fn.length) return fn.apply(this, totalArgs);
+    // 否则继续 currv
+    else return currv.call(this, fn, ...totalArgs);
+  };
+}
+
+const sum1 = currv(function (a, b) {
+  return a + b;
+}, 10);
+
+// 30
+console.log(sum1(20));
+// 40
+console.log(sum1(30), "\n");
+
+const sum2 = currv(function (a, b, c) {
+  return a + b + c;
+}, 10);
+
+// 50
+console.log(sum2(20, 20));
+// 80
+console.log(sum2(30, 40), "\n");
+
+const sum3 = sum2(20);
+// 70 ，10+20+40
+console.log(sum3(40));
+```
+
+```
+// 多参的柯里化不好标注，这里就标注只允许单参的类型
+
+type PreArgs<A extends any[]> = A extends [...infer PA, any]
+  ? A | PA | PreArgs<PA>
+  : [];
+
+type CurrvReturn<A, R> = A extends []
+  ? () => R
+  : A extends [infer ARG]
+  ? (param: ARG) => R
+  : A extends [infer ARG, ...infer REST]
+  ? (param: ARG) => CurrvReturn<REST, R>
+  : never;
+
+declare function currv<A extends any[], R, PA extends PreArgs<A>>(
+  fn: (...args: A) => R,
+  ...preArgs: PA
+): CurrvReturn<A, R>;
+```
+
+（7）函数管道
+
+将多个单参函数组合成一个新的单参函数，上一个单参函数的输出会作为下一个单参函数的输入。若传入的不是单参函数，则需要 currv ：
+
+```
+function pipe(...fns) {
+  return (value) => fns.reduce((pre, fn) => fn.call(this, pre), value);
+}
+
+const obj = {
+  num1: 2,
+  num2: 1,
+
+  double(n) {
+    return n * this.num1;
+  },
+
+  add(n) {
+    return n + this.num2;
+  },
+};
+
+const func = pipe.call(obj, obj.double, obj.add);
+
+// 5 ，2*2+1
+console.log(func(2));
+```
+
+（8）防抖、节流
+
+有对应的库：
+
+```
+npm install --save lodash
+```
+
+防抖、节流的作用都是为了限制执行次数，减少函数不必要的执行，优化性能，区别是：
+
+- 防抖：在一段时间内只允许执行一次，若在此时间段内再次触发，则重新计时
+
+- 节流：在一段时间内只允许执行一次，可以在开头或结尾执行
+
+- 有些场景防抖、节流都不合适，如上拉加载更多，这时候就用一个 flag 判断是否执行即可。
+
+```
+npm install --save @types/node
+```
+
+```
+// 防抖
+function debunce<A extends any[]>(
+  func: (...args: A) => any,
+  duration: number = 1000
+) {
+  let timer: NodeJS.Timeout = null;
+
+  return function (...args: A): void {
+    clearTimeout(Number(timer));
+    timer = setTimeout(() => func.call(this, ...args), duration);
+  };
+}
+
+// 节流
+function throttle<A extends any[]>(
+  func: (...args: A) => any,
+  duration: number = 1000,
+  immediate: boolean = true
+) {
+  let timer: NodeJS.Timeout = null;
+
+  return function (...args: A): void {
+    if (!timer) {
+      immediate && func.call(this, ...args);
+
+      timer = setTimeout(() => {
+        timer = null;
+        immediate || func.call(this, ...args);
+      }, duration);
+    }
+  };
+}
+```
+
+## 3 对象
+
+### 3.1 Object
+
+（1）基本
+
+```
+// 创建 -------------------------------------------------------------------------------
+// 构造函数创建，过程：bnew Object() -> 修改 this -> 执行构造函数 -> return this
+function Obj(n) {
+  this.a = n;
+
+  // 默认返回值
+  // return this;
+}
+const obj1 = new Obj(123);
+
+// 字面量创建，底层会调用 new Object()
+const c = 3;
+const func2 = () => {};
+
+const obj2 = {
+  a: 1,
+
+  // key 的引号可以省略，如果是复杂的 key 则必须加引号
+  "b.b.b": 2,
+
+  // 都是匿名函数
+  func1: function () {
+    console.log("func");
+  },
+
+  // ES6 新特性，若 value 是一个变量且和 key 名字相同，可以简写
+  c,
+  func2,
+
+  // ES6 新特性，函数简写，等价于 func3: function() {}
+  func3() {},
+
+  // ES6 新特性，key 可以用 [] 包裹表达式，若 key 不是 string、Symbol ，会隐式转为 string
+  [Symbol()]: "sym",
+};
+
+// 调用、添加、删除属性 ----------------------------------------------------------------
+// 调用
+console.log(obj1.a, obj1["a"]);
+
+// undefined ， 调用没有的属性得到 undefined
+console.log(obj1.aaa);
+
+// err ，无法从 undefined 中调用任何属性
+try {
+  console.log(o.a);
+} catch {
+  console.log("err");
+}
+
+// 删除
+delete obj1.a;
+
+// 添加到对象自身
+obj1.b = 3;
+obj1["c"] = 3;
+
+// 添加到圆形
+obj1.__proto__.d = 4;
+Obj.prototype.e = 5;
+
+// 添加 static 属性
+Obj.f = 6;
+```
+
+对象的 key 只能是 string 或 Symbol ，如果是其他类型则会转为 string ：
+
+```
+const obj = {};
+const arr = [];
+
+// 等价于 obj["[object Object]"] = "obj"
+obj[{ a: 1 }] = "obj";
+// "obj"
+console.log(obj["[object Object]"]);
+
+// 等价于 arr["0"] = 123
+arr[0] = 123;
+// 123
+console.log(arr[0]);
+```
+
+（2）深拷贝
+
+引用数据类型，引用（地址）存储在栈内存，用变量接收；属性等存储在堆内存。
+
+浅拷贝只拷贝地址，修改拷贝对象的属性，原始对象也会修改，因为是同一个堆内存空间；而深拷贝则是拷贝全部元素，存放在新开票的堆内存中。
+
+```
+const obj1 = { a: 1 };
+
+// 浅拷贝
+const obj2 = obj1;
+
+obj2.a = 2;
+
+// 2 2
+console.log(obj1.a, obj2.a);
+```
+
+深拷贝：
+
+```
+// 缺点是 JSON API 自己的限制，优先数据类型无法拷贝
+const func1 = (obj) => JSON.parse(JSON.stringify(obj));
+
+// 缺点是只能深拷贝一层
+const func2 = (obj) => ({ ...obj });
+
+/**自己实现
+ * NaN，Function，基本数据类型不需要深拷贝，直接返回，Symbol 除外
+ * 支持循环引用的深拷贝
+ * 支持 Symbol ，Date ，RegExp 的深拷贝
+ * 支持对象、数组、Set、WeakSet、Map、WeakMap 的深拷贝
+ * 原型上的自定义属性，需要 for in 遍历、方法，比较少用，这里就不实现拷贝了
+ */
+function deepCopy(source, hash = new WeakMap()) {
+  // 不需要递归深拷贝的类型
+  const nonRecursionTypes = [
+    "[object Symbol]",
+    "[object Date]",
+    "[object RegExp]",
+  ];
+
+  // 需要递归深拷贝的类型
+  const recursionTypes = [
+    "[object Object]",
+    "[object Array]",
+    "[object Set]",
+    "[object Map]",
+    "[object WeakSet]",
+    "[object WeakMap]",
+  ];
+
+  const type = Object.prototype.toString.call(source);
+
+  // 1.如果是NaN，函数或基本数据类型（Number,String,Boolean,null,undefined,BigInt），直接返回
+  if (!recursionTypes.includes(type) && !nonRecursionTypes.includes(type))
+    return source;
+
+  // 2.如果是Symbol，Date或RegExp，简单深拷贝后返回
+  if (nonRecursionTypes.includes(type))
+    return type === "[object Symbol]"
+      ? Symbol(source.description)
+      : type === "[object Date]"
+      ? new Date(source)
+      : new RegExp(source);
+
+  // 3.如果是循环引用，直接return
+  if (hash.has(source)) return hash.get(source);
+  hash.set(source, source);
+
+  // 4.若果是需要递归深拷贝的类型
+  let res = null;
+  switch (type) {
+    case "[object Array]":
+    case "[object Object]":
+      res = Array.isArray(source) ? [] : {};
+      //之所以不直接用for遍历source是因为这样遍历不出键位Symbol的属性，ownKeys才行
+      Reflect.ownKeys(source).forEach((i) => {
+        if (i !== "length" || type === "[object Object]") {
+          res[i] = deepCopy(source[i], hash);
+        }
+      });
+      break;
+    case "[object Set]":
+    case "[object WeakSet]":
+      res = new Set();
+      for (let i of source) res.add(deepCopy(i, hash));
+      break;
+    case "[object Map]":
+    case "[object WeakMap]":
+      res = new Map();
+      for (let [k, v] of source) res.set(k, deepCopy(v, hash));
+      break;
+    default:
+      break;
+  }
+
+  return res;
+}
+
+// 测试代码
+const obj = {
+  num: 123,
+  bigint: 123456789123456789n,
+  nan: NaN,
+  und: undefined,
+  arr: [1, 2],
+  obj: { a: 1, b: 2 },
+  func: () => 123,
+  null: null,
+  [Symbol("111")]: 111,
+  set: new Set([5, 6]),
+  map: new Map([["key", "value"]]),
+  sym: Symbol("sym"),
+  date: new Date(),
+  reg: new RegExp(),
+};
+
+// 测试循环引用
+const objTest = {
+  obj,
+};
+
+obj.myself = obj;
+obj.objTest = objTest;
+obj.arr.push(obj.arr);
+obj.set.add(obj.set);
+obj.map.set("m", obj.map);
+
+// 输出
+console.log(obj);
+console.log(deepCopy(obj));
+```
+
+深拷贝也有第三方 API 可以直接使用。
+
+（3）ES6 Object 新 API 
+
+```
+const obj = {
+  a: 1,
+  b: 2,
+};
+
+Object.defineProperty(obj, "c", {
+  value: 3,
+  enumerable: false,
+  writable: true,
+});
+
+// ES6 --------------------------------------------------------------------------------
+// 返回 key 或 value 的数组，会过滤掉非枚举属性
+// ["a", "b"] [1, 2] [["a", 1], ["b", 2]]
+console.log(Object.keys(obj));
+console.log(Object.values(obj));
+console.log(Object.entries(obj), "\n");
+
+// 判断两个是否相等，可以判断基本类型，会有严格的比较，如 +0 和 -0 不相等
+// true false
+console.log(Object.is(obj, obj), "\n");
+console.log(Object.is(+0, -0), "\n");
+
+// 合并多个 obj ，会改变原始 obj ，若有相同 key ，后面会覆盖前面，被覆盖的属性必须是可写的
+const newObj = Object.assign(obj, { a: 11 }, { c: 3 });
+console.log(newObj, obj, "\n");
+
+// ---------------------------------------------------------------------------------
+// ES10 新特性，用二维数组创建对象
+const obj1 = Object.fromEntries([
+  ["a", 1],
+  ["b", 2],
+]);
+console.log(obj1);
+```
+
+（3）Reflect 反射
+
+ES6 新特性，对象的任何操作，都会转化成浏览器的内部方法，数组、函数等也是对象，对其的操作也会转化成内部方法。这些方法开发者无法使用，ES5 无法使用这些方法的。
+
+```
+const obj = {};
+
+// 等价于 set(obj, "a") ，此时 key 一定是 string
+obj.a = 1;
+
+// 等价于 set(obj, "b") ，不同的是如果 key 可能不是 string ，就会强制类型转换成 string
+obj["b"] = 2;
+
+// 调用内部方法 defineProperty
+Object.defineProperty(obj, "c", { value: 3 });
+
+// 等价于 get(obj, key)
+console.log(obj.a, obj["b"], obj.c, "\n");
+```
+
+而 Reflect 就有这些内部方法：
+
+```
+const obj = {};
+
+// Reflect 使用这些内部方法时，会 try...catch 处理是否处理成功，返回布尔值
+// 第三个参数为 this 指向
+Reflect.set(obj, "a", obj);
+
+// undefined ，没有圆形
+console.log(Reflect.prototype);
+
+// 但是具备 OBJECT 的 static 方法
+// Object 圆形上的方法渐渐地也部署成 static 方法了，因此 Reflect 也有
+console.log(Reflect.hasOwnProperty, "\n");
+```
+
+Reflect 应用场景：
+
+```
+// 简化内部操作 -----------------------------------------------------------------------
+const obj = { a: 1 };
+
+Object.defineProperty(obj, "b", {
+  value: 2,
+  enumerable: false,
+});
+
+// ["a"] ，keys 方法内部会判断并过滤掉非枚举 key ，再调用 ownKeys
+console.log(Object.keys(obj));
+// ["a", "b"] ，如果不想要 keys 的操作，就可以直接使用 ownKeys
+console.log(Reflect.ownKeys(obj), "\n");
+
+// 修改 this ------------------------------------------------------------------------
+const o = {
+  a: 1,
+  get b() {
+    return this.a;
+  },
+};
+
+const p = new Proxy(o, {
+  get(t, k, r) {
+    console.log(k);
+
+    // return t[k];
+    return Reflect.get(t, k, r);
+  },
+});
+
+// "b" ，没有 a 是因为 this 只想的是 o ，而不是 p
+// "b" "a" ，使用 Reflect 修改 this 为 p 后就可以了
+p.b;
+```
+
+（4）对象常用操作
+
+数组、对象判空：
+
+```
+const arr = [], obj = {};
+
+// 推荐做法
+// true ，数组判空
+console.log(Array.isArray(arr) && arr.length === 0);
+// true true ，对象判空
+console.log(Object.keys(obj).length === 0);
+console.log(Object.getOwnPropertyNames(obj).length === 0);
+
+// ------------------------------------------------------------------------
+// false false ， 错误做法，因为这是判断两个引用的地址
+console.log(arr === [], obj === {});
+
+// true ture ，不推荐，性能差，且 stringify() 本身有些限制，如 undefined 会被忽略
+console.log(JSON.stringify(arr) === "[]", JSON.stringify(obj) === "{}");
+
+// 不推荐，for...in 会便利到圆形上的自定义属性，for...of 虽然不会到圆形，但也只能用于 arr ，且麻烦
+let arrIsEmpty = true, objIsEmpty = true;
+arr.__proto__.a = 123;
+obj.__proto__.a = 123;
+for (const i of arr) arrIsEmpty = false;
+for (const i in obj) objIsEmpty = false;
+// true false
+console.log(arrIsEmpty, objIsEmpty);
+```
+
+判断对象中是否有某属性：
+
+* 以下方法都无法判断 Symbol key 属性：
+  
+  ```
+  const obj = {
+    a: undefined,
+  };
+  
+  obj.__proto__.b = undefined;
+  obj.__proto__.c = 123;
+  
+  // 判断是否连圆形上都不存在 -----------------------------------------------------------
+  // 都是 undefined ，原型链上都找不到，但是无法确定是否 a 和 b 本身就是 undefined
+  console.log(obj.a, obj.b, obj["a"], obj["b"]);
+  // 123 123
+  console.log(obj.c, obj["c"]);
+  
+  // 都是 true ，在原型链上找，同时可以确定是否值本身就是 undefined
+  console.log("a" in obj, "b" in obj, "c" in obj);
+  
+  // 只判断对象本身是否有该属性，不去原型链上找 -----------------------------------------------
+  // true false ，可以判断值本身就是 undefined 的属性
+  console.log(obj.hasOwnProperty("a"), obj.hasOwnProperty("b"));
+  
+  // 同上，只是变成获取所有属性，包括非枚举属性
+  console.log(Object.getOwnPropertyNames(obj));
+  
+  // ES13 新增 hasOwn() ，等价于 hasOwnProperty
+  // 写法更简单，且不在 Object 圆形上，就不容易被修改调或意外的不可用
+  console.log(Object.prototype.hasOwnProperty.call(obj, "a"));
+  console.log(Object.hasOwn(obj, ""));
+  ```
+
+* 判断对象中是否有 Symbol key 属性：常规方法无法看到 Object 中的 Symbol key （Map 可以）：
+  
+  ```
+  const obj = {
+    a: "a",
+    [Symbol("b")]: "b",
+  };
+  
+  const map = new Map();
+  map.set("a", "a");
+  map.set(Symbol("b"), "b");
+  
+  // 无法看到 Objct 中的 Symbol key
+  for (const i in obj) console.log(i);
+  console.log(Object.keys(obj));
+  console.log(Object.getOwnPropertyNames(obj));
+  console.log(JSON.stringify(obj), "\n");
+  
+  // Map 就可以
+  for (const i of map) console.log(i);
+  console.log("\n");
+  
+  // 只能看到 Symbol key
+  console.log(Object.getOwnPropertySymbols(obj), "\n");
+  
+  // 全部非圆形属性都能看到
+  console.log(obj, map);
+  ```
+
+* 获取所有非圆形 key，包括 Symbol key 和非枚举属性：
+  
+  ```
+  const obj = {
+    a: 1,
+    [Symbol("b")]: 2,
+  };
+  
+  Object.defineProperty(obj, "c", {
+    value: 3,
+    enumerable: false,
+  });
+  
+  obj.__proto__.d = 4;
+  
+  // ["a", Symbol(b), "c"]”
+  console.log(Reflect.ownKeys(obj));
+  ```
+
+### 3.2 class
+
+解决 JS 函数二义性的另一个方案，实例对象专门由 class 的 constructor 构造。
+
+class 里的 this 永远不会指向 window ，硬要指向 window 也会指向 undefined 。
+
+（1）基本
+
+```
+// err ，class 此时是暂时性死区，无法使用
+try {
+  console.log(A);
+} catch {
+  console.log("err");
+}
+
+// 声明
+class A {
+  constructor(a) {
+    this.a = a;
+    this.b = 2;
+  }
+
+  // 定义方法，方法内的 this 为实例对象
+  func1() {
+    return this;
+  }
+
+  // class 是局部作用域，所以箭头函数 this 为实例对象
+  func2 = () => this;
+
+  // ES13 新特性 --------------------------------------------------------------------
+  // 在 constructor 外定义属性
+  c = 3;
+  [Symbol("d")] = 5;
+
+  // 用 # 定义私有属性、私有方法 ，外部无法使用
+  #e = 5;
+  #func3 = () => 6;
+  getPrivate = () => this.#e + this.#func3();
+  hasPrivate = (key) => #e in this;
+
+  // 静态属性、静态方法、只能 class 本身使用，静态方法只能使用静态属性和静态方法
+  static f = 7;
+  static staticFunc = () => this.f;
+
+  // static private
+  static #g = 8;
+  static getStaticPrivateFunc = () => A.#g;
+
+  // 静态代码块，可以有多个，编译阶段就执行，只能使用静态属性和静态方法
+  static {
+    // 局部作用域
+
+    // true ，this 指向类本身
+    console.log(this === A, "\n");
+  }
+}
+
+const obj = new A(1);
+
+// 1 2
+console.log(obj.a, obj.b);
+// true
+console.log(obj.func1() === obj.func2(), "\n");
+
+// ，5+6
+console.log(obj.getPrivate());
+// 7
+console.log(A.staticFunc());
+// 8
+console.log(A.getStaticPrivateFunc(), "\n");
+
+// true true ，in 只能判断 public  的属性方法，private 的只能类提供 get 方法才行
+console.log("a" in obj, obj.hasPrivate("e"));
+// true ，判断 static 需要类本身
+console.log("f" in A);
+```
+
+（2）class 转为构造函数
+
+（3）类的继承
+
+```
+// 父类
+class A {
+  constructor(a) {
+    this.a = a;
+  }
+
+  fatherFunc() {
+    console.log("fatherFunc");
+  }
+}
+
+//子类继承父类
+class B extends A {
+  constructor(a, b, c) {
+    // 子类中必须有 super() 调用父类的 constructor ，才能使用 this
+    super(a);
+
+    this.b = b;
+    this.c = c;
+  }
+
+  sonFunc() {
+    // 调用父类的方法
+    super.fatherFunc();
+    console.log("sonFunc", "\n");
+  }
+
+  /* 重写父类方法
+   * 内部无法使用 super() 调用父类同名方法
+   */
+  fatherFunc() {
+    console.log("rewrite fatherFunc");
+  }
+}
+
+const son = new B(1, 2, 3);
+
+// 1 2 3
+console.log(son.a, son.b, son.c);
+
+son.sonFunc();
+son.fatherFunc();
+```
+
+（4）实现私有属性
+
+ES6 的访问器使用 _name 在命名上区分私有属性，但约束力不强；用 Symbol key 实现私有属性和也有办法访问。
+
+ES13 有 \# 可以实现，且是运行时，不过由于是新特性，可能有兼容性问题。
+
+TypeScript 中的 private 只是编译时，编译后的 JS 也没有使用 # ，且就算再 ts 中，也有办法可以使用动态属性绕过检查：
+
+```
+class A {
+  private a = 5;
+}
+
+const obj = new A();
+console.log(obj["a"]);
+```
+
+自己实现可以使用立即执行函：
+
+```
+class A {
+  // 立即执行函数，防止外部访问私有属性
+  privateFields = (function () {
+    const fields = {
+      a: 1,
+    };
+
+    // 闭包，防止 fields 被垃圾回收
+    return {
+      get: (key) => {
+        // 防止从原型上访问，只有 key 时 privateFields 有的属性时，才允许访问
+        if (fields.hasOwnProperty(key)) return fields[key];
+      },
+      set: (key, newValue) => {
+        if (fields.hasOwnProperty(key)) fields[key] = newValue;
+      },
+    };
+  })();
+}
+
+const obj = new A();
+
+// 1
+console.log(obj.privateFields.get("a"));
+
+// 2
+obj.privateFields.set("a", 2);
+console.log(obj.privateFields.get("a"));
+
+// 测试从原型上访问
+Object.defineProperty(Object.prototype, "abc", {
+  get() {
+    return this;
+  },
+});
+obj.privateFields.set("a", 3);
+console.log(obj.privateFields.get("abc")?.a);
+```
+
+或者使用模块化，把私有属性存放在 WeakMap ：
+
+```
+// 用 WeakMap 而不是 Map、Object ，是为了垃圾回收对象时，同时也会受 WeakMap 的元素
+const privateFields = new WeakMap();
+
+export default class {
+  constructor() {
+    privateFields.set(this, { a: 1 });
+  }
+
+  getPrivateFields = () => privateFields.get(this);
+}
+```
+
+### 3.3 原型
+
+原型是一个对象，所以也叫原型对象。任何一个实例对象通过隐式原型属性 \_\_proto\_\_ ，任何一个构造函数通过显示原型属性 prototype ，就能访问到原型，实例对象和它的构造函数指向的是同一个原型对象：
+
+```
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+
+const p = new Person("asdf", 18);
+
+// true 
+console.log(p.__proto__ === Person.prototype);
+
+const obj = { a: 1 };
+
+// true ，字面量对象本是 new Object()
+console.log(obj.__proto__ === Object.prototype);
+
+// 原型对象也是对象，也有原型，而这个原型对象是 Object 构造的
+// true
+console.log(Person.prototype.__proto__ === Object.prototype);
+
+// Object 的原型不再有原型，指向 null
+// null
+console.log(Object.prototype.__proto__);
+```
+
+数组、函数等都是对象：
+
+```
+const arr = [];
+const func = () => {};
+
+// true true
+console.log(arr.__proto__ === Array.prototype);
+console.log(func.__proto__ === Function.prototype, "\n");
+
+// true true ture ，它们的原型对象的原型，即 Object 的原型
+console.log(Array.prototype.__proto__ === Object.prototype);
+console.log(Function.prototype.__proto__ === Object.prototype);
+console.log(Number.prototype.__proto__ === Object.prototype);
+```
+
+ES6 新增的有关圆形的 API：
+
+```
+// 创建 obj ，并指定原型，属性描述符默认都为 false （new Object() 默认为 true）
+function Person() {
+  this.a = 1;
+}
+
+const obj = Object.create(new Person(), {
+  b: {
+    value: 2,
+  },
+});
+
+// 1 2
+console.log(obj.__proto__.a, obj.b, "\n");
+
+// { a: 1 } ，返回 obj 的原型 ----------------------------------------------------------
+console.log(Object.getPrototypeOf(obj), "\n");
+
+// 给 obj 设置新的原型 -----------------------------------------------------------------
+Object.setPrototypeOf(obj, { c: 3 });
+
+// { c: 3 }
+console.log(obj.__proto__), "\n";
+```
+
+（2）原型链
+
+原形对象和函数都是对象，也有圆形，就形成了原型链，Object new 出原型对象，Function new 出函数：
+
+- Object.prototype 是最终的原型，没有构造者，网上就是 null
+
+- Function 的 __proto__ 和 prototype 是同一个原型对象
+
+```
+// Array 、Set 等也是一样的
+function Person() {}
+const obj = new Person();
+
+const A = obj.__proto__;
+const B = A.__proto__;
+const C = Person.__proto__;
+
+// 都是 true
+console.log(
+  A === Person.prototype,
+  B === Object.prototype,
+  C === Object.__proto__ && C === Function.prototype,
+
+  // 特殊情况
+  B.__proto__ === null,
+  Function.__proto__ === Function.prototype
+);
+```
+
+```
+obj ---> __proto__ ---> A ---> __proto__ ---> B ---> null
+ |\                    /|\                   /| 
+   \                  /   \                 / |
+    \                /     \               /  |
+     \              /       \             /   |
+     new        prototype   new     rototype  |
+      \           /          \          /     |
+       \         /            \        /      |
+        \       /              \      /       |
+        \      /                \    /        |
+         Person <---- new ----> Object        |
+             \         |          /  |        |
+              \     Function     /   |        |
+               \       |        /    |        |
+               \       |       /     |        |
+                \  prototype  /      |        |
+                 \\    |     /       |        |
+                  \    &    /        |        |
+                   \   |   /         |        |
+                   __proto__         |        |
+                     \ | /           |        |
+                      \|/            |        |
+                       C <--- new ---|        |
+                       |                      |
+                       |----- __proto__ ------|
+```
+
+obj instanceof Func ，判断 obj 的原型链上是否能找到 Func.prototype ：
+
+```
+// true true
+console.log({} instanceof Object, [] instanceof Array);
+
+// true ture
+console.log(Number instanceof Object, Function instanceof Object);
+
+// 都是 false ，无法判断基本数据类型
+console.log(
+  123 instanceof Number,
+  "" instanceof String,
+  undefined instanceof Number,
+  null instanceof Number
+);
+```
+
+原型链的作用是查找属性和方法，当对象自身不存在该属性，会去原型上找，直到 Object 的原型中都没有时，返回 undefined ，这个过程是自动的，不需要手动调用原型，简化了语法：
+
+```
+const obj = { a: 1 };
+
+// 可以在原型上添加自定义的属性、方法
+obj.__proto__.b = 2;
+
+// 1 2 2 ，不用手动找原型，JS 自己就会在原型链上找
+console.log(obj.a, obj.b, obj.__proto__.b);
+
+// undefined ，因为 Object.prototype 中都没有属性 c
+console.log(obj.c);
+```
+
+（3）ES5 继承
+
+```
+/**为了保证原型链的完整性
+ * ，实例对象的 __proto__ 和类的 prototype 要保证是一个对象
+ * 子类、父类的 prototype 不能是同一个对象
+ */
+
+function Person(name) {
+  this.name = name || "person";
+  this.arr = [1];
+  this.run = () => {};
+}
+Person.prototype.msg = "person_prototype_msg";
+
+/**原型链继承 -------------------------------------------------------------------------
+ * 优点：可继承父类原型
+ * 缺点：无法多继承；new 时无法给父构造函数传参
+        一些操作如数组 push 会先 get ，自身没有就会到原型上再 set ，所有实例对象也会修改
+ */
+function SonA(age) {
+  this.age = age || 18;
+}
+SonA.prototype = new Person();
+
+const a1 = new SonA(18);
+const a2 = new SonA(18);
+
+// { age: 18 } person person_prototype_msg
+console.log(a1, a1.name, a1.msg);
+
+a1.name = "xxx";
+// xxx person ，由于自己身上没有 name 就直接 set ，而不会去 __proto__
+console.log(a1.name, a2.name);
+
+a1.arr.push(2);
+// [1, 2] [1, 2] ，先 get arr ，所以会去到 __proto__ 再 set ，所有实例对象就都修改了
+console.log(a1.arr, a2.arr, "\n");
+
+/**构造函数继承 --------------------------------------------------------------------
+ * 优点：new 时可以给父构造函数传参；可用搓个 call 实现多继承
+ * 无法继承父类原型
+ */
+function SonB(name, age) {
+  Person.call(this, name);
+  this.age = age || 18;
+}
+
+const b = new SonB("myName", 18);
+
+// { name: "myName", age: 18, arr: [1], run } undefined
+console.log(b, b.msg, "\n");
+
+/**组合继承 --------------------------------------------------------------------
+ * 原型链继承 + 构造函数继承
+ * 优点：可多继承，可以给父构造函数传参、可继承圆形，由于实例对象已经有父类的属性方法，所以使用这些属性方法不会去原型找，继承的原型就不会被共享
+ * 缺点：需要执行两次父构造函数，Child.prototype 的属性方法实际上是不需要的
+ */
+function SonC(name, age) {
+  Person.call(this, name);
+  this.age = age || 18;
+}
+SonC.prototype = new Person();
+
+const c = new SonC('myName"', 18);
+
+// { name: "myName", age: 18, arr: [1], run } person_prototype_msg
+console.log(c, c.msg);
+
+/**寄生组合继承 --------------------------------------------------------------------
+ * 组合继承的基础上，吧 Child.prototype 变成空对象
+ */
+SonC.prototype = Object.create(Person.prototype);
+
+// create 的简化实现
+function func(prototype) {
+  function F() {}
+  F.prototype = prototype;
+  return new F();
+}
+
+// SonC.prototype = func(Person.prototype);
+```
+
+### 3.4 this
+
+函数中的 this 只有在调用时，才确定 this 的指向。
+
+ES11 新特性，globalThis ，始终指向全局对象：
+
+```
+// 浏览器：window ，node：node 全局对象
+console.log(globalThis);
+```
+
+（1） this 的 4 种绑定规则
+
+优先级：new > 显示 > 隐式 > 默认 。
+
+默认绑定规则：
+
+- 全局作用域中，浏览器 this 指向 window ，node 的 this 指向 {} ：
+  
+  ```
+  // 浏览器中 window window
+  // node 中 {} 和 node 全局对象
+  console.log(this, globalThis);
+  ```
+
+- 函数不通过对象直接调用，而是独立调用，浏览器中指向 window ，node 中指向 node 全局对象，这个 node 全局对象可以用 globalThis 获取。
+  
+  本质就是独立调用的函数是 window.func() 或 globalThis.func() 调用的，所以才指向它们：
+  
+  ```
+  function func1() {
+    console.log(this);
+  }
+  func1();
+  
+  (function func2() {
+    console.log(this);
+  })();
+  
+  function func3() {
+    return function () {
+      console.log(this);
+    };
+  }
+  func3()();
+  
+  function func4(fn) {
+    fn();
+  }
+  func4(function () {
+    console.log(this);
+  });
+  
+  const obj = {
+    func5() {
+      return function () {
+        console.log(this);
+      };
+    },
+  };
+  obj.func5()();
+  ```
+  
+  在严格模式下，这种情况会指向 undefined ，但是不影响全局作用域的 this 和任何作用域的 globalThis ，webpack 、vite 默认都是严格模式。
+  
+  原因是严格模式下，认为独立调用时就是一个普通函数，自然没有 this ：
+  
+  ```
+  "use strict";
+  
+  console.log(this);
+  console.log(globalThis);
+  
+  function func() {
+    console.log(this);
+  }
+  func();
+  ```
+
+隐式绑定规则：
+
+- 对象调用，就指向这个对象：
+  
+  ```
+  const obj = {
+    a: 1,
+    func() {
+      console.log(this);
+    },
+  };
+  
+  // obj
+  obj.func();
+  ```
+
+- 隐式丢失，结果和函数独立调用一样；
+  
+  ```
+  const obj = {
+    a: 1,
+    func() {
+      console.log(this);
+    },
+  };
+  
+  // window 或 node 全局对象，严格模式下是 undefined
+  const fn = obj.func;
+  fn();
+  ```
+
+- 圆形链上的函数，若 obj 是通过隐式的使用隐式圆形属性调用的，指向 obj ；若是主动加上 __proto__ 调用的，指向圆形对象：
+  
+  ```
+  const obj = {};
+  const op = obj.__proto__;
+  
+  obj.__proto__.func = function () {
+    console.log(this === obj, this === obj.__proto__);
+  };
+  
+  // true false
+  obj.func();
+  
+  // false true
+  obj.__proto__.func();
+  
+  // false true
+  op.func();
+  ```
+
+显示绑定规则：
+
+- call ，apply ，bind 显示修改 this ：
+
+new 绑定：
+
+- this 指向实例对象：
+  
+  ```
+  function Person() {
+    console.log(this);
+  
+    this.a = 1;
+    this.getThis = function () {
+      console.log(this);
+    };
+  }
+  
+  const obj1 = new Person();
+  obj1.getThis();
+  ```
+
+- 构造函数默认 return this ，使得接收的变量获得实例对象，若修改了 return ，则会得到 retuirn 的对象，不推荐这么做：
+  
+  ```
+  function Person() {
+    console.log(this);
+  
+    this.a = 1;
+    this.getThis = function () {
+      console.log(this);
+    };
+  
+    return { b: 2 };
+  }
+  
+  const obj1 = new Person();
+  
+  // { b: 2 }
+  console.log(obj1);
+  ```
+
+特殊情况：
+
+- 箭头函数没有 this ，也不适用 this 的四种绑定规则，使用 this 其实就是在作用域链中找：
+  
+  ```
+  const obj = {
+    func1: () => {
+      console.log(this);
+    },
+  
+    func2: function () {
+      return () => console.log(this);
+    },
+  
+    func3: () => {
+      return () => console.log(this);
+    },
+  };
+  
+  // 浏览器：window ，node：{} ，在作用域链中找到 this 在全局作用域
+  obj.func1();
+  // 浏览器：window ，node：{} ，箭头函数使用 this 规则无效
+  obj.func1.call(obj);
+  
+  // 浏览器和 node 都是 obj，在作用域链中找到 this 在 func2 局部作用域中，而 func2 是 obj 调用的
+  obj.func2()();
+  
+  // 浏览器：window ，node：node 全局对象，在作用域链中找到 this 在 func2 局部作用域中，而 func2 隐式丢失，相当于独立调用
+  const f = obj.func2;
+  f()();
+  
+  // 浏览器：window ，node：{} ，在作用域链中找到 this 在全局作用域
+  obj.func3()();
+  ```
+
+- API 的回调函数的 this 由内部实现决定，如 Vue 的一般都指向 Vue 实例。但如果回调函数是箭头函数，则不管内部如何实现，this 都只看调用 API 的作用域：
+  
+  ```
+  function api(fn) {
+    const obj = { a: 1 };
+    fn.call(obj);
+  }
+  
+  // obj
+  api(function () {
+    console.log(this);
+  });
+  
+  // 浏览器：window ，node：{} ，在作用域链中找到 this 在全局作用域
+  api(() => {
+    console.log(this);
+  });
+  ```
+
+（2）实例
+
+注意，浏览器 window 和 node 全局对象有一些内置属性；
+
+```
+// ""
+console.log(window.name);
+```
+
+```
+// 浏览器：window.name = 3 ，node：{}.name = 3 ，node 全局对象.name = 4
+// 非严格模式
+globalThis.name = 4;
+this.name = 3;
+
+const obj1 = {
+  name: "1",
+
+  fn1() {
+    console.log(this.name);
+  },
+
+  fn2: () => console.log(this.name),
+
+  fn3() {
+    return function () {
+      console.log(this.name);
+    };
+  },
+
+  fn4() {
+    return () => console.log(this.name);
+  },
+};
+
+const obj2 = {
+  name: "2",
+};
+
+// 浏览器：1 2 3 3 ，node：1 2 3 3
+obj1.fn1();
+obj1.fn1.call(obj2);
+obj1.fn2();
+obj1.fn2.call(obj2);
+console.log("\n");
+
+// 浏览器： 3 2 3 ，node：4 2 4
+obj1.fn3()();
+obj1.fn3().call(obj2);
+obj1.fn3.call(obj2)();
+console.log("\n");
+
+// 浏览器：1 1 2 ，node：1 1 2
+obj1.fn4()();
+obj1.fn4().call(obj2);
+obj1.fn4.call(obj2)();
+```
+
+### 3.5 属性描述符、代理
+
+（1）ES5 的 Object\.defineProperty
+
+给属性设置访问器、属性描述符：
+
+```
+const obj = {};
+let data = 0;
+
+Object.defineProperty(obj, "a", {
+  // 访问器 ---------------------------------------------------------
+  get() {
+    // 设置 getter 后，obj.a 类似于 get(obj, "a")
+    return data;
+  },
+
+  set(newValue) {
+    // 设置 setter 后，obj.a = newValue 类似于 set(obj, "a", newValue)
+    // 不可以 obj.a = newValue ，因为会无线递归 setter
+    data = newValue;
+  },
+
+  // 设置属性的 value
+  // 有了 getter 就不能这样设置 value
+  // value: 123,
+
+  // 三个属性描述符 ----------------------------------------------------
+  // 构造函数、字面量(即 new Object())、class 创建的对象，这三个属性描述符默认都是 true ，而 defineProperty 默认为 false
+
+  // 默认 false ，是否可修改，包括上面是否能以 value 形式修改
+  // 设置了 setter 后，就不能吧 writable: 设为 true ，因为修改已经交给 setter 处理了
+  // writable: true,
+
+  // 默认 false ，是否可枚举，如 for...in ，Object.keys() 等是否能获得这个属性
+  enumerable: true,
+
+  /**默认 false ，false 后：
+   * 属性不可删除
+   * 无访问器时无法添加访问器，若已有访问器也无法去掉
+   * 三个属性描述符不能再修改
+   */
+  configurable: true,
+});
+
+obj.a = 123;
+// 123
+console.log(obj.a);
+
+// ES8 新特性，获取属性描述符信息 -----------------------------------------------------
+console.log(Object.getOwnPropertyDescriptor(obj, "a"));
+
+// 实现数据代理 -----------------------------------------------------------------
+function defineReactive(target, key) {
+  if (!(target instanceof Object)) return;
+
+  // 闭包数据
+  let value = target[key];
+
+  Object.defineProperty(target, key, {
+    get: () => value,
+    set: (newValue) => (value = newValue),
+  });
+}
+
+const o = { a: 1 };
+defineReactive(o, "a");
+o.a = 123;
+// 123
+console.log(o.a);
+```
+
+ES6 新特性，访问器语法糖，可以在对象、构造函数、class 中直接设置访问器：
+
+```
+const obj = {
+  a: 1,
+
+  get b() {
+    return this._b;
+  },
+
+  set b(newValue) {
+    this._b = newValue;
+  },
+
+  // 可以设置多个访问器
+  // get c() {},
+  // set c(newValue) {},
+};
+
+obj.b = 2;
+
+// 2
+console.log(obj.b);
+// { a: 1m b: [Getter/Setter], _b: 2}
+console.log(obj);
+
+// "a" "b" "_b"
+console.log(Object.keys(obj), "\n");
+
+// 实现数据代理 -----------------------------------------------------------------------
+function ref(value) {
+  // value 是闭包数据
+
+  return {
+    get value() {
+      return value;
+    },
+
+    set value(newValue) {
+      value = newValue;
+    },
+  };
+}
+
+const a = ref(123);
+
+a.value = 456;
+console.log(a.value);
+```
+
+（2）Proxy
+
+ES6 新特性，Proxy 可以实现代理一个对象。
+
+Proxy 可以拦截所有对象的基本操作，如对象属性的读取、修改、添加、删除，判断属性是否存在；数组由于也是对象，所以数组元素的操作也可以拦截。
+
+原理是对象的操作最终都会执行浏览器的内部方法，如 .get() 、.set() 等。
+
+```
+const obj = { a: 1 };
+// const obj = [1, 2];
+
+const p = new Proxy(obj, {
+  // 拦截基本操作 get()
+  get(target, key, receiver) {
+    // return target[key];
+    return Reflect.get(target, key, receiver);
+  },
+
+  // 拦截基本操作 .hasProperty ，如使用 in
+  has(target, key) {
+    // return key in target;
+    return Reflect.has(target, key);
+  },
+
+  // 拦截基本操作 .ownKeys，如使用 for...in
+  ownKeys(target) {
+    return Reflect.ownKeys(target);
+  },
+
+  // 拦截基本操作 .set ，如修改、添加
+  set(target, key, newValue, receiver) {
+    // try {
+    //   target[key] = newValue;
+    //   return true;
+    // } catch {
+    //   return false;
+    // }
+
+    return Reflect.set(target, key, newValue, receiver);
+  },
+
+  deleteProperty(target, key) {
+    // try {
+    //   delete target[key];
+    //   return true;
+    // } catch {
+    //   return false;
+    // }
+
+    return Reflect.deleteProperty(target, key);
+  },
+});
+```
+
+Proxy 中的拦截器建议使用 Reflect ：
+
+- Proxy 的 set 、deleteProperty 这些拦截修改、删除操作的拦截器，需要 return 布尔值表示是否操作成功，通常需要 try...catch ，而 Reflect 内部就有 try...catch ，也 return 布尔值，使用起来更简洁
+
+- 一些情况需要直接使用内部方法修改 this ，Reflect 就可以做到
+
+（3）冻结
+
+Object\.freeze 冻结一个对象、冻结后无法修改、增加、删除属性、无法设置属性描述符、无法更换圆形、但是冻结对象自身可以赋值成另一个引用：
+
+```
+// 修改被冻结的对象的属性大多数情况下都会 thrrow error --------------------------------
+let obj = { a: 1 };
+const sameObj = Object.freeze(obj);
+
+// true
+console.log(obj === sameObj);
+
+// err
+try {
+  obj.a = 2;
+} catch {
+  console.log("err");
+}
+
+// err
+try {
+  Object.defineProperty(obj, "a", { value: 3 });
+} catch {
+  console.log("err");
+}
+
+// 1 true
+console.log(obj.a, Object.isFrozen(obj));
+
+// 冻结对象自身可以重新赋值成另一个引用
+obj = { a: 1 };
+obj.a = 11;
+// 11 false
+console.log(obj.a, Object.isFrozen(obj), "\n");
+
+// 浅冻结 --------------------------------------------------------------------------
+// freeze 只能冻结自己，如果冻结对象的属性是一个引用类型，是不会深度冻结的
+const obj1 = { a: 1, deepObj: { b: 2 } };
+Object.freeze(obj1);
+obj1.deepObj.b = 3;
+
+// 3 false
+console.log(obj1.deepObj.b, Object.isFrozen(obj1.deepObj), "\n");
+
+// freeze 前设置了 setter ------------------------------------------------------
+//  只要 set 的目标不是冻结对象的属性，就可以正常 set
+let b = 2;
+const obj2 = {
+  a: 1,
+  get b() {
+    return b;
+  },
+  set b(newValue) {
+    b = newValue;
+  },
+};
+
+function defineReactive(o, k) {
+  let value = o[k];
+
+  Object.defineProperty(o, k, {
+    get() {
+      return value;
+    },
+
+    set(newValue) {
+      value = newValue;
+    },
+  });
+}
+
+defineReactive(obj2, "a");
+Object.freeze(obj2);
+
+obj2.a = 11;
+obj2.b = 22;
+
+// 11 true
+console.log(obj2.a, Object.isFrozen(obj2));
+
+// 22 true
+console.log(obj2.b, Object.isFrozen(obj2));
+
+// Proxy 则不行，因为 set 的毁掉已经到了调用 set() 的阶段了
+const obj3 = { c: 3 };
+const p = new Proxy(obj3, {
+  get: (t, k) => t[k],
+  set(t, k, v) {
+    t[k] = v;
+    return true;
+  },
+});
+Object.freeze(p);
+
+// err
+try {
+  p.c = 33;
+} catch {
+  console.log("err");
+}
+```
+
+简单实现 freeze ：
+
+```
+function myFreeze(obj) {
+  if (!(obj instanceof Object)) return obj;
+
+  // 只处理自己的属性，不涉及到圆形
+  const keys = [
+    ...Object.getOwnPropertyNames(obj),
+    ...Object.getOwnPropertySymbols(obj),
+  ];
+
+  for (const key of keys) {
+    Object.defineProperty(obj, key, {
+      // 设置不能修改 value
+      writable: false,
+
+      // 设置不能删除属性、不能设置属性描述符
+      configurable: false,
+    });
+  }
+
+  // 设置不能新增属性、不能更换圆形
+  Object.preventExtensions(obj);
+
+  // 用 Object.defineProperty 给所有属性设置 configureble 为 false ，并调用 Object.preventExtensions()
+  // Object.seal(obj);
+
+  return obj;
+}
+```
+
+### 3.6 数组
+
+（1）ES5
 
 Array ，构造函数 ，即 Array 也是对象：
 
@@ -471,9 +3558,90 @@ console.log(
 );
 ```
 
-（4）包装类
+（2）ES6
 
-除了 null 、undefined 的其他 5 哥基本数据类型，都有包装类，内置了一些属性和方法。
+```
+const arr = [1, 2, 3];
+
+// ES6 ----------------------------------------------------------------------------
+// true ， 判断是否是一个真正的数组
+console.log(Array.isArray(arr));
+
+// 深拷贝数组，纯函数，参数可以是伪数组、Set 、Map ，结果都是真正的 Array
+// [1, 2, 3]
+console.log(Array.from(arr));
+// [1]
+console.log(Array.from(new Set([1])));
+// [["a", 1]]
+console.log(Array.from(new Map([["a", 1]])));
+// [] []
+console.log(
+  Array.from({ a: 1 }),
+  Array.from(function () {}),
+  "\n"
+);
+
+// [2,4,6] ，纯函数，便利原数组并根据自定义条件生成新数组
+console.log(arr.map((i) => i * 2));
+
+// [1, 2] ，纯函数，便利原数组并根据条件筛选
+console.log(arr.filter((i) => i < 3));
+
+// 6 ，纯函数，便利数组并汇总，pre 为上一次便利的 return；第二个参数为初始值，默认为 0
+console.log(arr.reduce((pre, now) => pre + now, 0));
+
+// 6 ，2+4 ， 链式调用 map 、filter 、reduce
+console.log(
+  arr
+    .filter((i) => i < 3)
+    .map((i) => i * 2)
+    .reduce((pre, now) => pre + now, 0),
+  "\n"
+);
+
+// 查询元素是否符合条件 ，都是纯函数
+// false ，便利整个数组，全部符合条件就返回 true
+console.log(arr.every((i) => i > 3));
+// true ，便利整个数组或者提前返回，只要一个符合条件就马上返回 true
+console.log(
+  arr.some((i) => i > 2),
+  "\n"
+);
+
+// 查找第一个符合条件的元素，找到就马上返回，都是纯函数
+// 1 ，找到返回元素值或引用，找不到返回 undefined
+console.log(arr.find((value, index, arr) => value < 2));
+// 0 ，找到返回 index ，找不到返回 -1
+console.log(
+  arr.findIndex((value, index, arr) => value < 2),
+  "\n"
+);
+
+// [0, 2, 3] ，替换，非纯函数，第二、三个参数为开始、结束 index（左闭右开），默认全部替换
+console.log(arr.fill(0, 0, 1), "\n");
+
+// ---------------------------------------------------------------------------------------
+// ES7 新特性，查询是否有某个元素，纯函数，找到就马上返回 true
+// true
+console.log(arr.includes(2), "\n");
+
+// ES10 新特性，数组降维，纯函数
+const deepArr = [1, [2, [3, 4]]];
+// [1, 2, 3, 4] ，[1, 2, [3, 4]] ，参数为降低的维度，默认为 1
+console.log(deepArr.flat(2), deepArr.flat());
+// [2, NaN] ，等价于 arr.map().flat()
+console.log(deepArr.flatMap((i) => i * 2));
+
+// ES13 新特性，纯函数，访问元素，可以传入负数反向索引
+const arr13 = [1, 2, 3];
+const str13 = "asdf";
+// 1 3 "a" "f"
+console.log(arr13.at(0), arr13.at(-1), str13.at(0), str13.at(-1));
+```
+
+### 3.7 包装类
+
+除了 null 、undefined 、Symbol 的其他 6 个基本数据类型，都有包装类，内置了一些属性和方法。
 
 ```
 var n = 123;
@@ -554,7 +3722,52 @@ console.log(
 );
 ```
 
-（5）正则
+ES6 String API ：
+
+```
+// ES8 新特性，填充字符串，纯函数，、(n, c) 填充 c 直到 length 为 n 为止，c 默认为 " "
+// "aab" " b"
+console.log("b".padStart(3, "a"), "b".padStart(2));
+// "qwb"
+console.log("b".padStart(3, "qwertyu"));
+// "bcs"
+console.log("b".padEnd(2, "c"), "\n");
+
+// ES10 新特性，去掉首尾空格，纯函数
+// "a" "a"
+console.log("  a".trimStart(), "a  ".trimEnd(), "\n");
+
+// ES12 新特性，替换所有符合条件的子串，纯函数
+console.log("aaa".replaceAll("a", "b"), "\n");
+```
+
+ES6 Number API ：
+
+```
+// Number.EPSILON ，用于浮点数运算
+if (Math.abs(0.3 - (0.1 + 0.2)) < Number.EPSILON) console.log("相等");
+
+// 进制
+const a = 0b1010, b = 0o777, c = 0xff;
+
+// 判断是否是整数
+console.log(Number.isInteger(123));
+
+// 判断是否是有理数
+console.log(Number.isFinite(123));
+
+// 转化成整数、浮点数
+console.log(Number.parseInt(3.14), Number.parseFloat("3"));
+
+// 判断是否是 NaN ，只有 NaN 才返回 true
+console.log(Number.isNaN(NaN));
+// 而 ES5 的 window.isNaN 会把 undefined ，String 、Object 都返回 true ，因为会进行类型转换
+// console.log(window.isNaN(undefined));
+```
+
+### 3.8 正则
+
+ES5 ：
 
 ```
 // 创建正则 ----------------------------------------------------------------------------
@@ -597,7 +3810,179 @@ var reg = [/[a-zA-Z0-9]{6,10}/, /[A-Z]/, /[0-9]/];
 console.log(reg.every((r) => r.test("123456")));
 ```
 
-（6）其他内置对象
+ES6 ：
+
+```
+// ES9 -------------------------------------------------------------------------------
+// 增加了负向后行断言，正向后行断言
+// 新增匹配模式：dotAll 模式，修饰符 s ，使得可以匹配换行符
+
+// 分组可以命名 左括号后加 ?<name>
+const a = /\w+(?<num>\d+)/;
+
+// 为每个字符分配了多个转义属性，比如判断是否存在希腊语字符，可以匹配 Script_Extensions 属性为 Greek 的字符
+console.log(/\p{Script_Extensions=Greek}/.test("π"));
+
+// ES11 -----------------------------------------------------------------------------
+// ES5 正则中，若想获得所有匹配结果并同时得到下标，只能使用循环
+const regExp = /yyds(\d+)/g;
+const text = "yyds1 is a very good yyds2";
+let matches;
+while ((matches = regExp.exec(text)) !== null) {
+  console.log(matches);
+}
+
+// matchAll
+const reg = /yyds(\d+)/g;
+const t = "yyds1 is a very good yyds2";
+let m = [...t.matchAll(reg)];
+for (const match of m) {
+  console.log(match);
+}
+
+// ES13 --------------------------------------------------------------------------
+// 新的修饰符 d，表示想要匹配字符串的开始和结束索引
+const matchObj = /(a+)(b+)/d.exec("aaaabb");
+// 'aaaa'
+console.log(matchObj[1]);
+// 'bb'
+console.log(matchObj[2]);
+// 由于 /d 标识的存在，matchObj 有一个属性 .indices，它用来记录捕获的每个编号组
+console.log(matchObj.indices[1]); // [0, 4]
+console.log(matchObj.indices[2]); // [4, 6]
+```
+
+### 3.9 Set 、Map
+
+ES6 新特性，用红黑树实现。
+
+（1）Set
+
+集合，成员的值是惟一的，有相同的会去重，具有iterator接口 ：
+
+```
+const s0 = new Set();
+const s1 = new Set([1, 2, 3]);
+
+s0.add(1);
+s0.delete(1);
+// [] 0
+console.log(s0, s0.size);
+
+// true
+console.log(s1.has(3));
+
+s1.clear();
+// []
+console.log(s1);
+```
+
+实际应用：
+
+```
+// 数组去重
+const arr = [1, 1, 2, 2, 3];
+const arr0 = [...new Set([...arr])];
+
+// 交集
+const arr1 = [1, 1, 2, 2, 3];
+const arr2 = [3, 4, 4, 5, 5];
+const arr3 = [...new Set([...arr1])].filter((i) => new Set([...arr2]).has(i));
+
+// 并集
+let arr4 = [...new Set([...arr1, ...arr2])];
+
+// 差集 (a-b a 有但 b没有)
+const arr5 = [...new Set([...arr1])].filter((i) => !new Set([...arr2]).has(i));
+```
+
+（2）Map
+
+字典，键值对的集合，key 是唯一的，相同的 key 会覆盖前面的 key ，有 iterator 接口。
+
+key 可以是任何数据类型，Symbol 类型的 key 也可以遍历出来：
+
+```
+const m1 = new Map();
+const m2 = new Map([
+  ["name", "asdf"],
+  ["age", 23],
+]);
+
+// obj 、map 互相转换
+const m3 = new Map(Object.entries({ a: 1, b: 2 }));
+const obj = Object.fromEntries(m3);
+
+m1.set("name", "qwer");
+console.log(m1.get("name"), m1.has("name"), m1.size);
+
+m1.delete("name");
+m2.clear();
+```
+
+实际应用：
+
+```
+// 统计出现个数
+
+const arr = ["apple", "apple", "banana"];
+const m = new Map();
+
+for (const i of arr) {
+  if (m.has(i)) m.set(i, m.get(i) + 1);
+  else m.set(i, 1);
+}
+
+console.log(m);
+```
+
+（3）WeakSet 、WeakMap
+
+都是弱引用，若资源不需要再使用，WeakSet 、WeakMap 就不再引用它们：
+
+* WeakSet 的成员必须是引用类型；WeakMap 的 key 必须是引用类型，但 value 可以是任何类型
+
+* 由于弱引用的不确定性，WeakSet 、WeakMap 就没有 size 、clear ，也无法便利，因此也没有 iterator 接口
+
+```
+const obj = {
+  a: {},
+  b: {},
+};
+
+const s = new Set([obj.a]);
+const m = new Map([[obj.a, 1]]);
+
+// 成员只能是引用类型
+const ws = new WeakSet([obj.b]);
+
+// key 只能是引用类型，value 可以是任何类型
+const wm = new WeakMap([[obj.b, 1]]);
+
+// Set 、Map 是强引用，引用不会被垃圾回收
+delete obj.a;
+console.log(s, m);
+
+// WeakSet 、WeakMap 是若引用，大概率会被垃圾回收，是否回收了要看垃圾回收机制是否到了这里
+delete obj.b;
+console.log(ws, wm, "\n");
+
+// 都是 undefined
+console.log(ws.size, wm.size, ws.clear, wm.clear);
+console.log(ws.forEach, wm.forEach);
+```
+
+ES12 新特性，WeakRef ，获得一个弱引用：
+
+```
+const obj = { a: 1 };
+const wr = new WeakRef(obj);
+
+// { a: 1 } ，若 obj 被垃圾回收了，则是 undefined
+console.log(wr.deref());
+```
+
+### 3.10 其他内置对象
 
 Math ，只是对象，不是构造函数：
 
@@ -620,6 +4005,13 @@ function myRandom(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 console.log(myRandom(10, 50));
+
+// ES6 ---------------------------------------------------------------------------------
+// 去掉小数部分
+console.log(Math.trunc(3.14));
+
+// 正数/负数/0返回 1/-1/0
+console.log(Math.sign(123));
 ```
 
 Date ，构造函数：
@@ -643,6 +4035,957 @@ console.log(date.getTime(), date.valueOf());
 
 // HTML5 新增获取时间戳的方式
 console.log(Date.now());
+```
+
+## 4 异步编程
+
+ES5 中异步使用回调函数，如果嵌套很多，可读性就很差，称为毁掉地狱：
+
+```
+setTimeout(() => {
+  console.log(1);
+
+  setTimeout(() => {
+    console.log(2);
+
+    setTimeout(() => {
+      console.log(3);
+    }, 1000);
+  }, 1000);
+}, 1000);
+```
+
+ES6 提供了生成器、Promise、async/await ，使异步代码更清晰。
+
+### 4.1 生成器
+
+本质是一个函数，但是语法与传统函数完全不同,进行异步编程。
+
+```
+// 定义：三种都一样
+function* xxx() {}
+function * xxx() {}
+function *xxx() {}
+
+/// 调用：生成器定义后是一个迭代器对象，所以：
+xxx().next();
+// 或：
+const x = xxx();
+x.next();
+```
+
+yield 语句：
+
+在生成器函数体中定义，将代码区域上下分割，n 条 yield 语句将代码分割成 n + 1 个代码块，每次调用 next() 都只执行当前代码块，然后将指针指向下一个代码块。
+
+```
+function* xxx() {
+  console.log(1);
+  yield "分割线 1";
+  console.log(2);
+  yield "分割线 2";
+  console.log(3);
+}
+
+// 不能是 xxx().next() 因为这样是不同的迭代器对象
+const x = xxx();
+
+/* res
+  1
+ {}value: "分割线 1", done: false}
+  2
+ {}value: "分割线 2", done: false}
+  3
+ {}value: undefined, done: true}
+ */
+console.log(x.next());
+console.log(x.next());
+console.log(x.next());
+
+// for...of
+/* res
+  1
+  分割线 1
+  2
+  分割线 2
+  3
+  */
+console.log("\n\n\n");
+for (i of xxx()) console.log(i);
+```
+
+生成器函数参数：
+
+- 生成器可以定义形参
+
+- next() 可传实参，生成器用 let x = yield 123 接收，x的值就是实参的值
+
+- 第 n 次调用的 next，则第 n - 1 个yield 接收
+
+```
+function* func(a) {
+  console.log(a);
+
+  const b = yield "接收参数 b";
+  console.log(b);
+
+  const c = yield "接收参数 c";
+  console.log(c);
+}
+
+const f = func(1);
+console.log(f.next());
+console.log(f.next(2));
+console.log(f.next(3));
+```
+
+应用：
+
+回调地狱的代码：
+
+```
+setTimeout(() => {
+  console.log(111);
+
+  setTimeout(() => {
+    console.log(222);
+
+    setTimeout(() => {
+      console.log(333);
+    }, 3000);
+  }, 2000);
+}, 1000);
+```
+
+同样的逻辑用生成器实现，简化代码：
+
+```
+function* xxx(a) {
+  yield setTimeout(() => {
+    console.log(111);
+    x.next();
+  }, 1000);
+
+  yield setTimeout(() => {
+    console.log(222);
+    x.next();
+  }, 2000);
+
+  yield setTimeout(() => {
+    console.log(333);
+    x.next();
+  }, 3000);
+}
+
+const x = xxx();
+x.next();
+```
+
+### 4.2 Promise
+
+（1）基本使用
+
+Promise 有 3 种状态：
+
+- Pending：待定，初始状态，未完成也未拒绝，then、catch 都不会执行
+
+- Fullfilled：已完成，resolve() 实现，后可以执行 then
+
+- Rejected：已拒绝，reject() 实现，后可以执行 catch
+
+状态只能从 Pending 改变到 Fillfilled 或 Rejected ，且只能改变一次。
+
+```
+const flag = true;
+
+/* 格式：
+ * new Promise((resolve, reject) => {}).then(res => {}).catch(err => {})
+ * new Promise((resolve, reject) => {}).then(res => {}, err => {})
+ */
+new Promise((resolve, reject) => {
+  setTimeout(() => {
+    /* resolve, reject
+     * resolve: 表示成功，执行后进入 then 的回调
+     * reject： 表示失败，执行后进入 catch 的回调
+     * 若 resolve、reject 都没有，则状态为 Pending， thern、catch 都不执行
+     */
+    if (flag) resolve("this is res");
+    else reject("err");
+  }, 1000);
+})
+  .then((res) => {
+    console.log(111, res);
+  })
+  .catch((str) => {
+    console.log(str);
+  });
+```
+
+resolve ，reject 后面的代码也会执行，也是同步任务：
+
+```
+// 输出结果：1 2 3 4
+
+new Promise((resolve, reject) => {
+  console.log(1);
+  resolve();
+  console.log(2);
+}).then(() => {
+  console.log(4);
+});
+
+console.log(3);
+```
+
+then，catch 都可以链式调用，具体则根据内部是 return 还是 throw ：
+
+```
+// 1 3 2 4
+
+new Promise((resolve, reject) => {
+  resolve();
+})
+  .then(() => {
+    console.log(1);
+  })
+  .then(() => {
+    console.log(2);
+  });
+
+new Promise((resolve, reject) => {
+  reject();
+})
+  .catch(() => {
+    console.log(3);
+  })
+  .then(() => {
+    console.log(4);
+  });
+```
+
+但如果没有 resolve 也没有 reject ，Promise 就是 Pending 状态，then，catch 都不执行：
+
+```
+// 无结果
+
+const p = new Promise((resolve, reject) => {
+  // resolve();
+})
+  .then(() => {
+    console.log(1);
+  })
+  .then(() => {
+    console.log(2);
+  });
+console.log(p);
+```
+
+（2）then ，catch
+
+then、catch 返回的也是 Promise ：
+
+- 若内部正常 return （默认 return undefined），则返回的 Promise 状态为 Fullfilled ，return 的值会成为下一个链式调用的 then 的参数
+  
+  ```
+  new Promise((resolve) => {
+    resolve();
+  })
+    .then(() => {
+      console.log(0);
+  
+      return 123;
+    })
+    .then((res) => {
+      // 123
+      console.log(res);
+    });
+  ```
+
+- 若内部 throw 了，则返回的 Promise 状态为 Rejected ，throw 的值的值会成为下一个链式调用的 catch 的参数
+  
+  ```
+  new Promise((resolve) => {
+    resolve();
+  })
+    .then(() => {
+      console.log(0);
+  
+      throw 123;
+    })
+    .catch((res) => {
+      // 123
+      console.log(res);
+    });
+  ```
+
+- 特殊情况，若 return 的是一个 Promise （这里记为 p1），则状态和 p1 的状态一样，且p1.then() 整个表达式入队为队列，而不是常规的 then 中的回调函数入队：
+  
+  ```
+  new Promise((resolve) => {
+    resolve();
+  })
+    .then(() => {
+      console.log(0);
+  
+      // .then 或 .catch(finallyFn) 的状态和 p1 一样
+  
+      // Fullfilled，执行 then
+      const p1 = Promise.resolve(123);
+      // const p1 = new Promise((resolve) => resolve(123));
+      // const p1 = new Promise((resolve) => resolve(123)).then(() => 123);
+  
+      // Rejected，执行 catch
+      // const p1 = Promise.reject(123);
+      // const p1 = new Promise((resolve, reject) => reject(123));
+      // const p1 = new Promise((resolve, reject) => reject(123)).catch(() => {
+      //   throw 123;
+      // });
+  
+      // Pending，then ，catch 都不入队，也就不执行
+      // const p1 = new Promise((resolve) => resolve());
+  
+      // return 一个 Promise，会变成把 p1.then(fn) 入队微任务
+      return p1;
+    })
+    // 这里的 then，catch 的回调函数记为 finallyFn
+    .then((res) => console.log(res))
+    .catch((res) => console.log(res));
+  
+  /* p1.then(fn) , p1.catch() 会整体入队微任务
+   * 1. 微任务中，执行 p1.then(fn) ，结果是把 fn 入队
+   * 2. 微任务中，执行 fn 《结果是 p1 完成，将最终的 finallyFn 入队
+   * 执行 finallyFn
+   */
+  ```
+
+Promise 的 then 和 catch 的回调函数是微任务，如果要把某些任务直接放入微任务人咧时，也可以：
+
+```
+Promise.resolve().then(() => {});
+Promise.reject().catch(() => {});
+```
+
+ES9 新特性：.finally() ，无论时 Fullfilled 还是 Rejected 都会回调，但是 Pending 依然不会回调：
+
+```
+new Promise((resolve, reject) => {
+  resolve();
+  // reject();
+}).finally(() => {
+  console.log(123);
+});
+```
+
+（3）处理多个 Promise
+
+当一个请求需要多个子请求的结果时，是不好判断子请求的完成顺序的，代码写起来就复杂。使用 Promise.all() 会方便很多。
+
+Promise.all() ：
+传入一个 Promise 数组，数组中所有的 Promise 状态都是 Fullfilled 时，外部 Promise 才是 Fullfilled 。
+
+由于封装的都是异步，所以all执行总时间就是执行最慢的那一个异步操作的时间。
+
+```
+const p1 = new Promise((resolve, reject) => {
+  resolve(1);
+});
+
+const p2 = new Promise((resolve, reject) => {
+  resolve(2);
+});
+
+const p3 = new Promise((resolve, reject) => reject("err"));
+
+Promise.all([p1, p2]).then((resArr) => {
+  // resArr 时一个数组，元素分别是各个 Promise 中 resolve 传入的参数
+  console.log("FullFilled", resArr);
+});
+
+Promise.all([p1, p3]).catch((err) => {
+  console.log(err);
+});
+```
+
+ES12 新特性：Promise.any() ，也是传入 Promise 的数组，不同的是，只要其中一个成功就成功，且 then 只能处理成功 Promise 的信息，有点像多个 Promise 竞速。
+
+所有 Promise 失败才会失败。
+
+```
+const p1 = new Promise((resolve) => {
+  setTimeout(() => resolve("p1"), 1000);
+});
+
+const p2 = new Promise((resolve) => {
+  setTimeout(() => resolve("p2"), 2000);
+});
+
+const p3 = new Promise((resolve, reject) => {
+  reject();
+});
+
+const p4 = new Promise((resolve, reject) => {
+  reject();
+});
+
+// ------------------------------------------------------------------
+Promise.any([p1, p2]).then((res) => {
+  //'p1'，1秒后输出
+  console.log(res);
+});
+
+Promise.any([p2, p3]).then((res) => {
+  //‘p2’，2秒后输出
+  console.log(res);
+});
+
+Promise.any([p3, p4]).catch((err) => {
+  // err 信息
+  console.log(err);
+});
+```
+
+ES11 新特性，Promise.allSettle() ，传入 Promise 数组，数组中的 Promise 无论成功失败，外部 Promise 都是 Fullfilled ，成功的值为对象数组，保存每个 Promise 的状态和值：
+
+```
+const p1 = new Promise((resolve) => {
+  resolve(1);
+});
+
+const p2 = new Promise((resolve) => {
+  resolve(2);
+});
+
+const p3 = new Promise((resolve, reject) => {
+  reject(3);
+});
+
+/*输出
+ [
+   { status: 'fulfilled', value: 1 },
+   { status: 'fulfilled', value: 2 },
+   { status: 'rejected', reason: 3 }
+ ]
+ */
+const res = Promise.allSettled([p1, p2, p3]);
+res.then((res) => {
+  console.log(res);
+});
+```
+
+（4）顶层 await
+
+ES13 新特性，允许在全局作用域使用 await 。在之前，如果 import 的资源是异步加载的，需要这么做：
+
+```
+// 1.js
+export let data;
+
+export default new Promise((resolve) => {
+  setTimeout(() => {
+    data = 123;
+    resolve();
+  }, 1000);
+});
+```
+
+```
+// 2.js
+import p, { data } from "./1.js";
+
+p.then(() => {
+  console.log(data);
+});
+```
+
+比较繁琐，而用顶层 await 会方便很多：
+
+```
+// 1.js
+export let data = await 异步;
+```
+
+```
+// 2.js
+import { data } from "./1.js";
+console.log(data);
+```
+
+其他用途：
+
+- 动态加载模块
+  
+  ```
+  const str = await import(`/i18n/${navigator.language}`);
+  ```
+
+- 资源初始化
+  
+  ```
+  const con = await dbConnector();
+  ```
+
+- 依赖回退
+  
+  ```
+  let translations;
+  try {
+    translations = await import('https://app.fr.json');
+  } catch {
+    translations = await import('https://fallback.en.json');
+  }
+  ```
+
+### 4.3 async/await
+
+ES8 新特性，以类似同步的方式使用异步。
+
+（1）async
+
+用来声明 async 函数，该函数一定会返回一个 Promise ，return 的值是 reslove 传入的参数，根据 async函数 返回的 Promise 的成状态，可以使用 then 、catch：
+
+```
+async function func1() {
+  return 123;
+}
+
+func1().then((val) => {
+  console.log(val); //输出123
+});
+
+//上面代码相当于
+new Promise((resolve) => {
+  resolve(123);
+}).then((val) => {
+  console.log(val);
+});
+```
+
+若 async 函数的返回值为：
+
+- *没有 return 或只有 return ，rereturn undefined，返回的 Promise 状态为 Fullfilled ，then 参数值为 undefined
+
+- return xxx ，返回的 Promise 状态为 Fuillfilled ，then 的参数值为 xxx
+
+- return Promise ，记为 p，返回的 Promise 状态即 p 的状态，then 、catch 的参数值为 p 内 resolve ，reject 的值
+
+- 该函数内跑出异常，返回的 Promise 状态为 Rejected
+
+（2）await
+
+后面可以放一个表达式，称为await 表达式（一般为Promise对象）。
+
+- *await 必须放在 async 函数中，不过 async 函数中不一定要有 await 。
+
+- await 下面的代码若 await 成功 ，则相当于 then ，若有多个 await ，则相当于嵌套的 then
+
+- await 之前的代码就相当于 Promise 的 (resolve, reject) => {}
+
+await 后面的表达式，若为：
+
+- Promise，若该 Promise 状态为 Fullfilled ，则 await 表达式结果为 resolve 传入的值；若状态为 Rejected ，则需要 try...catch 捕获异常，catch 获得的值即 reject 传入的值：
+  
+  ```
+  /* 输出结果
+   * resolve：1 2 end
+   * reject：1 err 3 end
+   */
+  
+  const p = new Promise((resolve, reject) => {
+    resolve();
+    // reject();
+  });
+  
+  async function func() {
+    try {
+      const res = await p;
+      console.log(2);
+    } catch (err) {
+      console.log("err");
+      console.log(3);
+    }
+  
+    // 若 resolve ，则这里相当于把下面的代码放入 then 中的后面
+    // 若 reject ， 则这里相当于把下面的代码放入 catch 中的后面
+    console.log("end");
+  }
+  
+  func();
+  console.log(1);
+  ```
+  
+  await 失败的另一种写法，虽然比 try...catch 简洁，但是只能获取 Promise 自己的成功失败，获取不到 Promise 内部代码的错误：
+  
+  ```
+  const p = new Promise((resolve, reject) => {
+    resolve(1);
+    // reject(2);
+  });
+  
+  async function func() {
+    const [res, err] = await p
+      .then((res) => [res, null])
+      .catch((err) => [null, err]);
+  
+    console.log(res, err);
+  }
+  
+  func();
+  ```
+
+- 不是 Promise ，则 await jscode 会转化成 await Promise.resolve(jscode) ：
+  
+  ```
+  // 输出结果：1 2 3 undefined
+  
+  async function func() {
+    // 转化成 await Promise.resolve(123)
+    const res1 = await 2;
+    console.log(res1);
+  
+    // 转换成 await Promise.resolve((() => console.log(3))())
+    const res2 = await (() => console.log(3))();
+    console.log(res2);
+  }
+  
+  func();
+  console.log(1);
+  ```
+
+await 的优先级低于 ] 和 . ：
+
+```
+const p1 = new Promise((resolve) => {
+  resolve({ a: 123 });
+});
+
+const p2 = new Promise((resolve) => {
+  resolve([5, 7]);
+});
+
+async function func() {
+  const res1 = (await p1).a;
+  const res2 = (await p2)[0];
+  console.log(res1, res2);
+
+  // 也可以直接解构赋值
+  const { a } = await p1;
+  const [res3] = await p2;
+  console.log(a, res3);
+}
+
+func();
+```
+
+### 4.4 异步迭代器
+
+ES9 新特性，即异步循环 for...await...of 。
+
+普通的在 for 中若有异步操作，其实就是把循环体按顺序执行 n 次，先执行同步任务再执行异步任务，本质上还是正常的 JS 执行机制：
+
+```
+function func(i) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(i);
+    }, 1000);
+  });
+}
+
+console.log("start");
+
+for (let i = 0; i < 3; i++) {
+  console.log(`同步${i}`);
+  func(i).then((res) => {
+    console.log(`异步${res}`);
+  });
+}
+console.log("end");
+
+/* 整个 for 循环其实就是 3 次 console...Promise
+start
+同步0
+同步1
+同步2
+end
+异步0
+异步1
+异步2
+*/
+```
+
+async ，await 也一样：
+
+```
+function func(i) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(i);
+    }, 1000);
+  });
+}
+
+async function run1() {
+  console.log("start");
+
+  for (let i = 0; i < 3; i++) {
+    console.log(`${i}`);
+    const res = await func(i);
+    console.log(`异步${res}`);
+  }
+
+  console.log("for执行完我才执行"); //这是最后一次await后的then
+}
+
+run1();
+console.log("end");
+
+/*
+start
+0
+end
+异步0
+1
+异步1
+2
+异步2
+for执行完我才执行
+*/
+```
+
+而异步迭代器 for...await...of ，在上面代码的基础上，把整个 for 的循环体放入一个 Promise 的 then 中：
+
+```
+function func(i) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(i);
+    }, 1000);
+  });
+}
+
+async function run2() {
+  console.log("start");
+
+  for await (let i of [0, 1, 2]) {
+    console.log(i);
+    const res = await func(i);
+    console.log(`异步${res}`);
+  }
+
+  console.log("for执行完我才执行"); //这是最后一次await后的then
+}
+run2();
+console.log("end");
+
+/*
+start
+end
+0
+异步0
+1
+异步1
+2
+异步2
+for执行完我才执行
+*/
+```
+
+### 4.5 并发 Promise
+
+当需要处理多个 Promise 可以用 Promise.allSettle() 并行处理，或 for await 穿行处理。但如果想要并行处理，且需要控制同一时间的并发量，就需要手写了，如大文件上传。
+
+此外，若 reject 了，也可以按需求看是否需要重新执行，如请求重传。
+
+```
+/**可控制并发量的 Promise
+ * taskList: 任务数组，每个元素是返回 Promise 的 function
+ * maxMaxConcurrent: 最大并发量
+ * needRestart: reject 时需要重新运行的次数
+ */
+function myAllSettle(taskList, maxConcurrent = 1, needRestart = 0) {
+  return new Promise((resolve) => {
+    if (!Array.isArray(taskList) || taskList.length === 0) return resolve([]);
+
+    maxCpncurrent = Number.parseInt(maxConcurrent);
+    needRestart = Number.parseInt(needRestart);
+    if (maxConcurrent <= 0 || Number.isNaN(maxConcurrent)) maxConcurrent = 1;
+    if (needRestart < 0 || Number.isNaN(needRestart)) needRestart = 0;
+
+    const result = [];
+    let index = 0, isFinally = 0;
+
+    const run = async (
+      nowindex,
+      isRestart = false,
+      remainRestart = needRestart
+    ) => {
+      try {
+        const nowindexRes = {
+          status: "fullfilled",
+          value: await taskList[nowindex](),
+        };
+
+        if (isRestart) result[nowindex].push(nowindexRes);
+        else result[nowindex] = nowindexRes;
+      } catch (err) {
+        const nowindexErr = {
+          status: "rejected",
+          reson: err,
+        };
+
+        if (isRestart) result[nowindex].push(nowindexErr);
+        else result[nowindex] = [nowindexErr];
+      } finally {
+        if (
+          remainRestart > 0 &&
+          result[nowindex]?.at?.(-1)?.status === "rejected"
+        ) {
+          run(nowindex, true, remainRestart - 1);
+        } else {
+          ++isFinally;
+
+          if (isFinally >= taskList.length) resolve(result);
+          else if (index < taskList.length) run(index++);
+        }
+      }
+    };
+
+    for (let i = 0; i < Math.min(maxConcurrent, taskList.length); i++)
+      run(index++);
+  });
+}
+
+// 测试 ——------------------------------------------------------------------------------
+function delayTask(fn, ms) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => fn(resolve, reject), ms);
+  });
+}
+
+const taskList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => {
+  return () => {
+    return delayTask((resolve, reject) => {
+      if (item % 3 === 0) reject(`err ${item}`);
+      else resolve(item);
+    }, Number.parseInt(Math.random() * 1000));
+  };
+});
+
+myAllSettle(taskList, 3, 2).then((res) => {
+  console.log(res);
+});
+```
+
+## 5 模块化
+
+解决导入多个 JS 文件后冲突的问题。模块化的核心是导入、导出。
+
+ES5 模块化：
+
+```
+<script type="module" src="..."></script>
+<script type="module">
+  import ... from '...'
+</script>
+```
+
+模块化规范：ES6 ，CommonJS ，AMD ，CMD 。其中 AMD 用在 requireJS ，CMD 用在 sealS ，不太常用。
+
+绝对路径：完整的路径
+
+相对路径：./ 当前目录 ，../ 上一级目录 ，../../ 上两级目录。
+
+（1）ES6 模块化
+
+方式一：
+
+```
+// 1.js
+const a = 1, b = 2;
+export { a, b };
+```
+
+```
+// 2.js
+export const c = 3;
+```
+
+```
+// 3.js
+const { a, b } from "./1.js";
+```
+
+```
+// 4.js
+export * from "./1.js";
+```
+
+```
+import { a, b } from "./1.js";
+import { c } from "./2.js";
+
+console.log(a, c);
+```
+
+```
+import * as js1 from "./1.js";
+import * as js2 from "./2.js";
+
+console.log(js1.a, js2.c);
+```
+
+方式二：
+
+default 一个文件只能有一个：
+
+```
+// 1.js
+export default a = 1;
+```
+
+```
+import js1 from "./1.js";
+// 1
+console.log(js1);
+```
+
+（2）CommonJS 模块化
+
+nodejs ，Browserify 使用。
+
+```
+// 1.js
+const a = 1, b = 2;
+module.exports = {
+  a, b
+}
+```
+
+```
+const { a, b } = require("./1.js");
+```
+
+（3）新特性
+
+ES11 新特性，动态 import
+
+ES6的是静态 import，这里的动态 import 实现按需加载（懒加载）：
+
+```
+import(‘./1.js’).then(res => {
+  console.log(res);
+})
+
+// 路由懒加载
+const a = import(‘xxx’);
+```
+
+ES11 新特性，import.meta
+
+是一个 JS 模块暴漏的特定上下文的元数据的对象，包含了这个模块的信息，如模块的 url ：
+
+```
+console.log(import.meta);
 ```
 
 # 二、Web API
@@ -1320,2858 +5663,11 @@ history.back();
 history.go(1);
 ```
 
-# 三、ES6
-
-ES6↑ 兼容性问题：babel 可以把ES6↑转化成ES5，解决兼容性问题。
-
-这里说的 ES6 语法，包含 ES6 之后各个新版本的特性（ES6 \- ES13）。
-
-需要考虑浏览器的兼容性，若 node 不支持，就升级更高版本的 node 。
-
-babel ：奖惩 ES6 以上语法和 TypeScript 转化为 ES5 代码的工具。
-
-关于新特性：
-
-自从 TC39 进程指定以来，新特性提案阶段就比 ECMA 版本更为重要，因为某个 ECMA 版本发布的新特性不一定全部能用，未正式发布的新特性也可能可以使用，能不能用得看这个新特性是否处于第4个提案阶段。
-
-ECMA 新特性的指定分为 4 个阶段，当处于第 4 阶段的新特性才能正式使用。如果想看这些正式可用的新特性有哪些，可访问：
-
-```
-https://github.com/tc39/proposals/blob/main/finished-proposals.md
-```
-
-如果想看正在开发测试中的新特性，可以访问：
-
-```
-https://github.com/tc39/ecma262/blob/main/README.md
-```
-
-## 1 let，const 和运算符
-
-### 1.1 let，const
-
-声明的变量具有块级作用域：
-
-* let 声明变量
-
-* const 声明常量，必须初始化且初始化后就无法修改
-  
-  * cosnt 声明的数组、对象，本身地址无法修改即无法重新赋值成新的数组、对象、但内部的元素、属性是在堆内存中，可以修改
-  
-  * 在确定不会修改变量时，推荐使用 const ，提升性能，如数组、对象、导入等
-
-var 其实是JS设计上的缺陷，var 没有块级作用域，会带来非常多的问题且解决很麻烦，因此 ES6 就出现了有块级作用域的 let 和 const 。
-
-块级作用域：for，if 等除了函数内的大括号里（函数中是局部左同宇）：
-
-```
-var i = 0;
-for (var i = 0; i < 10; i++) {}
-
-// 10
-console.log(i);
-
-var j = 0;
-for (let j = 0; i < 10; j++) {}
-
-// 0
-console.log(j);
-```
-
-let 、const 也会变量提升，但在声明之前是暂时性死区（TDZ），不允许使用：
-
-```
-// err ，暂时性死区
-try {
-  console.log(a, b);
-} catch {
-  console.log("err");
-}
-
-let a = 1;
-const b = 2;
-```
-
-### 1.2 运算符
-
-ES7 新特性，幂运算：
-
-```
-// 8
-console.log(2 ** 3);
-```
-
-ES11 新特性，可选链操作符 ?\.
-
-用于对象、数组、函数调用，只有它们存在时才会调用，有效防止 undefined 调用的错误：
-
-PS：最外层的对象、数组、函数需要已定义，如形参。
-
-```
-const obj = {
-  a: 1,
-  o1: {
-    b: 2,
-  },
-};
-
-const arr1 = [1, 2];
-const arr2 = undefined;
-
-const func1 = () => {
-  console.log("func1");
-};
-const func2 = undefined;
-
-// 2 undefined ，因为 o2 不存在
-console.log(obj?.o1?.b, obj?.o2?.a, "\n");
-
-// 1 undefined
-console.log(arr1[0], arr2?.[0]);
-
-// func1 undefined
-console.log(func1(), func2?.());
-```
-
-```
-// ES5 处理这种问题只能用 && 或 ?: 或 if ，非常麻烦
-
-const obj = {
-  a: 1,
-  o1: {
-    b: 2,
-  },
-};
-
-// undefined undefined
-console.log(obj.o2 && obj.o2.b);
-console.log(obj.o2 ? obj.o2.b : undefined);
-```
-
-ES11 新特性，空值合并操作符 ??
-
-类似 \|\| 。但比 \|\| 限制更大，\|\| 会把 0 ，"" 等都会执行右边，而 ?? 只有 null 和 undefined 才会执行右边，false 都不行：
-
-```
-// 都是执行左边
-console.log(false ?? "is left");
-console.log(0 ?? "is left");
-console.log("" ?? "is left");
-console.log([] ?? "is left");
-console.log({} ?? "is left", "\n");
-
-// 执行右边
-console.log(undefined ?? "is right");
-console.log(null ?? "is right");
-```
-
-ES12 新特性，逻辑赋值操作符，??= &&= \|\|=
-
-```
-let a = true, b = false, c = null;
-
-a &&= 1;
-b ||= 2;
-c ??= 3;
-
-// 1 2 3
-console.log(a, b, c);
-```
-
-ES12 新特性，数字的下划线分隔符 \_
-
-解决长数字可读性差的问题：
-
-```
-const a = 100000000;
-const b = 1_0000_0000;
-const c = 100_000_000;
-
-// true true true
-console.log(a === b);
-console.log(a === c);
-console.log(b === c);
-```
-
-## 2 字符串、正则
-
-### 2.1 模板字符串
-
-更强大的字符串，用反引号。
-
-可以把字符串中的换行保存下来：
-
-```
-let str = `
-  第一行
-  第二行
-`;
-
-console.log(str);
-```
-
-可以嵌入表达式：
-
-```
-function func() {
-  return 123;
-}
-
-const num = 456;
-
-const str = `${func()} 和 ${num}`;
-
-// 123 和 456
-console.log(str);
-```
-
-### 2.2 字符串 api
-
-ES8 新特性，padStart\(\) 和 padEnd\(\) ，填充字符串，都不改变原字符串。
-
-padStart()和padEnd()，在字符串首尾进行填充。
-
-```
-// str.padStart(num, string) 在 str 前面填充 string ，直到 size 为 num 为止
-// 第二个参数默认为 " "
-
-const str = "b";
-
-// "aab"
-console.log(str.padStart(3, "a"));
-
-// " b"
-console.log(str.padStart(2));
-
-// "qwb"
-console.log(str.padStart(3, "qwertyu"));
-```
-
-ES10 新特性，trimStart\(\) ，trimEnd\(\) ，去掉首尾空格，不改变原数组：
-
-```
-const str = "  abc  ";
-
-// ES5，首尾空格都去掉
-console.log(str.trim());
-
-// 只去掉首尾一边的空格
-console.log(str.trimStart());
-console.log(str.trimEnd());
-```
-
-ES12 新特性，replaceAll\(\)
-
-以前的 replace 只能替换匹配到的第一个，除非使用正则的 g 模式来全部替换。
-
-而现在 replaceAll 可以替换全部匹配结果。
-
-模式的所有匹配都会被替代项替换。模式可以是字符串或正则表达式，而替换项可以是字符串或针对每次匹配执行的函数。不改变原字符串：
-
-```
-const str = '2022-10-06';
-const newStr = str.replace(/-/g,'/');   //'2022/10/05'
-const newStr = str.replaceAll('-','/'); //'2022/10/05'
-```
-
-### 2.3 正则
-
-ES9 新特性：
-
-```
-// 分组可以命名 左括号后加 ?<name>
-const a = /\w+(?<num>\d+)/;
-
-// 为每个字符分配了多个转义属性，比如判断是否存在希腊语字符，可以匹配 Script_Extensions 属性为 Greek 的字符
-console.log(/\p{Script_Extensions=Greek}/.test("π"));
-
-// 增加了负向后行断言，正向后行断言
-
-// 新增匹配模式：dotAll 模式，修饰符 s ，使得可以匹配换行符
-```
-
-ES11 新特性，matchAll\(\)
-
-```
-// ES5 正则中，若想获得所有匹配结果并同时得到下标，只能使用循环
-const regExp = /yyds(\d+)/g;
-const text = "yyds1 is a very good yyds2";
-let matches;
-while ((matches = regExp.exec(text)) !== null) {
-  console.log(matches);
-}
-
-// matchAll
-const reg = /yyds(\d+)/g;
-const t = "yyds1 is a very good yyds2";
-let m = [...t.matchAll(reg)];
-for (const match of m) {
-  console.log(match);
-}
-```
-
-ES13 新特性，正则表达式匹配索引
-
-新的修饰符 d，表示想要匹配字符串的开始和结束索引。  
-以前，只能在字符串匹配操作期间获得一个包含提取的字符串和索引信息的数组。在某些情况下，这是不够的。因此，在这个规范中，如果设置标志 /d，将额外获得一个带有开始和结束索引的数组。
-
-```
-const matchObj = /(a+)(b+)/d.exec("aaaabb");
-
-// 'aaaa'
-console.log(matchObj[1]);
-
-// 'bb'
-console.log(matchObj[2]);
-
-// 由于 /d 标识的存在，matchObj 有一个属性 .indices，它用来记录捕获的每个编号组
-console.log(matchObj.indices[1]); // [0, 4]
-console.log(matchObj.indices[2]); // [4, 6]
-```
-
-## 3 新数据类型
-
-### 3.1 Symbol
-
-（1）基本使用
-
-特性：
-
-- 值唯一，且不可见，可用来解决命名冲突问题
-
-- 无法运算与比较大小，只能用 == \!= === \!== 比较
-
-- Symobole 可以转为字符串，可转为布尔值且值为 true
-
-```
-// 值唯一，且不可以见
-const s1 = Symbol();
-const s2 = Symbol();
-// Symbol()
-console.log(s1);
-// false
-console.log(s1 === s2, "\n");
-
-// 这个字符串并不是值，只是一个说明，用于注释，字符串相同的 Symbol 也是不同的
-const s3 = Symbol("asdf");
-const s4 = Symbol("asdf");
-// Symbol("asdf")
-console.log(s3);
-// false
-console.log(s3 === s4, "\n");
-
-// 用函数对象创建，当传入的字符串相相同时，两个 Symbol 就相同
-const s5 = Symbol.for();
-const s6 = Symbol.for("123");
-const s7 = Symbol.for("123");
-// false false true
-console.log(s5 === s6, s5 === s7, s6 === s7, "\n");
-```
-
-应用：作为对象中属性、方法第一无二的 key ：
-
-- 可以作为对象的 key （对象、Map 的 key 只能是 string 和 Symbol）
-  
-  ```
-  const obj = {
-    [Symbol()]: 123,
-  };
-  
-  console.log(obj);
-  ```
-
-- Symbol 的内置属性：通常用来作为对象的属性，在其他特性中用作各种用途：
-  
-  ```
-  const obj = {
-    [Symbol.hasInstance]: 123,
-  };
-  ```
-
-ES10 新特性，新增 description ，用来查看 Symbol 变量的描述字符串：
-
-```
-const s = Symbol("123");
-// 123
-console.log(s.description);
-```
-
-### 3.2 BigInt
-
-ES11 新特性，用于存放更大的数字，不过只能是整数：
-
-```
-const a = 123n;
-```
-
-将 Number 和 String 转为 BigInt ，只能装整数，小数不行：
-
-```
-let b = BigInt(123);
-let c = BigInt("456");
-
-// 123n 456n
-console.log(b, c);
-```
-
-BigInt 只能和 BigInt 或 String 运算，不能和 Number 运算：
-
-```
-const d = 123n + 456n;
-const e = 123 + "456n";
-
-// 579n "123456"
-console.log(d, e);
-```
-
-BigInt 也能转为 Number ，但会涉及到边界问题：
-
-```
-const f = Number(123456n);
-```
-
-转为 Boolean ：
-
-```
-// false true
-console.log(!!0n);
-console.log(!!10086n);
-```
-
-也提供了对应 BigInt 的数组构造函数：
-
-```
-const arr1 = new BigInt64Array(2);
-```
-
-Number 和 BigInt 比较大小：
-
-```
-// true false true false
-console.log(2n == 2);
-console.log(2n === 2);
-console.log(2n > 1);
-console.log(2n > 2);
-```
-
-### 3.3 Number 新 api
-
-Number ：
-
-```
-// Number.EPSILON ，用于浮点数运算
-console.log(Number.EPSILON);
-if (Math.abs(0.3 - (0.1 + 0.2)) < Number.EPSILON) console.log("相等");
-
-// 进制
-const a = 0b1010,
-  b = 0o777,
-  c = 0xff;
-
-// 判断是否是整数
-console.log(Number.isInteger(123));
-
-// 判断是否是有理数
-console.log(Number.isFinite(123));
-
-// 转化成整数、浮点数
-console.log(Number.parseInt(3.14), Number.parseFloat("3"));
-
-// 判断是否是 NaN ，只有 NaN 才返回 true
-console.log(Number.isNaN(NaN));
-// 而 window.isNaN 会把 undefined ，String 、Object 都返回 true ，因为会进行类型转换
-// console.log(window.isNaN(undefined));
-```
-
-Math ：
-
-```
-// 去掉小数部分
-console.log(Math.trunc(3.14));
-
-// 正数/负数/0返回 1/-1/0
-console.log(Math.sign(123));
-```
-
-## 4 迭代器
-
-### 4.1扩展运算符、 解构赋值
-
-（1）扩展运算符
-
-转化成逗号分隔的列表，具备 iterator 接口的数据类型才可使用：
-
-```
-const arr1 = [1, 2, 3];
-
-// 用于函数 ---------------------------------------------------------------------
-// 简化传参
-function func1(a, b, c) {
-  console.log(a, b, c, "\n");
-}
-
-// 1 2 3
-func1(...arr1);
-
-// 用于数组等有 iterator 接口的数据结构 --------------------------------------------
-// 构建新的数组，也能实现浅层深拷贝
-const arr2 = [...arr1, 4, ...arr1];
-
-// 数组去重
-const arr3 = [...new Set([...arr2])];
-
-// [1, 2, 3, 4, 1, 2, 3]
-console.log(arr2);
-
-// [1, 2, 3, 4]
-console.log(arr3, "\n");
-
-// ES9 新特性，对象字面量也可以使用，但不是基于迭代器 ---------------------------------------
-const obj = { a: 1, b: 2, c: 2 };
-
-// 扩展 key: value ，相同的 key ，后面会覆盖前面的
-const o = {
-  ...obj,
-  c: 33,
-  ...arr1,
-};
-
-// err ，扩展对象得到的是 key: value ，不能给数组使用
-try {
-  const a = [...o];
-} catch {
-  console.log("err");
-}
-
-// 1 2 33 1 2 3
-console.log(o.a, o.b, o.c, o["0"], o["1"], o["2"]);
-```
-
-（2）解构赋值
-
-将数组、对象中的元素/属性一次赋值给多个变量，若变量多余数组元素、或变量是对象中不存在的属性，则值为 undefined 。
-
-数组解构实现基于迭代器，而对象解构不是。
-
-可以使用 rest 参数，但只能放在最后面且只能有一个，其中对象在 ES9 后才允许使用 rest 参数：
-
-```
-// 数组解构赋值，和顺序有关，可以设置默认值，可以连续解构 ------------------------------------
-const arr = [1, 3, 5, [7, 9]];
-
-// 1 3 5 7 9 undefined 10
-const [a, b, c, [d, e], f, g = 10] = arr;
-console.log(a, b, c, d, e, f, g);
-
-// 1 3 [5, [7, 9]]
-const [a1, b1, ...c1] = arr;
-console.log(a1, b1, c1, "\n");
-
-// 对象解构赋值，和顺序无关，可以设置默认值，可以起别名，可以连续解构 ---------------------
-const obj = {
-  name: "asdf",
-  age: 18,
-  other: {
-    o1: 123,
-  },
-};
-
-// 18 asdf 123 undefined false
-const {
-  age: myAge,
-  name,
-  other: { o1 },
-  sex,
-  isDelete = false,
-} = obj;
-console.log(myAge, name, o1, sex, isDelete);
-
-// 18 {age: 18, other: { o1: 123 }} ，可以实现属性过滤
-const { name: myName, ...keys } = obj;
-console.log(myName, keys, "\n");
-
-// 函数参数、返回值解构 --------------------------------------------------------------
-function func1(options) {
-  const { type } = options;
-  console.log(type);
-
-  return [0, 1];
-}
-
-function func2({ a, ...keys }) {
-  console.log(a, keys, "\n");
-}
-
-// "asdf" 1 2
-const [r1, r2] = func1({ type: "asdf" });
-console.log(r1, r2);
-
-// 123 {type: "asdf"}
-func2({
-  a: 123,
-  type: "asdf",
-});
-
-// 复杂数据的解构 -----------------------------------------------------------------
-const data1 = [{ a: 1, b: 2 }];
-const data2 = { list: [3, 4] };
-
-const [{ a: dataA, b: dataB }] = data1;
-const {
-  list: [dataC, dataD],
-} = data2;
-
-// 1 2 3 4
-console.log(dataA, dataB, dataC, dataD);
-```
-
-### 4.2 for\.\.\.of
-
-具备 iterator 接口的数据类型才可使用 。除了 Object 外都有。
-
-for\.\.\.of 、forEach 、for\.\.\.in 异同：
-
-* 都可以遍历出 value 本身就是 undefined 的属性、遍历出的 key 都是 string 
-
-* 除了 Map 用 for\.\.\.of 、forEach 外，其他情况都无法遍历出 Symbol key
-
-* for\.\.\.in 遍历出 key ，for\.\.\.of 和 forEach 遍历出 value
-  
-  * forEach 还可以传入第二、三个参数，得到 key 和原始引用
-  
-  * 对于 Map ，for\.\.\. 遍历 Map 得到 key ，for\...of 得到 \[key, value\] 。forEach 则得到 value
-
-* for\.\.\.in 可以遍历出原型链上的自定义属性；for\.\.\.of 、forEach 不可以
-
-* 使用场景：
-  
-  * Array 、Object 、Set 、Map 均可以用 for...in ；遍历 Set 、Map 只能遍历出原型链上的自定义属性，无法遍历自身的属性
-  
-  * for...of 、forEach 无法便利 Object ；Array 、Set 、Map 则可以
-  
-  * WeakSet 、WeakMap 由于是弱引用所以无法以任何形式遍历
-  
-  * map\(\) 等方法只有 Array 可以用，效果和 for\.\.\.of 一样
-
-示例：
-
-```
-const arr = [1, undefined, 3];
-arr[Symbol("arr_sym")] = "arr_sym";
-arr.__proto__.arrKey = 4;
-arr.__proto__[Symbol("arr_proto_sym")] = "arr_proto_sym";
-
-const obj = { a: 1, b: undefined, c: 3, [Symbol("obj_sym")]: "obj_sym" };
-obj.__proto__.objKey = 4;
-obj.__proto__[Symbol("obj_proto_sym")] = "obj_proto_sym";
-
-const set = new Set([1, undefined, 3]);
-set[Symbol("set_sym")] = "set_sym";
-set.__proto__.setKey = 4;
-set.__proto__[Symbol("set_proto_sym")] = "set_proto_sym";
-
-const map = new Map([
-  ["a", 1],
-  ["c", 3],
-  [Symbol("map_sym"), "map_sym"],
-]);
-map.__proto__.mapKey = 4;
-map.__proto__[Symbol("map_proto_sym")] = "map_proto_sym";
-
-/**for...in ，便利 key ---------------------------------------------------------------
- * 无法便利出 Symbol key
- * 会遍历出圆形链上的自定义属性
- * Set 、Map 只能便利出原型链上的自定义属性，自己身上的无法遍历
- */
-// "0" "1" "2" "arrKey" "objKey"
-for (const i in arr) console.log("for...in arr", i);
-console.log("\n");
-
-// "a" "b" "c" "objKey"
-for (const i in obj) console.log("for...in obj", i);
-console.log("\n");
-
-// "setKey" "objKey"
-for (const i in set) console.log("for...in set", i);
-console.log("\n");
-
-// "mapKey" "objKey"
-for (const i in map) console.log("for...in map", i);
-console.log("\n");
-
-/**for...of ，便利出 value --------------------------------------------------------------
- * 除了 Map 外都无法遍历出 Symbol key ，Map 遍历出 [key, value]
- * 只能遍历有 iterator 接口的数据结构，Object 无法使用
- * 无法遍历原型链上的属性
- */
-// 1 undefined 3
-for (const i of arr) console.log("for...of arr", i);
-console.log("\n");
-
-// err
-try {
-  for (const i of obj) console.log("for...of obj", i);
-} catch {
-  console.log("err");
-}
-console.log("\n");
-
-// 1 undefined 3
-for (const i of set) console.log("for...of set", i);
-console.log("\n");
-
-// "mapKey" "objKey"
-for (const i of map) console.log("for...of map", i);
-console.log("\n");
-
-/**froEach ，便利出 value ---------------------------------------------------
- * Map 遍历出 key
- * 其他和 for...of 都一样
- *
- */
-// 1 2  "map_sym"
-map.forEach((i) => console.log("forEach map", i));
-console.log("\n");
-
-// 数组特有遍历方法
-arr.map((i) => console.log("arr.map", i));
-```
-
-### 4.3 迭代器
-
-（1）基本概念
-
-ES6 提供了 iterator 接口，为不同的数据结构提供统一的访问机制，只有 Object 没有 iterator 接口，其他都有，如 Array、伪数组、String、Set、Map 等
-
-数组解构赋值是按顺序解构出来的，因为底层实现使用的迭代器，扩展运算符和 for\.\.\.of 也只有具备 iterator 接口的数据解构才能使用。
-
-一般 iterator 接口是各数据结构的原型对象中的一个方法：
-
-```
-[Symbo.iterator] : function(){}
-```
-
-（2）原理与使用
-
-迭代器中有一个 next\(\) 方法，作用是返回当一个对象，对象的内容为当前 value 和是否结束，得到这个信息后，移动到下一个元素：
-
-```
-const arr = [1, 2, 3];
-const arrIterator = arr[Symbol.iterator]();
-
-/* {value: 1, done: false}
- * value：当前元素
- * done：是否到达 end
- */
-console.log(arrIterator.next());
-
-// {value: 2, done: false}
-console.log(arrIterator.next());
-// {value: 3, done: false}
-console.log(arrIterator.next());
-
-// {value: undefined, done: truye}  结束
-console.log(arrIterator.next());
-```
-
-当 done 为 true 时，迭代结束。总体上指针在 begin 到 end 是一个左闭右开的区间。
-
-（3）自定义遍历数据
-
-例如给某个对象单独部署 iterator 接口，使其可以使用 for\.\.\.of ，且 for\.\.\.of 的遍历规则是自定义的：
-
-```
-const o = {
-  name: "asdf",
-  arr: [1, 2, 3],
-  [Symbol.iterator]() {
-    let index = 0;
-    const _this = this;
-
-    return {
-      next() {
-        // 这里 this指向 o
-        if (index < _this.arr.length)
-          return { value: _this.arr[index++], done: false };
-        else return { value: undefined, done: true };
-      },
-    };
-  },
-};
-
-// 1 2 3
-for (i of o) console.log(i);
-```
-
-直接给 Object 部署 iterator 接口也可以，例如用数组解构赋值的语法按顺序结构对象：
-
-```
-Object.prototype[Symbol.iterator] = function () {
-  // 直接借助 Array 的 iterator 也可以，自己写也可以
-  return Object.keys(this)[Symbol.iterator]();
-};
-
-const [n1, n2] = { a: 1, b: 2 };
-console.log(n1, n2);
-
-for (const i of { a: 1, b: 2 }) console.log(i);
-```
-
-## 5 函数新特性
-
-（1）形参
-
-rest 参数，也叫剩余参数：
-
-用于接收不定数量的参数，必须放在最后面且只能有一个，接收后是一个数组，可以替代 arguments ：
-
-```
-function func(a, b, ...args) {
-  console.log(a, b, args);
-
-  // true
-  console.log(args.__proto__ === Array.prototype);
-}
-
-// 1 2 [3, 4, 5]
-func(1, 2, 3, 4, 5);
-```
-
-```
-// 可以利用 rest 参数获取回调函数需要几个参数
-function func(fn) {
-  fn(1, 2);
-}
-
-// 2
-func((...args) => console.log(args.length));
-```
-
-形参默认值：
-
-当未传入参数，或者传入 undefined 时，就使用默认值：
-
-```
-function func1(a = 5) {
-  console.log(a);
-}
-
-// 5
-func1();
-
-// 默认参数可以放在除了 rest 的任何位置，但最好往后靠，才比较明确 -----------------------------
-function func2(a, b, c = 3) {
-  console.log(a, b, c);
-}
-
-function func3(a, b = 2, c) {
-  console.log(a, b, c);
-}
-
-// 1 2 3
-func2(1, 2);
-
-// 1 2 undefined
-func3(1, 2);
-
-// 默认值也可以是一个表达式 ------------------------------------------------------------
-function double(n) {
-  return n * 2;
-}
-
-// 正常使用，只有在未传入参数或传入 undefined 时，表达式才会执行
-function func4(a, b = double(a)) {
-  console.log(a, b);
-}
-
-/*形成了暂时性死区，就类似于下面代码，无法再 b 声明前使用 b 
- * let a = double(b);
-   let b;
- */
-function func5(a = double(b), b) {
-  console.log(a, b);
-}
-
-// 1 2
-func4(1);
-
-// 1 undefined ，传入了非 undefined 参数，double(b) 未执行
-func5(1);
-
-// err
-try {
-  func5();
-} catch {
-  console.log("err");
-}
-```
-
-```
-// 引用类型作为默认值
-function func(str, options = {}) {
-  const defaultOptions = {};
-  options = { ...defaultOptions, ...options };
-}
-```
-
-函数的 length 的设计是为了获取函数至少需要的参数数量，所以会忽略 rest 参数和默认值参数，只获取第一个默认值参数前面的参数数量：
-
-```
-function func(a, b = 1, ...args) {}
-
-// 1
-console.log(func.length);
-```
-
-ES5 的 arguments 使用很不方便，尽量用 rest 参数替代：
-
-- 外部不知道 argument 需要使用剩余参数
-
-- argument 保存了所有参数，需要分割；arguments 是伪数组
-
-另外 arguments 也有设计上的问题，在修改刑参时会同步修改 arguments ，之所以没有修复这个 bug ，是因为考虑到老项目的兼容问题，所以退出了严格模式，有了 ES6 新语法后，使用这些函数新语法就说明是新项目了，就不用使用严格模式：
-
-```
-// 非严格模式下，修改形参会同步影响到 arguments ，这是非常不合理的
-function func1(a) {
-  // "use strict";
-
-  a = 5;
-
-  // 5
-  console.log(arguments[0]);
-}
-
-// 但只要用了默认值或 rest 参数。在非严格模式下也会恢复正常
-function func2(a, b = 5) {
-  a = 5;
-
-  // 1
-  console.log(arguments[0]);
-}
-
-func1(1);
-func2(1);
-```
-
-ES8 新特性，函数可以喝数组、对象一样，最后面加一个逗号而不报错了：
-
-```
-function func(a, b, ) {}
-func(1, 2, );
-```
-
-（2）箭头函数
-
-在 ES6 之前，function 既可以作为普通函数封装代码，又可以作为构造函数来实例化对象，这实际上是 JS 设计上的缺陷，作为面向对象的语言，应该把这两个功能在语法上区分开来，消除函数的二义性。
-
-箭头函数就是解决方案之一（另一个是 class ）：
-
-```
-// 普通函数
-// 具名
-function func1(a, b) {}
-// 匿名
-const func2 = function (a, b) {};
-
-// 箭头函数
-const func3 = (a, b) => {};
-```
-
-与普通函数的区别：
-
-* 只能定义匿名函数
-
-* 没有 arguments，因为 rest 参数是更好的替代
-
-* 由于设计初衷是为了消除二义性，所以箭头函数不能作为构造函数，不能 new、没有原型、没有自己的 this ，使用 this 其实就是在作用域链中找到的
-
-特殊情况下，可以简化：
-
-当形参只有一个时，小括号可以省略；当函数体只有一行时，大括号可以省略，注意省略后，会隐含 return ：
-
-```
-const func1 = (a) => a * 5;
-
-// 等价于
-const func2 = (a) => {
-  return a * 5;
-};
-```
-
-注意：
-
-以下是错的，本意是想要 return 一个对象且省略函数体
-
-```
-const func = () => { a: 1, b: 2 };
-```
-
-但是由于包裹对象的也是大括号，所以会解析成这样，就语法错误了：
-
-```
-const func = () => {
-  return a: 1, b: 2;
-}
-```
-
-解决方法是用 \(\) ：
-
-```
-const func = () => ({ a: 1, b: 2 });
-```
-
-（3）标签模板
-
-函数调用结合模板字符串的一种新的函数调用方式。标签指的就是函数，在函数调用后面的模板字符串会按照规则作为函数的实参：
-
-```
-const func = (a) => {
-  console.log(a);
-};
-
-// 相当于 func([`111`]);
-func`111`;
-```
-
-其他情况：
-
-```
-const func = (str, a, b) => {
-  console.log(str, a, b, "\n");
-};
-
-const a = "aaa",
-  b = 25;
-
-// func(["q", "w", "e"], a, b);
-func`q${a}w${b}e`;
-
-// func(["q", "w", ""], a, b);
-func`q${a}w${b}`;
-
-// func(["", "w", ""], a, b);
-func`${a}w${b}`;
-
-// func(["q", "", ""], a, b);
-func`q${a}${b}`;
-
-// func(["", "", ""], a, b);
-func`${a}${b}`;
-
-// func(["q", "w", "e", "r"], b, b, b);
-func`q${b}w${b}e${b}r`;
-```
-
-ES9 新特性，若模板字符串中有错误的转义字符，不再报错，而是把这个转义字符变成 undefined ，且可以从 raw 看到原始字符串：
-
-```
-function tag(strs) {
-  // undefined
-  console.log(strs[0]);
-
-  // "\\unicode and \\u{55}";
-  console.log(strs.raw[0]);
-}
-
-tag`\unicode and \u{55}`;
-```
-
-## 6 对象、数组
-
-### 6.1 对象
-
-（1）新语法
-
-对象中，属性名、方法名可以是表达式/函数，用 [] ：
-
-```
-const obj = {
-  [1 + 2 + 3]: 789,
-};
-
-// {"6": 789}
-console.log(obj);
-
-// 但若不是字符串，只能用 [] 调用，不能用 obj.6 调用
-console.log(obj[6]);
-```
-
-若属性、方法已声明，在对象中就可以简化：
-
-```
-const num = 123;
-function func() {}
-
-const obj = {
-  num,
-  func,
-};
-```
-
-对象中的方法新的写法：
-
-```
-const obj = {
-  // 老写法
-  func1: function () {},
-  // 新写法
-  func2() {},
-};
-```
-
-ES11 新特性，globalThis
-
-始终指向全局环境（浏览器是 window，node 是 global）：
-
-```
-console.log(globalThis);
-```
-
-（3）Object 新的 api
-
-string、Array 可以正常使用；Set，Map 可以使用，但结果为空：
-
-```
-const obj = {
-  a: 1,
-  b: 2,
-};
-
-// 返回 key 或 value 的数组
-console.log(Object.keys(obj));
-console.log(Object.values(obj), "\n");
-
-// 返回 [key, value] 构成的二维数组
-console.log(Object.entries(obj), "\n");
-
-// 判断两个对象是否完全相等，与 === 不同的是两个 NaN 比较为 true
-console.log(Object.is(obj, obj), "\n");
-
-// 把多个对象合并到 obj ，机会改变 obj 又能返回，若有相同 key ，则后面会覆盖前面的
-const newObj = Object.assign(obj, { a: 11 }, { c: 3 });
-console.log(newObj, obj, "\n");
-```
-
-ES10 新特性，Object.fromEntries\(\) ，用二维数组创建一个对象：
-
-```
-const obj = Object.fromEntries([
-  ["a", 1],
-  ["b", 2],
-]);
-
-console.log(obj);
-```
-
-### 6.2 数组
-
-（1）map、filter、reduce
-
-新增数组的高阶函数 map() 、filter() 、reduce() 。
-
-高阶函数是函数式编程的一个概念，指的是接收函数参数，或者返回值是函数的函数，接收的这个函数参数会作为回调函数在合适的时候调用。
-
-```
-const func1 = (fn) => {
-  fn();
-  console.log("高阶函数");
-};
-
-const func2 = () => {
-  return () => {
-    console.log("高阶函数");
-  };
-};
-```
-
-若返回函数的函数中，内部函数的行为是由外部函数的参数决定的，就叫所函数科里化：
-
-```
-const func = (a) => {
-  return () => {
-    console.log("函数科里化");
-
-    if (a) return 123;
-    else return 456;
-  };
-};
-```
-
-map()
-
-遍历数组，并按照自定义的规则构造新数组：
-
-```
-const arr = [1, 2, 3];
-
-const newArr = arr.map((item, index, source) => {
-  // value, key 和原始数组
-  console.log(item, index, source);
-
-  // 新数组中每一个新元素
-  return item * 10;
-});
-
-// 10 20 30
-console.log(newArr);
-```
-
-filter()
-
-遍历数组，按照自定义的规则筛选元素，构建新数组：
-
-```
-const arr = [1, 2, 3];
-
-const newArr = arr.filter((item, index, source) => {
-  // value, key 和原始数组
-  console.log(item, index, source);
-
-  // 新数组中每一个新元素
-  return item >= 2;
-});
-
-// 2 3
-console.log(newArr);
-```
-
-reduce()
-
-遍历数组，并汇总数据：
-
-```
-const arr = [1, 2, 3];
-
-// 第二个参数 0 是初始值，会成为第一轮的 pre
-const sum = arr.reduce((pre, item, index, source) => {
-  // 上一轮 return 的值，value，key 和原始数组
-  console.log(pre, item, index, source);
-
-  return pre + item;
-}, 0);
-
-// 6
-console.log(sum);
-```
-
-map() 和 filter() 都返回数组，所以互相之间可以链式调用。
-
-（2）其他数组 api
-
-使用这些数组 api 的注意点：
-
-- 是遍历整个数组还是有结果就中断遍历并返回结果
-
-- 数据有修改的是否改变原数组
-
-- 参数有范围的是左闭右开区间还是左闭右闭区间
-
-- 浅拷贝还是深拷贝
-
-Array\.isArray\(\) ，判断是否为数组，结果为一个 Boolean，优先级高于 instanceof ：
-
-```
-const arr = [1, 2];
-const obj = {};
-
-// true false
-console.log(Array.isArray(arr), Array.isArray(obj));
-```
-
-判断数组的元素是否符合某个条件：
-
-都不改变原数组
-
-```
-const a = [1, 2, 3, 4];
-
-// 遍历整个数组，当所有值都符合条件时，才返回true v值，i索引，arr原数组
-const boolean1 = a.every((v, i, arr) => v >= 2);
-
-// 遍历整个数组或一部分，当有一个值符合条件时，就中断并返回true v值，i索引，arr原数组
-const boolean2 = a.some((v, i, arr) => v >= 2);
-```
-
-数据查询：
-
-都不改变原数组
-
-```
-const a = [1, 2, 3, 4];
-
-/* 遍历数组一部分，返回符合条件的值
-   一旦找到就结束遍历并返回该元素，找不到返回undefine
-  若结果为基本数据类型，就返回值。
-  若结果为引用数据类型，就返回地址，也就是浅拷贝
-  形参v值，i索引，arr原数组
- */
-const res1 = a.find((v, i, arr) => v >= 2);
-//与find区别在于它返回索引值，找不到返回-1
-const index1 = a.findIndex((v, i, arr) => v >= 2);
-```
-
-数组元素替换，数组深拷贝：
-
-替换会改变原数组
-
-```
-const a = [1, 2, 3, 4];
-
-/* 替换数组里的元素，会改变原数组
- * 形参：值，开始索引，结束索引。
- * 用值替换掉开始到结束索引(左//闭右开)的值
- */
-a.fill(5, 0, 3);
-console.log(a);
-
-// 深拷贝数组
-const aCopy = Array.from(a);
-```
-
-ES7 新特性，includes\(\) ，判断数组中是否有某个元素，一旦找到就结束遍历，返回 Booleran：
-
-```
-const arr = ["a", "b"];
-
-// true
-console.log(arr.includes("a"));
-```
-
-ES10 新特性，flat() 和 flatMap() ，用于数组降维，返回降维后的数组，都不会改变原数组：
-
-```
-const arr2 = [1, 2, [3, 4]];
-const arr3 = [1, 2, [3, 4, [5, 6]]];
-
-// flat
-// [1,2,3,4] 二维转化一维
-console.log(arr2.flat());
-// [1,2,3,4,[5,6]] 三维转二维
-console.log(arr3.flat());
-// [1,2,3,4,5,6] 三维转一维，2 表示深度 2, 3 - 1 = 2，空参则默认为 1
-console.log(arr3.flat(2));
-
-// flatMap,相当于 map() 之后使用 flat()
-const arr = [1, 2, 3];
-// 先 map 后 flat
-const arrMap = arr.map((item) => [item * 10, item * 20]);
-console.log(arrMap.flat());
-// flatMap
-console.log(arr.flatMap((item) => [item * 10, item * 20]));
-```
-
-```
-// ES5 数组降维
-
-const arr = [1, [2, 3, [4, 5, 6]]];
-
-/* 方法一：自定义递归函数
- * 优点是不用对结果进行数据类型转换
- * 缺点是写法复杂
- */
-function myFlat(arr, deep) {
-  deep = deep || 1;
-
-  if (deep < 1) return [...arr];
-
-  let res = [];
-  for (const i of arr) {
-    if (Array.isArray(i)) res = [...res, ...myFlat(i, deep - 1)];
-    else res.push(i);
-  }
-
-  return res;
-}
-
-console.log(myFlat(arr, 2));
-
-/* 方法二：先转为字符串，再转为数组
- * 优点是写法简单
- * 缺点是结果需要数据类型转换，这里就不处理了
- */
-function func(arr) {
-  // toString ，join 都可以
-  const str1 = arr.toString();
-  // const str2 = arr.join();
-
-  return str1.split(",");
-}
-
-console.log(func(arr));
-```
-
-ES13 新特性，at\(\)
-
-访问数组、字符串中的元素，整数是正向索引，负数是反向索引：
-
-```
-const arr = [1, 2, 3];
-const str = "abcd";
-
-// 1 3
-console.log(arr.at(0), arr.at(-1));
-
-// a d
-console.log(str.at(0), str.at(-1));
-```
-
-## 7 异步编程
-
-都是用于封装异步代码，使得异步代码结构更加清晰，解决回调地狱的问题。
-
-对调地狱：传统方案单纯使用回电函数进行异步编程，当嵌套太深时，可读性很差，不好维护。
-
-### 7.1 生成器
-
-本质是一个函数，但是语法与传统函数完全不同,进行异步编程。
-
-```
-// 定义：三种都一样
-function* xxx() {}
-function * xxx() {}
-function *xxx() {}
-
-/// 调用：生成器定义后是一个迭代器对象，所以：
-xxx().next();
-// 或：
-const x = xxx();
-x.next();
-```
-
-yield 语句：
-
-在生成器函数体中定义，将代码区域上下分割，n 条 yield 语句将代码分割成 n + 1 个代码块，每次调用 next() 都只执行当前代码块，然后将指针指向下一个代码块。
-
-```
-function* xxx() {
-  console.log(1);
-  yield "分割线 1";
-  console.log(2);
-  yield "分割线 2";
-  console.log(3);
-}
-
-// 不能是 xxx().next() 因为这样是不同的迭代器对象
-const x = xxx();
-
-/* res
-  1
- {}value: "分割线 1", done: false}
-  2
- {}value: "分割线 2", done: false}
-  3
- {}value: undefined, done: true}
- */
-console.log(x.next());
-console.log(x.next());
-console.log(x.next());
-
-// for...of
-/* res
-  1
-  分割线 1
-  2
-  分割线 2
-  3
-  */
-console.log("\n\n\n");
-for (i of xxx()) console.log(i);
-```
-
-生成器函数参数：
-
-- 生成器可以定义形参
-
-- next() 可传实参，生成器用 let x = yield 123 接收，x的值就是实参的值
-
-- 第 n 次调用的 next，则第 n - 1 个yield 接收
-
-```
-function* func(a) {
-  console.log(a);
-
-  const b = yield "接收参数 b";
-  console.log(b);
-
-  const c = yield "接收参数 c";
-  console.log(c);
-}
-
-const f = func(1);
-console.log(f.next());
-console.log(f.next(2));
-console.log(f.next(3));
-```
-
-应用：
-
-回调地狱的代码：
-
-```
-setTimeout(() => {
-  console.log(111);
-
-  setTimeout(() => {
-    console.log(222);
-
-    setTimeout(() => {
-      console.log(333);
-    }, 3000);
-  }, 2000);
-}, 1000);
-```
-
-同样的逻辑用生成器实现，简化代码：
-
-```
-function* xxx(a) {
-  yield setTimeout(() => {
-    console.log(111);
-    x.next();
-  }, 1000);
-
-  yield setTimeout(() => {
-    console.log(222);
-    x.next();
-  }, 2000);
-
-  yield setTimeout(() => {
-    console.log(333);
-    x.next();
-  }, 3000);
-}
-
-const x = xxx();
-x.next();
-```
-
-### 7.2 Promise
-
-（1）基本使用
-
-Promise 有 3 种状态：
-
-- Pending：待定，初始状态，未完成也未拒绝，then、catch 都不会执行
-
-- Fullfilled：已完成，resolve() 实现，后可以执行 then
-
-- Rejected：已拒绝，reject() 实现，后可以执行 catch
-
-状态只能从 Pending 改变到 Fillfilled 或 Rejected ，且只能改变一次。
-
-```
-const flag = true;
-
-/* 格式：
- * new Promise((resolve, reject) => {}).then(res => {}).catch(err => {})
- * new Promise((resolve, reject) => {}).then(res => {}, err => {})
- */
-new Promise((resolve, reject) => {
-  setTimeout(() => {
-    /* resolve, reject
-     * resolve: 表示成功，执行后进入 then 的回调
-     * reject： 表示失败，执行后进入 catch 的回调
-     * 若 resolve、reject 都没有，则状态为 Pending， thern、catch 都不执行
-     */
-    if (flag) resolve("this is res");
-    else reject("err");
-  }, 1000);
-})
-  .then((res) => {
-    console.log(111, res);
-  })
-  .catch((str) => {
-    console.log(str);
-  });
-```
-
-resolve ，reject 后面的代码也会执行，也是同步任务：
-
-```
-// 输出结果：1 2 3 4
-
-new Promise((resolve, reject) => {
-  console.log(1);
-  resolve();
-  console.log(2);
-}).then(() => {
-  console.log(4);
-});
-
-console.log(3);
-```
-
-then，catch 都可以链式调用，具体则根据内部是 return 还是 throw ：
-
-```
-// 1 3 2 4
-
-new Promise((resolve, reject) => {
-  resolve();
-})
-  .then(() => {
-    console.log(1);
-  })
-  .then(() => {
-    console.log(2);
-  });
-
-new Promise((resolve, reject) => {
-  reject();
-})
-  .catch(() => {
-    console.log(3);
-  })
-  .then(() => {
-    console.log(4);
-  });
-```
-
-但如果没有 resolve 也没有 reject ，Promise 就是 Pending 状态，then，catch 都不执行：
-
-```
-// 无结果
-
-const p = new Promise((resolve, reject) => {
-  // resolve();
-})
-  .then(() => {
-    console.log(1);
-  })
-  .then(() => {
-    console.log(2);
-  });
-console.log(p);
-```
-
-（2）then ，catch
-
-then、catch 返回的也是 Promise ：
-
-* 若内部正常 return （默认 return undefined），则返回的 Promise 状态为 Fullfilled ，return 的值会成为下一个链式调用的 then 的参数
-  
-  ```
-  new Promise((resolve) => {
-    resolve();
-  })
-    .then(() => {
-      console.log(0);
-  
-      return 123;
-    })
-    .then((res) => {
-      // 123
-      console.log(res);
-    });
-  ```
-
-* 若内部 throw 了，则返回的 Promise 状态为 Rejected ，throw 的值的值会成为下一个链式调用的 catch 的参数
-  
-  ```
-  new Promise((resolve) => {
-    resolve();
-  })
-    .then(() => {
-      console.log(0);
-  
-      throw 123;
-    })
-    .catch((res) => {
-      // 123
-      console.log(res);
-    });
-  ```
-
-* 特殊情况，若 return 的是一个 Promise （这里记为 p1），则状态和 p1 的状态一样，且p1.then\(\) 整个表达式入队为队列，而不是常规的 then 中的回调函数入队：
-  
-  ```
-  new Promise((resolve) => {
-    resolve();
-  })
-    .then(() => {
-      console.log(0);
-  
-      // .then 或 .catch(finallyFn) 的状态和 p1 一样
-  
-      // Fullfilled，执行 then
-      const p1 = Promise.resolve(123);
-      // const p1 = new Promise((resolve) => resolve(123));
-      // const p1 = new Promise((resolve) => resolve(123)).then(() => 123);
-  
-      // Rejected，执行 catch
-      // const p1 = Promise.reject(123);
-      // const p1 = new Promise((resolve, reject) => reject(123));
-      // const p1 = new Promise((resolve, reject) => reject(123)).catch(() => {
-      //   throw 123;
-      // });
-  
-      // Pending，then ，catch 都不入队，也就不执行
-      // const p1 = new Promise((resolve) => resolve());
-  
-      // return 一个 Promise，会变成把 p1.then(fn) 入队微任务
-      return p1;
-    })
-    // 这里的 then，catch 的回调函数记为 finallyFn
-    .then((res) => console.log(res))
-    .catch((res) => console.log(res));
-  
-  /* p1.then(fn) , p1.catch() 会整体入队微任务
-   * 1. 微任务中，执行 p1.then(fn) ，结果是把 fn 入队
-   * 2. 微任务中，执行 fn 《结果是 p1 完成，将最终的 finallyFn 入队
-   * 执行 finallyFn
-   */
-  ```
-
-Promise 的 then 和 catch 的回调函数是微任务，如果要把某些任务直接放入微任务人咧时，也可以：
-
-```
-Promise.resolve().then(() => {});
-Promise.reject().catch(() => {});
-```
-
-ES9 新特性：\.finally\(\) ，无论时 Fullfilled 还是 Rejected 都会回调，但是 Pending 依然不会回调：
-
-```
-new Promise((resolve, reject) => {
-  resolve();
-  // reject();
-}).finally(() => {
-  console.log(123);
-});
-```
-
-（3）处理多个 Promise
-
-当一个请求需要多个子请求的结果时，是不好判断子请求的完成顺序的，代码写起来就复杂。使用 Promise.all\(\) 会方便很多。
-
-Promise\.all\(\) ：
-传入一个 Promise 数组，数组中所有的 Promise 状态都是 Fullfilled 时，外部 Promise  才是 Fullfilled 。
-
-由于封装的都是异步，所以all执行总时间就是执行最慢的那一个异步操作的时间。
-
-```
-const p1 = new Promise((resolve, reject) => {
-  resolve(1);
-});
-
-const p2 = new Promise((resolve, reject) => {
-  resolve(2);
-});
-
-const p3 = new Promise((resolve, reject) => reject("err"));
-
-Promise.all([p1, p2]).then((resArr) => {
-  // resArr 时一个数组，元素分别是各个 Promise 中 resolve 传入的参数
-  console.log("FullFilled", resArr);
-});
-
-Promise.all([p1, p3]).catch((err) => {
-  console.log(err);
-});
-```
-
-ES12 新特性：Promise\.any\(\) ，也是传入 Promise 的数组，不同的是，只要其中一个成功就成功，且 then 只能处理成功 Promise 的信息，有点像多个 Promise 竞速。
-
-所有 Promise 失败才会失败。
-
-```
-const p1 = new Promise((resolve) => {
-  setTimeout(() => resolve("p1"), 1000);
-});
-
-const p2 = new Promise((resolve) => {
-  setTimeout(() => resolve("p2"), 2000);
-});
-
-const p3 = new Promise((resolve, reject) => {
-  reject();
-});
-
-const p4 = new Promise((resolve, reject) => {
-  reject();
-});
-
-// ------------------------------------------------------------------
-Promise.any([p1, p2]).then((res) => {
-  //'p1'，1秒后输出
-  console.log(res);
-});
-
-Promise.any([p2, p3]).then((res) => {
-  //‘p2’，2秒后输出
-  console.log(res);
-});
-
-Promise.any([p3, p4]).catch((err) => {
-  // err 信息
-  console.log(err);
-});
-```
-
-ES11 新特性，Promise.allSettle\(\) ，传入 Promise 数组，数组中的 Promise 无论成功失败，外部 Promise 都是 Fullfilled ，成功的值为对象数组，保存每个 Promise 的状态和值：
-
-```
-const p1 = new Promise((resolve) => {
-  resolve(1);
-});
-
-const p2 = new Promise((resolve) => {
-  resolve(2);
-});
-
-const p3 = new Promise((resolve, reject) => {
-  reject(3);
-});
-
-/*输出
- [
-   { status: 'fulfilled', value: 1 },
-   { status: 'fulfilled', value: 2 },
-   { status: 'rejected', reason: 3 }
- ]
- */
-const res = Promise.allSettled([p1, p2, p3]);
-res.then((res) => {
-  console.log(res);
-});
-```
-
-（4）顶层 await
-
-ES13 新特性，允许在全局作用域使用 await 。在之前，如果 import 的资源是异步加载的，需要这么做：
-
-```
-// 1.js
-export let data;
-
-export default new Promise((resolve) => {
-  setTimeout(() => {
-    data = 123;
-    resolve();
-  }, 1000);
-});
-```
-
-```
-// 2.js
-import p, { data } from "./1.js";
-
-p.then(() => {
-  console.log(data);
-});
-```
-
-比较繁琐，而用顶层 await 会方便很多：
-
-```
-// 1.js
-export let data = await 异步;
-```
-
-```
-// 2.js
-import { data } from "./1.js";
-console.log(data);
-```
-
-其他用途：
-
-- 动态加载模块
-  
-  ```
-  const str = await import(`/i18n/${navigator.language}`);
-  ```
-
-- 资源初始化
-  
-  ```
-  const con = await dbConnector();
-  ```
-
-- 依赖回退
-  
-  ```
-  let translations;
-  try {
-    translations = await import('https://app.fr.json');
-  } catch {
-    translations = await import('https://fallback.en.json');
-  }
-  ```
-
-### 7.3 async、await
-
-ES8 新特性，以类似同步的方式使用异步。
-
-（1）async
-
-用来声明 async 函数，该函数一定会返回一个 Promise ，return 的值是 reslove 传入的参数，根据 async函数 返回的 Promise 的成状态，可以使用 then 、catch：
-
-```
-async function func1() {
-  return 123;
-}
-
-func1().then((val) => {
-  console.log(val); //输出123
-});
-
-//上面代码相当于
-new Promise((resolve) => {
-  resolve(123);
-}).then((val) => {
-  console.log(val);
-});
-```
-
-若 async 函数的返回值为：
-
-- *没有 return 或只有 return ，rereturn undefined，返回的 Promise 状态为 Fullfilled ，then 参数值为 undefined
-
-- return xxx ，返回的 Promise 状态为 Fuillfilled ，then 的参数值为 xxx
-
-- return Promise  ，记为 p，返回的 Promise 状态即 p 的状态，then 、catch 的参数值为 p 内 resolve ，reject 的值
-
-- 该函数内跑出异常，返回的 Promise 状态为 Rejected
-
-（2）await
-
-后面可以放一个表达式，称为await 表达式（一般为Promise对象）。
-
-* *await 必须放在 async 函数中，不过 async 函数中不一定要有 await 。
-
-* await 下面的代码若 await 成功 ，则相当于 then ，若有多个 await ，则相当于嵌套的 then
-
-* await 之前的代码就相当于 Promise 的 \(resolve, reject\) =\> \{\}
-
-await 后面的表达式，若为：
-
-* Promise，若该 Promise 状态为 Fullfilled ，则 await 表达式结果为 resolve 传入的值；若状态为 Rejected ，则需要 try\.\.\.catch 捕获异常，catch 获得的值即 reject 传入的值：
-  
-  ```
-  /* 输出结果
-   * resolve：1 2 end
-   * reject：1 err 3 end
-   */
-  
-  const p = new Promise((resolve, reject) => {
-    resolve();
-    // reject();
-  });
-  
-  async function func() {
-    try {
-      const res = await p;
-      console.log(2);
-    } catch (err) {
-      console.log("err");
-      console.log(3);
-    }
-  
-    // 若 resolve ，则这里相当于把下面的代码放入 then 中的后面
-    // 若 reject ， 则这里相当于把下面的代码放入 catch 中的后面
-    console.log("end");
-  }
-  
-  func();
-  console.log(1);
-  ```
-  
-  await 失败的另一种写法，虽然比 try\.\.\.catch 简洁，但是只能获取 Promise 自己的成功失败，获取不到 Promise 内部代码的错误：
-  
-  ```
-  const p = new Promise((resolve, reject) => {
-    resolve(1);
-    // reject(2);
-  });
-  
-  async function func() {
-    const [res, err] = await p
-      .then((res) => [res, null])
-      .catch((err) => [null, err]);
-  
-    console.log(res, err);
-  }
-  
-  func();
-  ```
-
-* 不是 Promise ，则 await jscode 会转化成 await Promise\.resolve(jscode) ：
-  
-  ```
-  // 输出结果：1 2 3 undefined
-  
-  async function func() {
-    // 转化成 await Promise.resolve(123)
-    const res1 = await 2;
-    console.log(res1);
-  
-    // 转换成 await Promise.resolve((() => console.log(3))())
-    const res2 = await (() => console.log(3))();
-    console.log(res2);
-  }
-  
-  func();
-  console.log(1);
-  ```
-
-await 的优先级低于 \] 和 \. ：
-
-```
-const p1 = new Promise((resolve) => {
-  resolve({ a: 123 });
-});
-
-const p2 = new Promise((resolve) => {
-  resolve([5, 7]);
-});
-
-async function func() {
-  const res1 = (await p1).a;
-  const res2 = (await p2)[0];
-  console.log(res1, res2);
-
-  // 也可以直接解构赋值
-  const { a } = await p1;
-  const [res3] = await p2;
-  console.log(a, res3);
-}
-
-func();
-```
-
-### 7.4 异步迭代器
-
-ES9 新特性，即异步循环 for\.\.\.await\.\.\.of 。
-
-普通的在 for 中若有异步操作，其实就是把循环体按顺序执行 n 次，先执行同步任务再执行异步任务，本质上还是正常的 JS 执行机制：
-
-```
-function func(i) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(i);
-    }, 1000);
-  });
-}
-
-console.log("start");
-
-for (let i = 0; i < 3; i++) {
-  console.log(`同步${i}`);
-  func(i).then((res) => {
-    console.log(`异步${res}`);
-  });
-}
-console.log("end");
-
-/* 整个 for 循环其实就是 3 次 console...Promise
-start
-同步0
-同步1
-同步2
-end
-异步0
-异步1
-异步2
-*/
-```
-
-async ，await 也一样：
-
-```
-function func(i) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(i);
-    }, 1000);
-  });
-}
-
-async function run1() {
-  console.log("start");
-
-  for (let i = 0; i < 3; i++) {
-    console.log(`${i}`);
-    const res = await func(i);
-    console.log(`异步${res}`);
-  }
-
-  console.log("for执行完我才执行"); //这是最后一次await后的then
-}
-
-run1();
-console.log("end");
-
-/*
-start
-0
-end
-异步0
-1
-异步1
-2
-异步2
-for执行完我才执行
-*/
-```
-
-而异步迭代器 for\.\.\.await\.\.\.of ，在上面代码的基础上，把整个 for 的循环体放入一个 Promise 的 then 中：
-
-```
-function func(i) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(i);
-    }, 1000);
-  });
-}
-
-async function run2() {
-  console.log("start");
-
-  for await (let i of [0, 1, 2]) {
-    console.log(i);
-    const res = await func(i);
-    console.log(`异步${res}`);
-  }
-
-  console.log("for执行完我才执行"); //这是最后一次await后的then
-}
-run2();
-console.log("end");
-
-/*
-start
-end
-0
-异步0
-1
-异步1
-2
-异步2
-for执行完我才执行
-*/
-```
-
-### 7.5 并发 Promise
-
-当需要处理多个 Promise 可以用 Promise\.allSettle\(\) 并行处理，或 for await 穿行处理。但如果想要并行处理，且需要控制同一时间的并发量，就需要手写了，如大文件上传。
-
-此外，若 reject 了，也可以按需求看是否需要重新执行，如请求重传。
-
-```
-/**可控制并发量的 Promise
- * taskList: 任务数组，每个元素是返回 Promise 的 function
- * maxMaxConcurrent: 最大并发量
- * needRestart: reject 时需要重新运行的次数
- */
-function myAllSettle(taskList, maxConcurrent = 1, needRestart = 0) {
-  return new Promise((resolve) => {
-    if (!Array.isArray(taskList) || taskList.length === 0) return resolve([]);
-
-    maxCpncurrent = Number.parseInt(maxConcurrent);
-    needRestart = Number.parseInt(needRestart);
-    if (maxConcurrent <= 0 || Number.isNaN(maxConcurrent)) maxConcurrent = 1;
-    if (needRestart < 0 || Number.isNaN(needRestart)) needRestart = 0;
-
-    const result = [];
-    let index = 0, isFinally = 0;
-
-    const run = async (
-      nowindex,
-      isRestart = false,
-      remainRestart = needRestart
-    ) => {
-      try {
-        const nowindexRes = {
-          status: "fullfilled",
-          value: await taskList[nowindex](),
-        };
-
-        if (isRestart) result[nowindex].push(nowindexRes);
-        else result[nowindex] = nowindexRes;
-      } catch (err) {
-        const nowindexErr = {
-          status: "rejected",
-          reson: err,
-        };
-
-        if (isRestart) result[nowindex].push(nowindexErr);
-        else result[nowindex] = [nowindexErr];
-      } finally {
-        if (
-          remainRestart > 0 &&
-          result[nowindex]?.at?.(-1)?.status === "rejected"
-        ) {
-          run(nowindex, true, remainRestart - 1);
-        } else {
-          ++isFinally;
-
-          if (isFinally >= taskList.length) resolve(result);
-          else if (index < taskList.length) run(index++);
-        }
-      }
-    };
-
-    for (let i = 0; i < Math.min(maxConcurrent, taskList.length); i++)
-      run(index++);
-  });
-}
-
-// 测试 ——------------------------------------------------------------------------------
-function delayTask(fn, ms) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => fn(resolve, reject), ms);
-  });
-}
-
-const taskList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => {
-  return () => {
-    return delayTask((resolve, reject) => {
-      if (item % 3 === 0) reject(`err ${item}`);
-      else resolve(item);
-    }, Number.parseInt(Math.random() * 1000));
-  };
-});
-
-myAllSettle(taskList, 3, 2).then((res) => {
-  console.log(res);
-});
-```
-
-# 8 新数据结构
-
-Set 、Map 底层是用红黑树实现的。
-
-### 8.1 Set
-
-集合，成员的值是惟一的，有相同的会去重，具有iterator接口
-
-```
-const s0 = new Set();
-const s1 = new Set([1, 2, 3]);
-
-s0.add(1);
-s0.delete(1);
-console.log(s0, s0.size);
-
-// true
-console.log(s1.has(3));
-
-s1.clear();
-console.log(s1);
-```
-
-遍历，无法使用 for\.\.\.in ：
-
-```
-const s = new Set([1, 2, 3, 4]);
-
-s.forEach((i) => {
-  console.log(i);
-});
-
-for (const i of s) console.log(i);
-```
-
-实际应用：
-
-```
-// 数组去重
-const arr = [1, 1, 2, 2, 3];
-const arr0 = [...new Set([...arr])];
-
-// 交集
-const arr1 = [1, 1, 2, 2, 3];
-const arr2 = [3, 4, 4, 5, 5];
-const arr3 = [...new Set([...arr1])].filter((i) => new Set([...arr2]).has(i));
-
-// 并集
-let arr4 = [...new Set([...arr1, ...arr2])];
-
-// 差集 (a-b a 有但 b没有)
-const arr5 = [...new Set([...arr1])].filter((i) => !new Set([...arr2]).has(i));
-```
-
-WeakSet ：
-
-与 Set 的区别就两个：
-
-* 每个成员只能是引用类型：
-  
-  ```
-  const ws = new WeakSet([[1, 2], { a: 123 }, new Date(), new Set()]);
-  ```
-
-* 每个成员都是弱引用：
-  
-  ```
-  const s = new Set();
-  const ws = new WeakSet();
-  
-  function test() {
-    const o1 = { a: 123 };
-    const o2 = { a: 456 };
-  
-    s.add(o1);
-    ws.add(o2);
-  }
-  
-  test();
-  
-  // Set 的成员是强引用，函数调用完成员还保持着对 {a:123} 的引用
-  console.log(s);
-  
-  // WeakSet 是弱引用，函数调用完成员是否还保持着对 {a:456} 的引用得看垃圾回收有没有回收到这里
-  console.log(ws);
-  ```
-  
-  由于弱引用的不确定性，因此 WeakSet 的成员是否存在是不确定的，所以没有 size 和 clear\(\)，无法遍历。
-
-### 8.2 Map
-
-字典，键值对的集合，key 是唯一的，相同的 key 会覆盖前面的 key ，有 iterator 接口。
-
-key 可以是任何数据类型，Symbol 类型的 key 也可以遍历出来。
-
-```
-const m1 = new Map();
-const m2 = new Map([
-  ["name", "asdf"],
-  ["age", 23],
-]);
-const m3 = new Map(Object.entries({ a: 1, b: 2 }));
-
-const obj = Object.fromEntries(m3);
-
-m1.set("name", "qwer");
-console.log(m1.get("name"), m1.has("name"), m1.size);
-
-m1.delete("name");
-m2.clear();
-```
-
-遍历，可以遍历出来 Symbol key ，无法使用 for\.\.\.in
-
-```
-const m = new Map([
-  ["name", "asdf"],
-  ["age", 23],
-]);
-
-m.forEach((i, k) => {
-  console.log(i, k);
-});
-
-// [key, value]
-for (const i of m) console.log(i);
-```
-
-实际应用：
-
-```
-// 统计出现个数
-
-const arr = ["apple", "apple", "banana"];
-const m = new Map();
-
-for (const i of arr) {
-  if (m.has(i)) m.set(i, m.get(i) + 1);
-  else m.set(i, 1);
-}
-
-console.log(m);
-```
-
-WeakMap ：
-
-与 Map 区别就两个：
-
-* key 只能是引用类型，但 value 可以是任何数据类型
-
-* key 时弱引用，没有 size 和 clear\(\) ，无法遍历
-
-Vue3 的响应式系统的源码，采用了 WeakMap，是为了使不再使用的资源释放掉，来优化性能。
-
-## 9 Class
-
-解决 JS 函数二义性的另一个方案，实例对象专门由 class 的 constructor 构造。
-
-class 里的 this 永远不会指向 window ，硬要指向 window 也会指向 undefined 。
-
-ES6 的 class 功能比较简陋，ES13 才比较完善。
-
-（1）ES6 class
-
-基本使用：
-
-```
-// 声明，class 不会被提升
-class A {
-  // 构造函数
-  constructor(a) {
-    this.a = a;
-    this.b = 2;
-  }
-
-  // 定义方法，方法内的 this 为实例对象
-  func1() {
-    console.log(this);
-  }
-
-  // 箭头函数，属于 func2 ，func2 所在的作用域时 class 内，所以 this 指向实例对象
-  func2 = () => {
-    console.log(this);
-  };
-}
-
-const obj = new A(1);
-
-// 1 2
-console.log(obj.a, obj.b);
-
-obj.func1();
-obj.func2();
-```
-
-类的继承：
-
-```
-// 父类
-class A {
-  constructor(a) {
-    this.a = a;
-  }
-
-  fatherFunc() {
-    console.log("fatherFunc");
-  }
-}
-
-//子类继承父类
-class B extends A {
-  constructor(a, b, c) {
-    // 子类中必须有 super() 调用父类的 constructor ，才能使用 this
-    super(a);
-
-    this.b = b;
-    this.c = c;
-  }
-
-  sonFunc() {
-    // 调用父类的方法
-    super.fatherFunc();
-    console.log("sonFunc", "\n");
-  }
-
-  /* 重写父类方法
-   * 内部无法使用 super() 调用父类同名方法
-   */
-  fatherFunc() {
-    console.log("rewrite fatherFunc");
-  }
-}
-
-const son = new B(1, 2, 3);
-
-// 1 2 3
-console.log(son.a, son.b, son.c);
-
-son.sonFunc();
-son.fatherFunc();
-```
-
-（2）ES13
-
-可以在 constructor 外定义属性，也可以用公共实例字段定义属性：
-
-```
-let test = "Name";
-
-class A {
-  a = 123;
-  b;
-
-  // 公共实例字段定义属性
-  [`user${test}`] = "ASDF";
-}
-
-const obj = new A();
-
-console.log(obj.a, obj.b);
-
-console.log(obj.userName);
-```
-
-私有属性、私有方法，用 \# 定义：
-
-```
-class A {
-  // public
-  name;
-
-  // private
-  #age;
-  #run() {}
-
-  constructor(name, age) {
-    this.name = name;
-    this.#age = age;
-  }
-
-  getAge() {
-    return this.#age;
-  }
-
-  setAge(newAge) {
-    this.#age = newAge;
-  }
-}
-
-const obj = new A("asdf", 18);
-console.log(obj.getAge());
-
-obj.setAge(28);
-console.log(obj.getAge());
-```
-
-静态属性、静态方法：
-
-```
-class A {
-  static name = "class A";
-
-  static func() {
-    // this 还想类本身
-    console.log(A.name);
-    console.log(this.name);
-  }
-}
-
-console.log(A.name);
-A.func();
-```
-
-静态初始化代码块，可以有多个，在编译阶段就执行，由于是 static 的，所以只能调用 static 的属性和方法，在代码块你诶不定义的是局部变量和局部方法：
-
-```
-class Person {
-  static a = "static";
-
-  static {
-    // this 指向类本身
-    console.log(this.a);
-
-    // 局部变量
-    const b = 123;
-  }
-}
-
-// undefined
-console.log(Person.b);
-```
-
-in ，判断类中是否有某个属性和方法：
-
-```
-class A {
-  a;
-  func() {}
-
-  #b;
-
-  static c;
-  static #d;
-
-  hasB(obj) {
-    console.log(#b in obj);
-  }
-
-  static hasD() {
-    console.log(#d in A);
-  }
-}
-
-const obj = new A();
-
-// public 属性和方法需要加 ""
-console.log("a" in obj, "func" in obj);
-console.log("c" in A);
-
-// private
-obj.hasB(obj);
-A.hasD();
-```
-
-（4）实现私有属性
-
-ES6 的访问器使用 \_name 在命名上区分私有属性，但约束力不强；用 Symbol key 实现私有属性和也有办法访问。 
-
-ES13 有 \# 可以实现，且是运行时，不过由于是新特性，可能有兼容性问题。
-
-TypeScript 中的 private 只是编译时，编译后的 JS 也没有使用 \# ，且就算再 ts 中，也有办法可以使用动态属性绕过检查：
-
-```
-class A {
-  private a = 5;
-}
-
-const obj = new A();
-console.log(obj["a"]);
-```
-
-自己实现可以使用立即执行函：
-
-```
-class A {
-  // 立即执行函数，防止外部访问私有属性
-  privateFields = (function () {
-    const fields = {
-      a: 1,
-    };
-
-    // 闭包，防止 fields 被垃圾回收
-    return {
-      get: (key) => {
-        // 防止从原型上访问，只有 key 时 privateFields 有的属性时，才允许访问
-        if (fields.hasOwnProperty(key)) return fields[key];
-      },
-      set: (key, newValue) => {
-        if (fields.hasOwnProperty(key)) fields[key] = newValue;
-      },
-    };
-  })();
-}
-
-const obj = new A();
-
-// 1
-console.log(obj.privateFields.get("a"));
-
-// 2
-obj.privateFields.set("a", 2);
-console.log(obj.privateFields.get("a"));
-
-// 测试从原型上访问
-Object.defineProperty(Object.prototype, "abc", {
-  get() {
-    return this;
-  },
-});
-obj.privateFields.set("a", 3);
-console.log(obj.privateFields.get("abc")?.a);
-```
-
-或者使用模块化，把私有属性存放在 WeakMap ：
-
-```
-// 用 WeakMap 而不是 Map、Object ，是为了垃圾回收对象时，同时也会受 WeakMap 的元素
-const privateFields = new WeakMap();
-
-export default class {
-  constructor() {
-    privateFields.set(this, { a: 1 });
-  }
-
-  getPrivateFields = () => privateFields.get(this);
-}
-```
-
-## 10 模块化、其他
-
-### 10.1 模块化
-
-解决导入多个 JS 文件后冲突的问题。模块化的核心是导入、导出。
-
-ES5 模块化：
-
-```
-<script type="module" src="..."></script>
-<script type="module">
-  import ... from '...'
-</script>
-```
-
-模块化规范：ES6 ，CommonJS ，AMD ，CMD 。其中 AMD 用在 requireJS ，CMD 用在 sealS ，不太常用。
-
-绝对路径：完整的路径
-
-相对路径：\./ 当前目录 ，\.\./ 上一级目录 ，\.\./\.\./ 上两级目录。
-
-（1）ES6 模块化
-
-方式一：
-
-```
-// 1.js
-const a = 1, b = 2;
-export { a, b };
-```
-
-```
-// 2.js
-export const c = 3;
-```
-
-```
-// 3.js
-const { a, b } from "./1.js";
-```
-
-```
-// 4.js
-export * from "./1.js";
-```
-
-```
-import { a, b } from "./1.js";
-import { c } from "./2.js";
-
-console.log(a, c);
-```
-
-```
-import * as js1 from "./1.js";
-import * as js2 from "./2.js";
-
-console.log(js1.a, js2.c);
-```
-
-方式二：
-
-default 一个文件只能有一个：
-
-```
-// 1.js
-export default a = 1;
-```
-
-```
-import js1 from "./1.js";
-// 1
-console.log(js1);
-```
-
-（2）CommonJS 模块化
-
-nodejs ，Browserify 使用。
-
-```
-// 1.js
-const a = 1, b = 2;
-module.exports = {
-  a, b
-}
-```
-
-```
-const { a, b } = require("./1.js");
-```
-
-（3）新特性
-
-ES11 新特性，动态 import
-
-ES6的是静态 import，这里的动态 import 实现按需加载（懒加载）：
-
-```
-import(‘./1.js’).then(res => {
-  console.log(res);
-})
-
-// 路由懒加载
-const a = import(‘xxx’);
-```
-
-ES11 新特性，import.meta
-
-是一个 JS 模块暴漏的特定上下文的元数据的对象，包含了这个模块的信息，如模块的 url ：
-
-```
-console.log(import.meta);
-```
-
-### 10.2 其他
-
-ES10 新特性，catch 不再必须传入形参：
-
-```
-try {
-} catch () {}
-```
-
-ES12 新特性，WeakRef ，得到一个对象的弱引用：
-
-```
-const obj = { a: 1 };
-const wr = new WeakRef(obj);
-
-// { a: 1 } ，若 obj 被垃圾回收了，则是 undefined
-console.log(wr.deref());
-```
-
-ES13 新特性，Error Cause
-
-proposal-error-cause 这一提案，目的主要是为了便捷的传递导致错误的原因，如果不使用这个模块，想要清晰的跨越多个调用栈传递错误上下文信息，通常要这么做：
-
-```javascript
-async function doJob() {
-  const rawResource = await fetch('//domain/resource-a')
-    .catch(err => {
-      // How to wrap the error properly?
-      // 1. throw new Error('Download raw resource failed: ' + err.message);
-      // 2. const wrapErr = new Error('Download raw resource failed');
-      //    wrapErr.cause = err;
-      //    throw wrapErr;
-      // 3. class CustomError extends Error {
-      //      constructor(msg, cause) {
-      //        super(msg);
-      //        this.cause = cause;
-      //      }
-      //    }
-      //    throw new CustomError('Download raw resource failed', err);
-    })
-  const jobResult = doComputationalHeavyJob(rawResource);
-  await fetch('//domain/upload', { method: 'POST', body: jobResult });
-}
-
-await doJob(); // => TypeError: Failed to fetch
-```
-
-而按照这一提案的语法：
-
-```javascript
-sync function doJob() {
-  const rawResource = await fetch('//domain/resource-a')
-    .catch(err => {
-      throw new Error('Download raw resource failed', { cause: err });
-    });
-  const jobResult = doComputationalHeavyJob(rawResource);
-  await fetch('//domain/upload', { method: 'POST', body: jobResult })
-    .catch(err => {
-      throw new Error('Upload job result failed', { cause: err });
-    });
-}
-
-try {
-  await doJob();
-} catch (e) {
-  console.log(e);
-  console.log('Caused by', e.cause);
-}
-// Error: Upload job result failed
-// Caused by TypeError: Failed to fetch
-```
-
-# 四、JS 高级
-
-## 1 JS 执行机制、浏览器渲染
+## 3 Web 原理
 
 执行上下文：就是执行栈。
 
-### 1.1 事件循环
+### 3.1 事件循环
 
 事件循环（event loop），也叫消息循环（message loop）。
 
@@ -4701,7 +6197,7 @@ Promise.resolve()
 </html>
 ```
 
-### 1.2 渲染帧
+### 3.2 渲染帧
 
 渲染任务的优先级比微任务低，但和宏任务的优先级不好比较，不同浏览器的处理不同，有的比宏任务高，有的在宏任务中间适合的时间段渲染，因此执行顺序不好判断。
 
@@ -5071,11 +6567,11 @@ HTML5 新特性提供了两个渲染帧相关的 API 。注意只有渲染任务
 
 分片任务如果环境不支持这两个 API ，就使用 web worker，再不支持只能用定时器了，但是定时器无法准确在两个渲染帧之间执行任务，就会由卡顿，但至少比直接同步执行好。
 
-### 1.3 Web Worker
+### 3.3 Web Worker
 
 HTML5 新特性，开启一个新县城
 
-### 1.4 浏览器渲染原理
+### 3.4 浏览器渲染原理
 
 渲染，将一个 HTML 字符串（HTML 文档）转变成页面像素信息的过程。
 
@@ -5108,7 +6604,7 @@ const html = `
 
 生成 DOM 树（DOM Object Model）和 SOM 树（CSS Object Model），都是对象，方便后续处理，同时让 JS 有操作 HTML 、CSS 的能力。
 
-当 JS 修改 DOM\.style 事，就会修改 DOM 树，即便是 JS 修改 transform 。
+当 JS 修改 DOM 事，就会修改 DOM 树，若修改了样式还会修改 SOM 树，即便是 JS 修改 transform 。
 
 ```
 // dom 树的根结点
@@ -5362,223 +6858,7 @@ transform 是在合成现成中起作用的，已经是渲染的后期了，又�
 
 浏览器滚动也不会 reflow、repaint ，所以不会被 JS 阻塞。
 
-### 1.5 作用域
-
-（1）作用域、预编译
-
-三种作用域：
-
-* 全局作用域
-
-* 局部作用域，即函数内部
-
-* 块级作用域，if 、for 等内部，let 、const 具有块级作用域，而 var 没有。
-
-预编译，也叫与解析，JS 运行分为预编译和编译运行两部分。在预编译阶段，会有变量提升和函数提升，作用是吧 var 声明和函数声明的代码放到当前作用域的最前面：
-
-* var 只提升声明，不提升赋值；let、const 也会提升，只不过在声明之前是暂时性死区：
-  
-  ```
-  // undefined 10
-  console.log(a);
-  var a = 10;
-  console.log(a);
-  
-  // err
-  try {
-    console.log(b);
-  } catch {
-    console.log("err\n");
-  }
-  let b = 10;
-  
-  // 10 ，由于 var 没有块级作用域，所以 var 当前处于全局作用域
-  for (var i = 0; i < 10; i++) {}
-  console.log(i);
-  
-  // 0
-  let j = 0;
-  for (let j = 0; j < 10; j++) {}
-  console.log(j, "\n");
-  
-  // err ，因为 funcVar 提升的位置是它的当前作用域，也就是局部作用域
-  try {
-    console.log(funcVar);
-  } catch {
-    console.log("err");
-  }
-  
-  // undefined 10
-  function func() {
-    console.log(funcVar);
-    var funcVar = 10;
-    console.log(funcVar);
-  }
-  func();
-  ```
-
-* 函数也只提升声明，只有具名函数会提升，连 var 定义的匿名函数都不会提升：
-  
-  ```
-  // 1
-  func();
-  function func() {
-    console.log(1);
-  }
-  
-  // err
-  try {
-    notNameFunc();
-  } catch {
-    console.log("err\n");
-  }
-  var notNameFunc = function () {};
-  
-  //  2，内部函数也会提升到当前作用域最前面
-  function f() {
-    func();
-    function func() {
-      console.log(2);
-    }
-  }
-  f();
-  ```
-
-注意事项：
-
-* 浏览器全局 this 为 window ，node 全局 this 为 \{\} ；浏览器 globalThis 为 window ，node 中 globalThis 为 node 全局对象：
-  
-  ```
-  console.log(this, globalThis);
-  ```
-
-* 全局作用域中，具名函数和 var 声明的变量、var 声明的匿名函数，在浏览器中会加到 window 中（let、const 不会），node 则不会加到 \{\} 和 node 全局对象中：
-  
-  ```
-  var a = 1;
-  let b = 2;
-  const c = 3;
-  
-  function func1() {}
-  var func2 = function () {};
-  let func3 = function () {};
-  const func4 = function () {};
-  
-  // 1 undefined unfined func1 func2 undefined unfined
-  try {
-    // 浏览器环境
-    console.log(
-      window.a,
-      window.b,
-      window.c,
-      window.func1,
-      window.func2,
-      window.func3,
-      window.func4
-    );
-  } catch {
-    // {}、undefined ，node 环境
-    console.log(
-      this,
-      globalThis.a,
-      globalThis.b,
-      globalThis.c,
-      globalThis.func1,
-      globalThis.func2,
-      globalThis.func3,
-      globalThis.func4
-    );
-  }
-  ```
-
-* 若声明变量时没有使用 var 、let 、const ，此时必须赋值，否则报错；浏览器会吧变量放到 window 中，node 会放到 globalThis 中。
-  
-  严格模式下，这种情况浏览器和 node 都会直接报错：
-  
-  ```
-  // 下面的情况等价于 window.xxx = value 或 globalThis.xxx = value
-  
-  // err ，必须赋值
-  try {
-    a;
-  } catch {
-    console.log("err");
-  }
-  
-  a = 1;
-  func = function () {};
-  
-  function func1() {
-    b = 2;
-  }
-  func1();
-  
-  // func1 必须运行，b 才会加到 window、globalThis 中
-  // 1 2 func ，当然调用时 window、globalThis 可以省略
-  try {
-    console.log(window.a, window.b, window.func);
-  } catch {
-    console.log(globalThis.a, globalThis.b, globalThis.func);
-  }
-  ```
-
-* ES6 有了 let、const 后，就不要在使用 var ，var 有很多缺陷：
-  
-  ```
-  // 重复用 var 声明不报错
-  var a = 1;
-  var a = 2;
-  // 2
-  console.log(a);
-  
-  // 用立即执行函数生成局部作用域，解决 var 没有块级作用域问题
-  var i = 0;
-  (function () {
-    for (var i = 0; i < 10; i++) {}
-  })();
-  // 0
-  console.log(i);
-  ```
-
-（2）作用域链
-
-类似原型链，用于查找变量，先从自己作用域开始，直到全局，找不到就是 undefined 。规则：
-
-- 内部可以访问外部变量，反之不行；访问的是最近一级作用域的变量
-
-- 只与定义函数时有关，与调用无关：
-  
-  ```
-  function func1() {
-    var a = 1;
-  
-    return function () {
-      console.log(a);
-    };
-  }
-  
-  function func2() {
-    var a = 2;
-    func1()();
-  }
-  
-  // 1
-  func2();
-  ```
-* 由于 JS 是解释型语言，所以下面代码不会报错：
-  
-  ```
-  function func() {
-    console.log(a);
-  }
-  
-  const a = 1;
-  
-  // 1
-  func();
-  ```
-
-### 1.6 垃圾回收机制
+### 3.5 垃圾回收机制
 
 为了防止内存泄漏，js会对没有使用或不再使用的资源自动地进行回收来释放内存，遵循以下基本规则
 
@@ -5655,2003 +6935,1711 @@ test2();
 
 可以看出，强引用由于可能会有不被垃圾回收的情况，所以可能会出现内存泄漏；而弱引用则没有内存泄漏的问题。
 
-## 2 面向对象
+# 四、TS
 
-### 2.1 原型
+typescript 是 javascript 的超集，具有类型检查等功能。
 
-（1）原型
-
-原型是一个对象，所以也叫原型对象。任何一个实例对象通过隐式原型属性 \_\_proto\_\_ ，任何一个构造函数通过显示原型属性 prototype ，就能访问到原型，实例对象和它的构造函数指向的是同一个原型对象：
+安装；
 
 ```
-function Person(name, age) {
-  this.name = name;
-  this.age = age;
+npm install -g typescript @types/node
+
+# 编译 ts 文件
+tsc 1.ts
+```
+
+ts\-node ，直接编译运行 ts ：
+
+```
+npm install -g ts-node
+
+# 运行 ts
+ts-node xxx.ts
+```
+
+@types/xxx 是类型声明文件，当 TS 需要使用 JS 文件的资源时就需要声明文件，一些老的第三方库没有升级为 TS ，则会提供 @types/xxx ，若没有提供，则需要自己声明：
+
+```
+// utils.js
+function add(a, b) {
+  return a + b;
 }
+```
 
-const p = new Person("asdf", 18);
+```
+// 1.ts
 
-// true ，实例对象 p 的隐式原型属性和它的构造函数 Person 的显示原型属性指向的同一个对象，就是原型
-console.log(p.__proto__ === Person.prototype);
+import { add } from "./utils.js";
 
+// declare 声明类型
+export declare function add(a: number, b: number): number;
+
+console.log(add(1, 2));
+```
+
+
+
+也可以单独把类型声明放到 \.d\.ts 文件中：
+
+```
+// utils.d.ts
+export declare function add(a: number, b: number): number;
+```
+
+```
+// 1.ts ，不需要导入 .d.ts 文件，会自动识别
+import { add } from "./utils.js";
+console.log(add(1, 2));
+```
+
+
+
+## 1 类型
+
+### 1.1 基本
+
+JS 类型在 TS 的写法：
+
+```
+// 声明变量 --------------------------------------------------------------------------
+let num: number = 1;
+
+// 类型转换
+const num1: number = Number("2");
+
+// err ，不能吧包装类对象赋值给 number 类型
+// const num2: number = new Number(3);
+
+// 包装类对象
+const num3: Number = new Number(3);
+
+// 类型检查 -------------------------------------------------------------------------
+const str: string = "a";
+const bool: boolean = true;
+const u: undefined = undefined;
+const n: null = null;
+const sym: symbol = Symbol();
+
+const obj: { a: number } = { a: 1 };
+
+const arr1: numebr[] = [1, 2]
+const arr2: Array<number> = [1, 2];
+
+function func1(a: number): void {}
+const func = function (a: number): number {
+  return a;
+};
+const func3 = (a: number): number => a;
+
+// err ，ts 具有类型检测，只能赋值相同类型的值
+// num = 2;
+
+// err ，不同类型无法比较
+// console.log(num == str, num > str);
+
+// err ，不同类型用 === 比较，始终为 false
+// console.log(num === str);
+
+// 若实在有比较不同类型的需求，可以先判断类型
+if (typeof num === typeof str) {
+}
+```
+
+type 可以给类型起别名：
+
+```
+type Obj = { a: number; b: number };
+
+const obj: Obj = { a: 1, b: 2 };
+
+// err ，type 无法重新赋值，无法输出
+// Obj = string;
+// console.log(Obj);
+```
+
+联合类型、获得并集，可以使用 keyof ：
+
+```
+// 联合类型 ------------------------------------------------------------------------------
+type Test1 = number | string;
+
+// type：string
+type test2 = "a" | string;
+
+// type：number
+type Test3 = number | never;
+
+// 联合类型，获得 obj 并集，并的是 obj 而不是 key ---------------------------------------------
+type T1 = { a: number; b: number };
+type T2 = { b: number; c: number };
+type T3 = { b: string; c: number };
+type U1 = T1 | T2;
+
+// 只能是这三种，其他都是 err
+const uo1: U1 = { a: 1, b: 2 };
+const uo2: U1 = { b: 2, c: 3 };
+const uo3: U1 = { a: 1, b: 2, c: 3 };
+
+// 1 2 2 3
+console.log(uo1.a, uo1.b);
+console.log(uo2.b, uo2.c);
+// 2
+console.log(uo3.b);
+
+// err ，并集后，只能使用 "b" ，因为 "a" 、"c" 不在另一个子集
+// console.log(uo3.a, uo3.c);
+
+// 若有相同的 key 且类型不同，则这个 key 的类型变成联合类型
+// 相同的 key ，保留 readonly 和 ? ，因为并集
+type U2 = { a: number; b: number } | { b: string; c: number };
+const uo4: U2 = { a: 1, b: 2, c: 3 };
+const uo5: U2 = { a: 1, b: "a", c: 3 };
+```
+
+交叉类型，获得交集；
+
+```
+// 交叉类型 ----------------------------------------------------------------------------
+// type："a""
+type Test4 = "a" | string;
+
+// type：never
+type Test5 = number & string;
+
+// type：never
+type Test6 = "a" | never;
+
+// 交叉类型，获得 obj 焦集，交的是 obj 而不是 key ------------------------------------------------
+type T1 = { a: number; b: number };
+type T2 = { b: number; c: number };
+type A1 = T1 & T2;
+
+// 只能是这种情况，因为交集必须有两个子集的所有属性
+const ao1: A1 = { a: 1, b: 2, c: 3 };
+
+// 若有相同的 key 且类型不同，则这个 key 变成交叉后的结果，下面是 "2" & string
+// 相同的 key ，去掉 readonly 和 ? ，因为交集
+type T3 = { b: string; c: number };
+type T4 = { b: "2"; c: number };
+type A2 = T3 & T4;
+
+const ao2: A2 = { b: "2", c: 3 };
+
+// 混入，得到交叉类型
+// type：{ a:number, b: never, c: number }
+const ao3 = Object.assign({ a: 1, b: 2 }, { b: "2", c: 3 });
+```
+
+类型推断，当未指定类型时，会自动根据值推断出类型，开发中可以多用这种方式；
+
+```
+// type: number
+let num1 = 1;
+
+// type: 2 ，因为是 const 的基本类型敞亮，类型就被推断为字面量了
+const num2 = 2;
+
+// type: number[]
+const arr1 = [1];
+
+// type：(number | string)[]
+const arr2 = [1, "a"];
+
+// type：{ a: number }
 const obj = { a: 1 };
 
-// true ，字面量对象本是 new Object()
-console.log(obj.__proto__ === Object.prototype);
+// type：() => void
+const func1 = () => {};
 
-// 原型对象也是对象，也有原型，而这个原型对象是 Object 构造的
-// true
-console.log(Person.prototype.__proto__ === Object.prototype);
+// type：() => number
+const func2 = () => 123;
 
-// Object 的原型不再有原型，指向 null
-// null
-console.log(Object.prototype.__proto__);
+// 匿名函数指定了类型，就类型推断
+const func3: (a: number) => void = (a) => {};
+
+// 回调函数也会推断
+type Fn = (a: number) => void;
+const func4 = (fn: Fn) => {};
+// type: a; number
+func4((a) => {});
 ```
 
-数组、函数等都是对象：
+类型收缩，在运行时当分支中判断具体类型时，会自动收缩类型，这也叫类型守卫：
 
 ```
-const arr = [];
-const func = () => {};
+let method: "GET" | "POST";
 
-// true true
-console.log(arr.__proto__ === Array.prototype);
-console.log(func.__proto__ === Function.prototype, "\n");
+// type："GET"
+if (method === "GET") console.log(method);
+// type："POST"
+else if (method === "POST") console.log(method);
 
-// true true ture ，它们的原型对象的原型，即 Object 的原型
-console.log(Array.prototype.__proto__ === Object.prototype);
-console.log(Function.prototype.__proto__ === Object.prototype);
-console.log(Number.prototype.__proto__ === Object.prototype);
-```
-
-ES6 新增的有关圆形的 API：
-
-```
-// 创建 obj ，并指定原型，属性描述符默认都为 false （new Object() 默认为 true）
-function Person() {
-  this.a = 1;
+switch (method) {
+  case "GET":
+    // type："GET"
+    console.log(method);
+  case "POST":
+    // type："POST"
+    console.log(method);
 }
-
-const obj = Object.create(new Person(), {
-  b: {
-    value: 2,
-  },
-});
-
-// 1 2
-console.log(obj.__proto__.a, obj.b, "\n");
-
-// { a: 1 } ，返回 obj 的原型 ----------------------------------------------------------
-console.log(Object.getPrototypeOf(obj), "\n");
-
-// 给 obj 设置新的原型 -----------------------------------------------------------------
-Object.setPrototypeOf(obj, { c: 3 });
-
-// { c: 3 }
-console.log(obj.__proto__), "\n";
 ```
 
-（2）原型链
-
-原形对象和函数都是对象，也有圆形，就形成了原型链，Object new 出原型对象，Function new 出函数：
-
-* Object\.prototype 是最终的原型，没有构造者，网上就是 null
-
-* Function 的 \_\_proto\_\_ 和 prototype 是同一个原型对象
+类型断言，告诉编译器类型，谨慎使用：
 
 ```
-// Array 、Set 等也是一样的
-function Person() {}
-const obj = new Person();
+// 类型断言 -------------------------------------------------------------------------
+type T1 = { a: number; b: number };
+type T2 = { b: number; c: number };
+type Obj = T1 | T2;
 
-const A = obj.__proto__;
-const B = A.__proto__;
-const C = Person.__proto__;
+const obj: Obj = { a: 1, b: 2, c: 3 };
 
-// 都是 true
-console.log(
-  A === Person.prototype,
-  B === Object.prototype,
-  C === Object.__proto__ && C === Function.prototype,
+// err ，并集只能使用 "b"
+// console.log(obj.b);
 
-  // 特殊情况
-  B.__proto__ === null,
-  Function.__proto__ === Function.prototype
-);
-```
+// 梁总方式的类型断言
+console.log((obj as T1).a);
+console.log((<T2>obj).c);
 
-```
-obj ---> __proto__ ---> A ---> __proto__ ---> B ---> null
- |\                    /|\                   /| 
-   \                  /   \                 / |
-    \                /     \               /  |
-     \              /       \             /   |
-     new        prototype   new     rototype  |
-      \           /          \          /     |
-       \         /            \        /      |
-        \       /              \      /       |
-        \      /                \    /        |
-         Person <---- new ----> Object        |
-             \         |          /  |        |
-              \     Function     /   |        |
-               \       |        /    |        |
-               \       |       /     |        |
-                \  prototype  /      |        |
-                 \\    |     /       |        |
-                  \    &    /        |        |
-                   \   |   /         |        |
-                   __proto__         |        |
-                     \ | /           |        |
-                      \|/            |        |
-                       C <--- new ---|        |
-                       |                      |
-                       |----- __proto__ ------|
-```
+// 非空断言 ----------------------------------------------------------------------------
+type T3 = { a?: { aa: number } };
 
-obj instanceof Func ，判断 obj 的原型链上是否能找到 Func\.prototype ：
+function func(obj: T3) {
+  // warn ，obj.a 是可选参数，可能为 undefined
+  // console.log(obj.a.aa);
 
-```
-// true true
-console.log({} instanceof Object, [] instanceof Array);
-
-// true ture
-console.log(Number instanceof Object, Function instanceof Object);
-
-// 都是 false ，无法判断基本数据类型
-console.log(
-  123 instanceof Number,
-  "" instanceof String,
-  undefined instanceof Number,
-  null instanceof Number
-);
-```
-
-原型链的作用是查找属性和方法，当对象自身不存在该属性，会去原型上找，直到 Object 的原型中都没有时，返回 undefined ，这个过程是自动的，不需要手动调用原型，简化了语法：
-
-```
-const obj = { a: 1 };
-
-// 可以在原型上添加自定义的属性、方法
-obj.__proto__.b = 2;
-
-// 1 2 2 ，不用手动找原型，JS 自己就会在原型链上找
-console.log(obj.a, obj.b, obj.__proto__.b);
-
-// undefined ，因为 Object.prototype 中都没有属性 c
-console.log(obj.c);
-```
-
-（3）ES5 继承
-
-```
-/**为了保证原型链的完整性
- * ，实例对象的 __proto__ 和类的 prototype 要保证是一个对象
- * 子类、父类的 prototype 不能是同一个对象
- */
-
-function Person(name) {
-  this.name = name || "person";
-  this.arr = [1];
-  this.run = () => {};
+  // 如果确定不为 undefined ，就可以用非空断言
+  console.log(obj.a!.aa);
 }
-Person.prototype.msg = "person_prototype_msg";
-
-/**原型链继承 -------------------------------------------------------------------------
- * 优点：可继承父类原型
- * 缺点：无法多继承；new 时无法给父构造函数传参
-        一些操作如数组 push 会先 get ，自身没有就会到原型上再 set ，所有实例对象也会修改
- */
-function SonA(age) {
-  this.age = age || 18;
-}
-SonA.prototype = new Person();
-
-const a1 = new SonA(18);
-const a2 = new SonA(18);
-
-// { age: 18 } person person_prototype_msg
-console.log(a1, a1.name, a1.msg);
-
-a1.name = "xxx";
-// xxx person ，由于自己身上没有 name 就直接 set ，而不会去 __proto__
-console.log(a1.name, a2.name);
-
-a1.arr.push(2);
-// [1, 2] [1, 2] ，先 get arr ，所以会去到 __proto__ 再 set ，所有实例对象就都修改了
-console.log(a1.arr, a2.arr, "\n");
-
-/**构造函数继承 --------------------------------------------------------------------
- * 优点：new 时可以给父构造函数传参；可用搓个 call 实现多继承
- * 无法继承父类原型
- */
-function SonB(name, age) {
-  Person.call(this, name);
-  this.age = age || 18;
-}
-
-const b = new SonB("myName", 18);
-
-// { name: "myName", age: 18, arr: [1], run } undefined
-console.log(b, b.msg, "\n");
-
-/**组合继承 --------------------------------------------------------------------
- * 原型链继承 + 构造函数继承
- * 优点：可多继承，可以给父构造函数传参、可继承圆形，由于实例对象已经有父类的属性方法，所以使用这些属性方法不会去原型找，继承的原型就不会被共享
- * 缺点：需要执行两次父构造函数，Child.prototype 的属性方法实际上是不需要的
- */
-function SonC(name, age) {
-  Person.call(this, name);
-  this.age = age || 18;
-}
-SonC.prototype = new Person();
-
-const c = new SonC('myName"', 18);
-
-// { name: "myName", age: 18, arr: [1], run } person_prototype_msg
-console.log(c, c.msg);
-
-/**寄生组合继承 --------------------------------------------------------------------
- * 组合继承的基础上，吧 Child.prototype 变成空对象
- */
-SonC.prototype = Object.create(Person.prototype);
-
-// create 的简化实现
-function func(prototype) {
-  function F() {}
-  F.prototype = prototype;
-  return new F();
-}
-
-// SonC.prototype = func(Person.prototype);
 ```
 
-### 2.2 this
+（2）TS 中与 JS 略有不同以及新增的类型
 
-函数中的 this 只有在调用时，才确定 this 的指向。
-
-（1） this 的 4 种绑定规则
-
-优先级：new \> 显示 \> 隐式 \> 默认 。
-
-默认绑定规则：
-
-- 全局作用域中，浏览器 this 指向 window ，node 的 this 指向 \{\} ：
-  
-  ```
-  // 浏览器中 window window
-  // node 中 {} 和 node 全局对象
-  console.log(this, globalThis);
-  ```
-
-- 函数不通过对象直接调用，而是独立调用，浏览器中指向 window ，node 中指向 node 全局对象，这个 node 全局对象可以用 globalThis 获取。
-  
-  本质就是独立调用的函数是 window.func\(\) 或 globalThis.func\(\) 调用的，所以才指向它们：
-  
-  ```
-  function func1() {
-    console.log(this);
-  }
-  func1();
-  
-  (function func2() {
-    console.log(this);
-  })();
-  
-  function func3() {
-    return function () {
-      console.log(this);
-    };
-  }
-  func3()();
-  
-  function func4(fn) {
-    fn();
-  }
-  func4(function () {
-    console.log(this);
-  });
-  
-  const obj = {
-    func5() {
-      return function () {
-        console.log(this);
-      };
-    },
-  };
-  obj.func5()();
-  ```
-  
-  在严格模式下，这种情况会指向 undefined ，但是不影响全局作用域的 this 和任何作用域的 globalThis ，webpack 、vite 默认都是严格模式。
-  
-  原因是严格模式下，认为独立调用时就是一个普通函数，自然没有 this ：
-  
-  ```
-  "use strict";
-  
-  console.log(this);
-  console.log(globalThis);
-  
-  function func() {
-    console.log(this);
-  }
-  func();
-  ```
-
-隐式绑定规则：
-
-- 对象调用，就指向这个对象：
-  
-  ```
-  const obj = {
-    a: 1,
-    func() {
-      console.log(this);
-    },
-  };
-  
-  // obj
-  obj.func();
-  ```
-
-- 隐式丢失，结果和函数独立调用一样；
-  
-  ```
-  const obj = {
-    a: 1,
-    func() {
-      console.log(this);
-    },
-  };
-  
-  // window 或 node 全局对象，严格模式下是 undefined
-  const fn = obj.func;
-  fn();
-  ```
-* 圆形链上的函数，若 obj 是通过隐式的使用隐式圆形属性调用的，指向 obj ；若是主动加上 \_\_proto\_\_ 调用的，指向圆形对象：
-  
-  ```
-  const obj = {};
-  const op = obj.__proto__;
-  
-  obj.__proto__.func = function () {
-    console.log(this === obj, this === obj.__proto__);
-  };
-  
-  // true false
-  obj.func();
-  
-  // false true
-  obj.__proto__.func();
-  
-  // false true
-  op.func();
-  ```
-
-显示绑定规则：
-
-* call ，apply ，bind 显示修改 this ：
-  
-  ```
-  
-  ```
-
-new 绑定：
-
-* this 指向实例对象：
-  
-  ```
-  function Person() {
-    console.log(this);
-  
-    this.a = 1;
-    this.getThis = function () {
-      console.log(this);
-    };
-  }
-  
-  const obj1 = new Person();
-  obj1.getThis();
-  ```
-
-* 构造函数默认 return this ，使得接收的变量获得实例对象，若修改了 return ，则会得到 retuirn 的对象，不推荐这么做：
-  
-  ```
-  function Person() {
-    console.log(this);
-  
-    this.a = 1;
-    this.getThis = function () {
-      console.log(this);
-    };
-  
-    return { b: 2 };
-  }
-  
-  const obj1 = new Person();
-  
-  // { b: 2 }
-  console.log(obj1);
-  ```
-
-特殊情况：
-
-* 箭头函数没有 this ，也不适用 this 的四种绑定规则，使用 this 其实就是在作用域链中找：
-  
-  ```
-  const obj = {
-    func1: () => {
-      console.log(this);
-    },
-  
-    func2: function () {
-      return () => console.log(this);
-    },
-  
-    func3: () => {
-      return () => console.log(this);
-    },
-  };
-  
-  // 浏览器：window ，node：{} ，在作用域链中找到 this 在全局作用域
-  obj.func1();
-  // 浏览器：window ，node：{} ，箭头函数使用 this 规则无效
-  obj.func1.call(obj);
-  
-  // 浏览器和 node 都是 obj，在作用域链中找到 this 在 func2 局部作用域中，而 func2 是 obj 调用的
-  obj.func2()();
-  
-  // 浏览器：window ，node：node 全局对象，在作用域链中找到 this 在 func2 局部作用域中，而 func2 隐式丢失，相当于独立调用
-  const f = obj.func2;
-  f()();
-  
-  // 浏览器：window ，node：{} ，在作用域链中找到 this 在全局作用域
-  obj.func3()();
-  ```
-
-* API 的回调函数的 this 由内部实现决定，如 Vue 的一般都指向 Vue 实例。但如果回调函数是箭头函数，则不管内部如何实现，this 都只看调用 API 的作用域：
-  
-  ```
-  function api(fn) {
-    const obj = { a: 1 };
-    fn.call(obj);
-  }
-  
-  // obj
-  api(function () {
-    console.log(this);
-  });
-  
-  // 浏览器：window ，node：{} ，在作用域链中找到 this 在全局作用域
-  api(() => {
-    console.log(this);
-  });
-  ```
-
-（2）实例
-
-注意，浏览器 window 和 node 全局对象有一些内置属性；
+字面量类型：
 
 ```
-// ""
-console.log(window.name);
-```
+// 字面量类型的值只能是这个字面量，相当于无法修改，成为一个敞亮
+let num: 123 = 123;
 
-```
-// 浏览器：window.name = 3 ，node：{}.name = 3 ，node 全局对象.name = 4
-// 非严格模式
-globalThis.name = 4;
-this.name = 3;
+// err
+// num = 456;
 
+let obj: { a: 1 } = { a: 1 };
+
+// err
+// obj = {};
+
+// as const ，将成员转为字面量类型 -----------------------------------------------------
+// 类型推断为 { a: string }
 const obj1 = {
-  name: "1",
-
-  fn1() {
-    console.log(this.name);
-  },
-
-  fn2: () => console.log(this.name),
-
-  fn3() {
-    return function () {
-      console.log(this.name);
-    };
-  },
-
-  fn4() {
-    return () => console.log(this.name);
-  },
+  a: "a",
 };
 
+// 类型推断为 { a: "a" }
 const obj2 = {
-  name: "2",
+  a: "a" as const,
 };
 
-// 浏览器：1 2 3 3 ，node：1 2 3 3
-obj1.fn1();
-obj1.fn1.call(obj2);
-obj1.fn2();
-obj1.fn2.call(obj2);
-console.log("\n");
+// 放在最后面则所有成员变为字面量类型
+// type；{ :: "a", b: "b" }
+const obj3 = {
+  a: "a",
+  b: "b",
+} as const;
 
-// 浏览器： 3 2 3 ，node：4 2 4
-obj1.fn3()();
-obj1.fn3().call(obj2);
-obj1.fn3.call(obj2)();
-console.log("\n");
+// 类型推断为联合类型的数组
+const arr1 = [1, "a"];
 
-// 浏览器：1 1 2 ，node：1 1 2
-obj1.fn4()();
-obj1.fn4().call(obj2);
-obj1.fn4.call(obj2)();
+// type：[1, "a"] 的字面量元祖
+const arr2 = [1, "a"] as const;
 ```
 
-### 2.3 深拷贝
-
-引用数据类型，引用（地址）存储在栈内存，用变量接收；属性等存储在堆内存。
-
-浅拷贝只拷贝地址，修改拷贝对象的属性，原始对象也会修改，因为是同一个堆内存空间；而深拷贝则是拷贝全部元素，存放在新开票的堆内存中。
+void 、undefined 、null ：
 
 ```
-const obj1 = { a: 1 };
+// void 的值只有 undefined 、null 两种，通常作为函数的空返回类型
+const v1: void = undefined;
+const v2: void = null;
+const func = (): void => {};
 
-// 浅拷贝
-const obj2 = obj1;
+// 但是 void 类型不 能赋值给 undefined 、null ，联合类型也不行
+const v: void = null;
+// err
+// const u: undefined = v;
+// const n: null = v;
+// const un: undefined | null = v;
 
-obj2.a = 2;
+// undefined 、null 的值只有 undefined 、null 两种
+const u1: undefined = undefined;
+const u2: undefined = null;
+const n1: null = null;
+const n2: null = undefined;
 
-// 2 2
-console.log(obj1.a, obj2.a);
+// undefined 、null 是任何类型的子类型，所有类型都可以是这两种值
+// 在 tsconfig.json 中也可以配置不允许这种情况，达到更严格的类型检查
+const num1: number = undefined;
+const num2: number = null;
+
+// 但上述情况并不规范，可以使用联合类型
+const num4: number | undefined = undefined;
+
+// 为负值为 undefined
+let num3: number;
+console.log(num3);
 ```
 
-深拷贝：
+any 、unknown ：
 
 ```
-// 缺点是 JSON API 自己的限制，优先数据类型无法拷贝
-const func1 = (obj) => JSON.parse(JSON.stringify(obj));
+// any 可以是任何类型，不推荐使用，相当于关闭了类型检查
+// 显示 any
+const num1: any = "a";
+// 隐式 any
+let num2;
 
-// 缺点是只能深拷贝一层
-const func2 = (obj) => ({ ...obj });
+// unknown 是未知类型，有类型检查，相当于类型安全的 any
+let num3: unknown;
+num3 = 1;
+num3 = "a";
+// unknown 类型无法访问属性，而 any 可以
+const obj: unknown = { a: 1 };
+// err
+// obj.a;
 
-/**自己实现
- * NaN，Function，基本数据类型不需要深拷贝，直接返回，Symbol 除外
- * 支持循环引用的深拷贝
- * 支持 Symbol ，Date ，RegExp 的深拷贝
- * 支持对象、数组、Set、WeakSet、Map、WeakMap 的深拷贝
- * 原型上的自定义属性，需要 for in 遍历、方法，比较少用，这里就不实现拷贝了
- */
-function deepCopy(source, hash = new WeakMap()) {
-  // 不需要递归深拷贝的类型
-  const nonRecursionTypes = [
-    "[object Symbol]",
-    "[object Date]",
-    "[object RegExp]",
-  ];
+// any 类型的值可以赋值给任何的类型
+const n1: number = num1;
+// err ，unknown 类型的值只能赋值给 unknown 、any
+// const n2: number = num3;
 
-  // 需要递归深拷贝的类型
-  const recursionTypes = [
-    "[object Object]",
-    "[object Array]",
-    "[object Set]",
-    "[object Map]",
-    "[object WeakSet]",
-    "[object WeakMap]",
-  ];
+// 若 unknown 想要赋值给其他类型，，可以使用类型断言
+const n3 = num3 as number;
+const n4 = <number>num3;
+```
 
-  const type = Object.prototype.toString.call(source);
+never ，表示不存在的状态，或永远无法达到的状态：
 
-  // 1.如果是NaN，函数或基本数据类型（Number,String,Boolean,null,undefined,BigInt），直接返回
-  if (!recursionTypes.includes(type) && !nonRecursionTypes.includes(type))
-    return source;
+```
+// never 表示不存在的类型
+// type：never ，不存在既是 number 又是 string 的类型
+type T = number & string;
 
-  // 2.如果是Symbol，Date或RegExp，简单深拷贝后返回
-  if (nonRecursionTypes.includes(type))
-    return type === "[object Symbol]"
-      ? Symbol(source.description)
-      : type === "[object Date]"
-      ? new Date(source)
-      : new RegExp(source);
+// 应用一，提高代码可维护性 --------------------------------------------------------------
+type Method = "GET" | "POST";
+// type Method = "GET" | "POST" | "DELETE";
 
-  // 3.如果是循环引用，直接return
-  if (hash.has(source)) return hash.get(source);
-  hash.set(source, source);
-
-  // 4.若果是需要递归深拷贝的类型
-  let res = null;
-  switch (type) {
-    case "[object Array]":
-    case "[object Object]":
-      res = Array.isArray(source) ? [] : {};
-      //之所以不直接用for遍历source是因为这样遍历不出键位Symbol的属性，ownKeys才行
-      Reflect.ownKeys(source).forEach((i) => {
-        if (i !== "length" || type === "[object Object]") {
-          res[i] = deepCopy(source[i], hash);
-        }
-      });
+const func1 = (method: Method) => {
+  switch (method) {
+    case "GET":
       break;
-    case "[object Set]":
-    case "[object WeakSet]":
-      res = new Set();
-      for (let i of source) res.add(deepCopy(i, hash));
-      break;
-    case "[object Map]":
-    case "[object WeakMap]":
-      res = new Map();
-      for (let [k, v] of source) res.set(k, deepCopy(v, hash));
+    case "POST":
       break;
     default:
+      // 类型收缩，此时 method 只能是 never
+      // 当给联合类型 Method 添加类型时，default 的类型收缩得到的就不是 never ，此时就会报错，不能把不是 never 的类型赋值给 never
+      const tag: never = method;
       break;
   }
-
-  return res;
-}
-
-// 测试代码
-const obj = {
-  num: 123,
-  bigint: 123456789123456789n,
-  nan: NaN,
-  und: undefined,
-  arr: [1, 2],
-  obj: { a: 1, b: 2 },
-  func: () => 123,
-  null: null,
-  [Symbol("111")]: 111,
-  set: new Set([5, 6]),
-  map: new Map([["key", "value"]]),
-  sym: Symbol("sym"),
-  date: new Date(),
-  reg: new RegExp(),
 };
 
-// 测试循环引用
-const objTest = {
-  obj,
-};
+// 应用二，类型取反 ------------------------------------------------------------------
+type Not<T, U> = T extends U ? never : T;
 
-obj.myself = obj;
-obj.objTest = objTest;
-obj.arr.push(obj.arr);
-obj.set.add(obj.set);
-obj.map.set("m", obj.map);
+// number 取反，除了 number 的类型都接受
+const func2 = <T>(a: Not<T, number>) => {};
+func2("a");
 
-// 输出
-console.log(obj);
-console.log(deepCopy(obj));
+// err
+// func2(123);
 ```
 
-深拷贝也有第三方 API 可以直接使用。
+### 1.2 对象、枚举、数组、函数
 
-### 2.4 异常处理
-
-当代码出错时，会报错并终止运行，可以使用异常处理使报错后不终止运行：
+（1）对象
 
 ```
-try {
-  出错了;
-  console.log("出现异常后，try 中后续代码不会执行，直接进入 catch");
+const oobj1: object = {};
 
-  // 也可以手动抛出异常
-  // throw "myErr";
-} catch (err) {
-  console.log("err\n");
+const obj2: {
+  a: number;
+
+  // 只读属性
+  readonly b: number;
+
+  // 可选属性
+  d?: number;
+
+  // 索引签名，允许添加属性，xxx 可以是任何名字，只是一个描述，通常用 key
+  // key 的类型可以是任何类型，但只是编译时，编译称 JS 后还是 JS 的规则
+  // 索引签名可以用 readonly ，不能用 ?
+  // 若未来需要删除必选属性，只能定义一个新对象类型
+  [xxx: string | symbol]: any;
+  // readonly [xxx: string | symbol]: any;
+} = { a: 1, b: 2 };
+```
+
+（2）枚举
+
+枚举enum，适合在几个值选择时使用：
+
+```
+// 枚举
+enum Method {
+  GET = 0,
+  POST = 1,
 }
 
-// ES9 新特性，catch 可以不 用传入参数
-try {
-} catch {}
+// 数字枚举，若不给值，则从 0 开始
+enum E1 {
+  A,
+  B,
+  C,
+}
 
-// ES9 新特性，新增 finally ，无论是否异常都会执行，且就算 return 、breaqk 、continue 后也会执行
-function test(value) {
-  try {
-    if (value) throw "err";
-    console.log("ok");
-    return "res";
-  } catch {
-    console.log("err");
-  } finally {
-    console.log("finally");
+// 数字增长枚举，无值的会是上一个值 + 1
+enum E2 {
+  A = 1,
+  B = 5,
+  C,
+}
+
+// 字符串枚举，每个都必须有值
+enum E3 {
+  A = "a",
+  B = "b",
+}
+
+const method: Method = Method.GET;
+const e1: E1 = E1.B;
+const e2: E2 = E2.C;
+const e3: E3 = E3.A;
+
+// 0 1 6 "a"
+console.log(method, e1, e2, "a");
+```
+
+枚举可以被 const 修饰，但不能使用 let 、var ：
+
+```
+const enum E1 {
+  A = 0,
+  B = 0,
+}
+
+enum E2 {
+  A = 0,
+  B = 1,
+}
+
+const e1: E1 = E1.A;
+const e2: E2 = E2.A;
+
+// 编译后不同，const 的枚举其实就是单纯赋值
+// var E2;
+// (function (E2) {
+//   E2[(E2["A"] = 0)] = "A";
+//   E2[(E2["B"] = 1)] = "B";
+// })(E2 || (E2 = {}));
+// var e1 = 0;
+// var e2 = E2.A;
+```
+
+数字枚举的反向映射：
+
+```
+// 编译会有 E1["A"] = "a" 的过程
+enum E1 {
+  A = "a",
+}
+
+// 编译会有 E2[E2["A"] = 0] = "A" 的过程，就形成了反向映射
+enum E2 {
+  A = 0,
+}
+
+// { "a": "A", "A": 0 }
+console.log(E2);
+
+// err ，但是无法使用
+// const e: E2 = E2["0"];
+```
+
+（3）数组
+
+数组、伪数组：
+
+```
+// 数组，不定长度 --------------------------------------------------------------------
+// 一维数组
+const arr1: number[] = [];
+const arr2: Array<number> = [];
+
+// 二维数组
+const arr3: number[][] = [];
+const arr4: Array<Array<number>> = [];
+
+// 多种类型的数组
+const arr5: (number | string)[] = [];
+
+// 伪数组 ，number 、string 都行，nember 更直观一点
+// arguments 的类型就是 Arguments
+type Arr1 = {
+  [index: number]: any;
+};
+
+// 数组对象都行，只是对象的 key 要写成 number
+const arr6: Arr1 = [];
+const tup1: Arr1 = [];
+const obj1: Arr1 = {};
+const obj2: Arr1 = { 0: "a" };
+
+// string 也行
+type Arr2 = {
+  [index: string]: any;
+};
+
+const arr7: Arr2 = [];
+```
+
+元祖：
+
+```
+// 元祖、固定长度，且每个元素都固定类型 -------------------------------------------------
+const tup: [number, string, boolean] = [1, "a", true];
+
+// 形参列表也是元祖，"a" 、"b" 只是标识作用
+const args: [a: number, b: string] = [1, "a"];
+
+// 元祖数组
+const tupArr: [number, string][] = [];
+
+// TS 只有元祖可以使用扩展运算符，数组类型、对象类型无法使用 -------------------------------------
+type T1 = [number, string];
+
+// type：[number, string, boolean]
+type T2 = [...T1, ...[boolean]];
+```
+
+（4）函数
+
+```
+const func1: Function = () => {};
+
+// 可以设置可选参数，必须放在必选参数后，剩余参数前
+// 设置了默认值就是可选参数了，不用加 ?
+const func2 = (a: number, b?: number, ...args: any[]) => {};
+
+// 使用元祖实现前置不定量参数
+function func3(...args: [...preArgs: any[], a: number]) {}
+func3("a", 1);
+func3("a", "b", 1);
+```
+
+函数重载，只能重载具名函数：
+
+```
+// 多个函数签名
+function func(): number;
+function func(a: string): string;
+function func(a: boolean): boolean;
+function func(a: number, b: number): void;
+
+// 实现只能有一个，且类型必须涵盖所有重载
+function func(
+  a?: number | string | boolean,
+  b?: number
+): number | string | boolean | void {
+  // 类型守卫
+  if (typepf a === "undefined" && typeof b === "undefined") return 123;
+  else if (typeof a === "string") return "asdf";
+  else if (typeof a === "boolean") return true;
+  else if (typeof a === "number" && typeof b === "number") return;
+}
+
+func();
+func("a");
+func(true);
+func(1, 2);
+```
+
+对象、class 内的函数重载：
+
+```
+// type 也行，只是 class 只能实现接口
+interface Obj {
+  func(): number;
+  func(a: string): string;
+}
+
+function func(a?: string): any {
+  if (typeof a === "undefined") return 123;
+  else if (typeof a === "string") return "asdf";
+}
+
+const obj: Obj = { func };
+
+class A implements Obj {
+  public func = func;
+}
+```
+
+当函数形参是子类型，而实参是父类型无法传入时，可以用重载解决：
+
+```
+type Method = "GET" | "POST";
+
+function func1(method: Method) {}
+
+// 正常
+func1("GET");
+
+// err ，因为 obj 的 method 类型推断为 string ，string 无法传给子类型 "get" | "post"
+const obj = { method: "GET" };
+// func1(obj.method);
+
+// 方法一，用类型断言解决 ---------------------------------------------------------
+func1(obj.method as Method);
+
+// 方法二，函数重载 -----------------------------------------------------------------
+// 类型守卫函数，本来返回值是 boolean ，使用 is 后有更好的提示
+function isMethod(value: any): value is Method {
+  return value === "GET" || value === "POST";
+}
+
+function func2(method: Method): any;
+function func2(method: string): any;
+function func2(method: any) {
+  if (!isMethod(method)) new Error();
+}
+
+func2(obj.method);
+```
+
+### 1.3 其他
+
+（1）JS 内置对象的额类型
+
+```
+const reg: RegExp = /1/;
+
+const date: Date = new Date();
+const now: number = Date.now();
+
+const err: Error = new Error();
+
+const set = new Set<number>([1, 2]);
+const map = new Map<string, number>([["a", 1]]);
+
+const ite: () => ArrayIterator<number> = [1, 2][Symbol.iterator];
+
+new Promise<number>((resolve, reject) => {
+  resolve(123);
+});
+```
+
+（2）DOM 、BOM 类型
+
+```
+const body: HTMLElement = document.body;
+
+const div: HTMLDivElement = document.querySelector("#box");
+
+const items: NodeList = document.querySelectorAll(".item");
+
+div.addEventListener("click", function (e: MouseEvent) {});
+
+const t1: NodeJS.Timeout = setTimeout(() => {});
+```
+
+## 2 类、接口
+
+### 2.1 类
+
+（1）基本
+
+与 JS 略有不同：
+
+```
+class Person {
+  // 省略默认为 public
+  public name: string;
+  private age: number;
+  protected password;
+
+  // readonly 只能修饰属性
+  public readonly sex;
+
+  // 多个修饰符一起使用
+  public static readonly xxx;
+
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+
+    // err ，设置的属性必须已经在类内声明
+    // this.a = 1;
   }
 }
 
-// ok finally res
-console.log(test(false), "\n");
-// err finally undefined
-console.log(test(true), "\n");
+const obj: Person = new Person("asdf", 18);
 
-// finally
-for (let i = 0; i < 10; i++) {
-  try {
-    break;
-    // continue;
-  } finally {
-    console.log("finally");
+// "asdf"
+console.log(obj.name);
+
+// err ，无法访问 private 属性
+// console.log(obj.age);
+
+// 但 private 不是 ES13 的 # 语法层面上的约束，只是类型检查而已，而下面这种方式就能访问 private 属性
+console.log(obj["age"]);
+```
+
+构造函数可以简写：
+
+```
+class Person {
+  // 声明并赋值，除了 static 外都可以
+  constructor(
+    public name: string,
+    private age: number,
+    protected password: string,
+    public readonly sex
+  ) {}
+}
+
+const obj = new Person("asdf", 18, "123456", "male");
+console.log(obj);
+```
+
+（2）装饰器
+
+类似于面向切面编程，若报错，则说明该语法还在实验阶段，需要在 tsconfig\.json 配置：
+
+```
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "experimentalDecorators": true
   }
 }
 ```
 
-### 2.5 数据代理、劫持
-
-（1）ES5 的 Object\.defineProperty
-
-给属性设置访问器、属性描述符：
+使用：
 
 ```
-const obj = {};
-let data = 0;
+// 类装饰器
+const classDes1: ClassDecorator = (target: Function) => {
+  // target 为类的构造函数，可以给原型添加属性方法
+  target.prototype.a = 1;
+};
+const classDes2 = (target: any) => {};
 
-Object.defineProperty(obj, "a", {
-  // 访问器 ---------------------------------------------------------
-  get() {
-    // 设置 getter 后，obj.a 类似于 get(obj, "a")
-    return data;
-  },
-
-  set(newValue) {
-    // 设置 setter 后，obj.a = newValue 类似于 set(obj, "a", newValue)
-    // 不可以 obj.a = newValue ，因为会无线递归 setter
-    data = newValue;
-  },
-
-  // 设置属性的 value
-  // 有了 getter 就不能这样设置 value
-  // value: 123,
-
-  // 三个属性描述符 ----------------------------------------------------
-  // 构造函数、字面量(即 new Object())、class 创建的对象，这三个属性描述符默认都是 true ，而 defineProperty 默认为 false
-
-  // 默认 false ，是否可修改，包括上面是否能以 value 形式修改
-  // 设置了 setter 后，就不能吧 writable: 设为 true ，因为修改已经交给 setter 处理了
-  // writable: true,
-
-  // 默认 false ，是否可枚举，如 for...in ，Object.keys() 等是否能获得这个属性
-  enumerable: true,
-
-  /**默认 false ，false 后：
-   * 属性不可删除
-   * 无访问器时无法添加访问器，若已有访问器也无法去掉
-   * 三个属性描述符不能再修改
-   */
-  configurable: true,
-});
-
-obj.a = 123;
-// 123
-console.log(obj.a);
-
-// ES8 新特性，获取属性描述符信息 -----------------------------------------------------
-console.log(Object.getOwnPropertyDescriptor(obj, "a"));
-
-// 实现数据代理 -----------------------------------------------------------------
-function defineReactive(target, key) {
-  if (!(target instanceof Object)) return;
-
-  // 闭包数据
-  let value = target[key];
-
-  Object.defineProperty(target, key, {
-    get: () => value,
-    set: (newValue) => (value = newValue),
-  });
-}
-
-const o = { a: 1 };
-defineReactive(o, "a");
-o.a = 123;
-// 123
-console.log(o.a);
-```
-
-ES6 新特性，访问器语法糖，可以在对象、构造函数、class 中直接设置访问器：
-
-```
-const obj = {
-  a: 1,
-
-  get b() {
-    return this._b;
-  },
-
-  set b(newValue) {
-    this._b = newValue;
-  },
-
-  // 可以设置多个访问器
-  // get c() {},
-  // set c(newValue) {},
+// 属性装饰器
+const propDes: PropertyDecorator = (target: any, propName: string) => {
+  // target 是类的原型
 };
 
-obj.b = 2;
-
-// 2
-console.log(obj.b);
-// { a: 1m b: [Getter/Setter], _b: 2}
-console.log(obj);
-
-// "a" "b" "_b"
-console.log(Object.keys(obj), "\n");
-
-// 实现数据代理 -----------------------------------------------------------------------
-function ref(value) {
-  // value 是闭包数据
-
-  return {
-    get value() {
-      return value;
-    },
-
-    set value(newValue) {
-      value = newValue;
-    },
-  };
-}
-
-const a = ref(123);
-
-a.value = 456;
-console.log(a.value);
-```
-
-（2）Proxy
-
-ES6 新特性，Proxy 可以实现代理一个对象。
-
-Proxy 可以拦截所有对象的基本操作，如对象属性的读取、修改、添加、删除，判断属性是否存在；数组由于也是对象，所以数组元素的操作也可以拦截。
-
-原理是对象的操作最终都会执行浏览器的内部方法，如 .get() 、.set() 等。
-
-```
-const obj = { a: 1 };
-// const obj = [1, 2];
-
-const p = new Proxy(obj, {
-  // 拦截基本操作 get()
-  get(target, key, receiver) {
-    // return target[key];
-    return Reflect.get(target, key, receiver);
-  },
-
-  // 拦截基本操作 .hasProperty ，如使用 in
-  has(target, key) {
-    // return key in target;
-    return Reflect.has(target, key);
-  },
-
-  // 拦截基本操作 .ownKeys，如使用 for...in
-  ownKeys(target) {
-    return Reflect.ownKeys(target);
-  },
-
-  // 拦截基本操作 .set ，如修改、添加
-  set(target, key, newValue, receiver) {
-    // try {
-    //   target[key] = newValue;
-    //   return true;
-    // } catch {
-    //   return false;
-    // }
-
-    return Reflect.set(target, key, newValue, receiver);
-  },
-
-  deleteProperty(target, key) {
-    // try {
-    //   delete target[key];
-    //   return true;
-    // } catch {
-    //   return false;
-    // }
-
-    return Reflect.deleteProperty(target, key);
-  },
-});
-```
-
-Proxy 中的拦截器建议使用 Reflect ：
-
-- Proxy 的 set 、deleteProperty 这些拦截修改、删除操作的拦截器，需要 return 布尔值表示是否操作成功，通常需要 try\.\.\.catch ，而 Reflect 内部就有 try\.\.\.catch ，也 return 布尔值，使用起来更简洁
-
-- Object 的内部方法是 private 的，开发者无法使用：
-  
-  ```
-  // undefined
-  console.log(Object.get);
-  ```
-  
-  而 Reflect 就有这些方法，在一些特殊情况下必须使用这些基本方法才能实现功能，如 .get() 可以修改 this 指向：
-
-```
-const obj = {
-  a: 1,
-  b: 2,
-  get c() {
-    return this.a + this.b;
-  },
+// 方法装饰器
+const funcDes: MethodDecorator = (
+  target: any,
+  funcName: string,
+  tag: PropertyDescriptor
+) => {
+  // target 是类的原型，tag 是修饰符如 public
 };
 
-const proxy1 = new Proxy(obj, {
-  get(target, key, _) {
-    console.log("get");
-    return target[key];
-  },
-});
+// 参数装饰器
+const paramsDes: ParameterDecorator = (
+  target: any,
+  funcName: string,
+  paramsLoc
+) => {
+  // target 是类的原型，paramsLoc 是参数在形参列表的索引
+};
 
-// 只输出一个 get ，正常应该输出三个，因为 c 用到了 a 和 b
-console.log(proxy1.c, "\n");
+// 可以同时用多个装饰器
+@classDes1
+@classDes2
+class A {
+  // @propDes
+  public name: string;
 
-const proxy2 = new Proxy(obj, {
-  // receiver 即 proxy2 本身
-  get(target, key, receiver) {
-    console.log("get");
+  @funcDes
+  public func(@paramsDes a: number) {}
+}
 
-    // 最后一个参数修改 this 为 proxy2
-    return Reflect.get(target, key, receiver);
-  },
-});
-
-// 三个 get，原因是 proxy1 在 get c 事 this 指向原始对象，而 proxy2 吧 this 指向 receiver ，也就是 proxy2
-console.log(proxy2.c);
+const obj = new A();
+console.log((obj as any).a);
 ```
 
-（3）冻结
+装饰器工厂：
 
-Object\.freeze 冻结一个对象、冻结后无法修改、增加、删除属性、无法设置属性描述符、无法更换圆形、但是冻结对象自身可以赋值成另一个引用：
+（3）控制反转
+
+控制反转（Inversion of Control，IoC）是面向对象的一种设计原则，可以降低代码之间的耦合度，最常见的一种实现方法是依赖注入（Dependency Injection，DI）。
+
+依赖注入就是在创建对象时，将该对象所依赖的其他对象通过参数、属性等方式传递进去，而不是让该对象自己去创建这些依赖对象。这样做的好处是，使得对象之间的依赖关系更加清晰，降低代码的耦合度，同时也更容易进行单元测试和模块化设计。
 
 ```
-// 修改被冻结的对象的属性大多数情况下都会 thrrow error --------------------------------
-let obj = { a: 1 };
-const sameObj = Object.freeze(obj);
+// 未使用依赖注入的例子 ---------------------------------------------------------------------
+// B 类使用 A 类的属性方法，如果修改了 A 类，就需要改动 B 类，形成了耦合
+class A {
+  constructor(public name: string) {}
+}
 
-// true
-console.log(obj === sameObj);
+class B {
+  public name: string;
+
+  constructor() {
+    this.name = new A("asdf").name;
+  }
+}
+
+const obj1 = new B();
+console.log(obj1.name);
+
+// 使用依赖注入 ----------------------------  ----------------------------------
+// 定义一个依赖注入容器
+class Container {
+  private module: any;
+
+  constructor() {
+    this.module = {};
+  }
+
+  public provide(key: string, instance: any) {
+    this.module[key] = instance;
+  }
+
+  public inject(key: string) {
+    return this.module[key];
+  }
+}
+
+const container = new Container();
+
+// 使用
+class C {
+  constructor(public name: string) {}
+}
+
+container.provide("class_A_instance", new A("asdf"));
+
+class D {
+  public name: string;
+
+  constructor(instance: string) {
+    this.name = container.inject(instance).name;
+  }
+}
+
+const obj2 = new D("class_A_instance");
+console.log(obj2.name);
+```
+
+（4）抽象类
+
+当父类涵盖的范围比较大，具体的属性方法不好定义，而且我们也不想实例化这个父类，这时候，就可以使用抽象类，专门用来做继承。抽象类不能被实例化。
+
+抽象类可以有普通类的属性方法构造器，抽象类内还可以写抽象方法
+
+抽象方法：
+
+- 抽象方法，只定义方法的结构，不做具体实现，若不知道方法具体要怎么实现，就先不实现，使用抽象方法
+
+- 抽象方法没有方法体，只能在抽象类/接口内定义，继承的子类必须重写抽象方法来实现
+
+```
+abstract class Person {
+  public abstract func: (a: number) => void;
+}
+
+class A extends Person {
+  // 抽象方法必须重写
+  public func = (a: number): void => {};
+}
+```
+
+### 2.2 接口
+
+接口用来定义类或对象的结构，和 type 的区别：
+
+* 接口只能定义对象类型，而type 可以定义任何的类型
+
+* 接口可以重复声明，type 不行
+
+* 接口可以继承，而 type 不行，但type 也可以用交叉类型实现类似效果
+
+和抽象类的区别：
+
+* 接口的属性不能初始化，而抽象类可以
+
+* 接口的方法不加 abstract 但都是抽象方法，而抽象类可以有普通方法
+
+* 接口的属性方法不能加除 readonly 外的修饰符，而抽象类都可以加
+
+```
+interface A {
+  name: string;
+  func(): void;
+}
+
+/**若重复声明接口
+ * 相同的属性类型、readovly、是否可选必须一样；会加上没有的属性
+ * 相同的方法会被忽略，不会重载
+ */
+interface A {
+  name: string;
+  age: number;
+  func(a: number): void;
+}
+
+interface B {
+  age: string;
+  sex: "male";
+}
+
+// 给对象使用
+const obj: A = {
+  name: "asdf",
+  age: 18,
+  func() {},
+};
+
+// class 实现接口，可以多实现，相当于接口的交叉类型
+class Person implements A, B {
+  constructor(public name: string) {}
+  public age: never;
+  public sex: "male";
+  public func() {}
+}
+
+// 类可以在继承的同时实现接口，也是相当于交叉类型
+// 类无法多继承
+interface C {
+  sex: string;
+}
+class Child extends Person implements C {
+  public sex: "male";
+}
+```
+
+接口扩展，即继承：
+
+```\
+interface A {
+  name: string;
+  func(): void;
+}
+
+interface B {
+  age: number;
+}
+
+// 可以多继承，若有相同的属性则类型必须相同
+interface C extends A, B {
+  // err ，若子接口有相同的属性，则类型必须相同，只能从可选变成必选（反之不行），readonly 无所谓
+  // age: string;
+  // age?: number;
+
+  // err ，子接口不能有同名方法，即不能重写
+  // func(a: number): void;
+
+  sex: boolean;
+}
+
+const obj: C = { name: "asdf", age: 18, sex: true, func() {} };
+```
+
+## 3 泛型
+
+### 3.1 基本
+
+用于建立类型的联系：
+
+```
+function func1<T>(a: T) {}
+
+const func2 = <T>(a: T, b: T) => {};
+
+// 可以使用多个泛型，也可以设置默认类型如 <T = number>
+function func3<T, U>(a: T, b: U) {}
+
+// 传入类型
+func1<number>(123);
+func3<number, string>(1, "a");
+
+// 不传入则类型推断，推断第一个 T 后，后面的所有 T 也会适用
+func2(123, 456);
+
+// class 、。interface 、type 也可以使用泛型
+class Person<T> {}
+
+interface Int<T> {}
+
+type T1<T> = T;
+```
+
+泛型约束，限制泛型只能是某个范围内的类型：
+
+```
+// 限制 T 必须是引用类型 --------------------------------------------------------------
+function func1<T extends object>(obj: T) {}
+
+func1([]);
 
 // err
-try {
-  obj.a = 2;
-} catch {
-  console.log("err");
+// func1(123);
+
+// 限制 K 必须是 T 的 key -------------------------------------------------------------
+function func2<T extends object, K extends keyof T>(obj: T, key: K): any {
+  return obj[key];
 }
+
+// T 、K 都自动推断出来了
+func2({ a: 1 }, "a");
+
+// 类型取反 -------------------------------------------------------------------------------
+type Not<T, U> = T extends U ? never : U;
+
+// 除了 number 外的类型都可以
+function func3<T>(a: Not<number, T>) {}
+
+func3("123");
 
 // err
-try {
-  Object.defineProperty(obj, "a", { value: 3 });
-} catch {
-  console.log("err");
+// func3(123);
+```
+
+泛型应用举例，MySQL 和 MongoDB 的操作可能不同，可以统一一下：
+
+```
+interface DB<T> {
+  add(info: T): boolean;
+  update(info: T, id: number): boolean;
+  get(id: number): boolean;
+  delete(id: number): boolean;
 }
 
-// 1 true
-console.log(obj.a, Object.isFrozen(obj));
-
-// 冻结对象自身可以重新赋值成另一个引用
-obj = { a: 1 };
-obj.a = 11;
-// 11 false
-console.log(obj.a, Object.isFrozen(obj), "\n");
-
-// 浅冻结 --------------------------------------------------------------------------
-// freeze 只能冻结自己，如果冻结对象的属性是一个引用类型，是不会深度冻结的
-const obj1 = { a: 1, deepObj: { b: 2 } };
-Object.freeze(obj1);
-obj1.deepObj.b = 3;
-
-// 3 false
-console.log(obj1.deepObj.b, Object.isFrozen(obj1.deepObj), "\n");
-
-// freeze 前设置了 setter ------------------------------------------------------
-//  只要 set 的目标不是冻结对象的属性，就可以正常 set
-let b = 2;
-const obj2 = {
-  a: 1,
-  get b() {
-    return b;
-  },
-  set b(newValue) {
-    b = newValue;
-  },
-};
-
-function defineReactive(o, k) {
-  let value = o[k];
-
-  Object.defineProperty(o, k, {
-    get() {
-      return value;
-    },
-
-    set(newValue) {
-      value = newValue;
-    },
-  });
-}
-
-defineReactive(obj2, "a");
-Object.freeze(obj2);
-
-obj2.a = 11;
-obj2.b = 22;
-
-// 11 true
-console.log(obj2.a, Object.isFrozen(obj2));
-
-// 22 true
-console.log(obj2.b, Object.isFrozen(obj2));
-
-// Proxy 则不行，因为 set 的毁掉已经到了调用 set() 的阶段了
-const obj3 = { c: 3 };
-const p = new Proxy(obj3, {
-  get: (t, k) => t[k],
-  set(t, k, v) {
-    t[k] = v;
+class MySQL<T> implements DB<T> {
+  public add(info: T): boolean {
     return true;
-  },
-});
-Object.freeze(p);
+  }
+
+  public update(info: T, id: number): boolean {
+    return true;
+  }
+
+  public get(id: number): boolean {
+    return true;
+  }
+
+  public delete(id: number): boolean {
+    return true;
+  }
+}
+
+class MongoDB<T> implements DB<T> {
+  public add(info: T): boolean {
+    return true;
+  }
+
+  public update(info: T, id: number): boolean {
+    return true;
+  }
+
+  public get(id: number): boolean {
+    return true;
+  }
+
+  public delete(id: number): boolean {
+    return true;
+  }
+}
+```
+
+### 3.2 类型安全
+
+（1）子类型
+
+泛型约束 extends 判断是否是子类型，子类型如：
+
+```
+interface Parent {
+  name: string;
+}
+
+interface Child extends Parent {
+  age: number;
+}
+
+// type：Child ，Child 是 Parent 的子类型
+type T1 = Child & Parent;
+
+// type: "a" ，"a" 是 string 的子类型"
+type T2 = "a" & string;
+
+// type："a" ，"a" 是 "a" | "b" 的子类型
+type T3 = ("a" | "b") & "a";
+
+type O1 = { a: number };
+type O2 = { b: number };
+// type：O1 & O2 ，交叉类型是联合类型的子类型
+type T4 = (O1 & O2) & (O1 | O2);
+
+// type：any[] ，数组是对象的子类型
+type T5 = any[] & object;
+
+// type：[] ，空数组、元祖是数组的子类型
+type T6 = [number] & any[];
+
+// type：never [number] ，元祖的子类型只能是自己
+type T7 = [] & [number];
+type T8 = [number] & [number];
+
+// 泛型约束长度为 n 的元祖时，需要得到 n-1 ，n-2 ... [] 的联合类型 -------------------------------
+type SubArgs<A extends any[]> = A extends [...infer PA, any]
+  ? A | PA | SubArgs<PA>
+  : [];
+
+// type：[] | [number] | [number, string]
+type T9 = SubArgs<[number, string]>;
+
+// 测试元祖的泛型约束 extends
+type T10<Tup extends any[], SubTup> = SubTup extends SubArgs<Tup>
+  ? SubTup
+  : never;
+
+// type：[number] ，可以正确判断
+type T11 = T10<[number, string], [number]>;
+```
+
+（2）类型安全
+
+类型安全，保证成员始终可用：
+
+```
+interface Parent {
+  name: string;
+}
+
+interface Child extends Parent {
+  age: number;
+}
+
+// 协变，父类型只能接受子类型，反之不行 -------------------------------------------------------
+const c: Child = { name: "c", age: 1 };
+
+// 类型安全，p 只需要调用 name
+const p: Parent = c;
+
+// err ，类型不安全，因为可能没有 age
+// const cc: Child = p;
+
+// 逆变，协变反过来，但其实还是协变，如下只要关注函数参数，保证类型安全即可 -----------------
+type ReadParent = (p: Parent) => any;
+type ReadChild = (c: Child) => any;
+
+const readParent: ReadParent = (p: Parent) => {};
+const readChild: ReadChild = (c: Child) => {};
+
+// 类型安全，因为 readC 传入的是 Child ，接收的是 Parent
+const readC: ReadChild = readParent;
+// 在 readParent 逆变为 { name: "child" }
+readChild({ name: "child", age: 1 });
+
+// 类型不安全，readP 传入的是 Parent ，接收的是 Child
+// const readP: ReadParent = readChild;
+
+// 如果是返回值，就又是协变了，因为要传给外部 ---------------------------------------------
+type GetParent = () => Parent;
+type GetChild = () => Child;
+
+const getParent: GetParent = () => ({ name: "parent" });
+const getChild: GetChild = () => ({ name: "child", age: 1 });
+
+// 类型安全
+const getP: GetParent = getChild;
+
+// 类型不安全
+// const getC: GetChild = getParent;
+
+// 如果参数和返回值都有，优先协变 ---------------------------------------------------------
+type Func = (p: Parent) => Parent;
+type SubFunc = (c: Child) => Child;
+
+const func: Func = (p: Parent) => ({ name: "name" });
+const subFunc: SubFunc = (c: Child) => ({ name: "child", age: 1 });
+
+// 虽然是协变不报错，但是参数船进去会有问题，因为也存在逆变
+const f: Func = subFunc;
 
 // err
-try {
-  p.c = 33;
-} catch {
-  console.log("err");
-}
+// const sf: SubFunc = func;
 ```
 
-简单实现 freeze ：
+逆变的应用：
 
 ```
-function myFreeze(obj) {
-  if (!(obj instanceof Object)) return obj;
+/**联合类型转交叉类型
+ * 第一步得到 ((x: Obj1) => any) | ((x: Obj2) => any)
+ * 第二部本该得到 O1 | O2 ，但由于函数参与了运算，逆变成子类型 O1 & O2
+ */
+type Obj1 = { a: number };
+type Obj2 = { b: number };
 
-  // 只处理自己的属性，不涉及到圆形
-  const keys = [
-    ...Object.getOwnPropertyNames(obj),
-    ...Object.getOwnPropertySymbols(obj),
-  ];
+type UnionToIntersection<U> = (U extends any ? (x: U) => any : never) extends (
+  x: infer R
+) => any
+  ? R
+  : never;
+// type：O1 & O2
+type T1 = UnionToIntersection<Obj1 | Obj2>;
 
-  for (const key of keys) {
-    Object.defineProperty(obj, key, {
-      // 设置不能修改 value
-      writable: false,
+// 元祖转联合类型 -----------------------------------------------------------------
+type LastOf<T> = UnionToIntersection<
+  T extends any ? () => T : never
+> extends () => infer R
+  ? R
+  : never;
 
-      // 设置不能删除属性、不能设置属性描述符
-      configurable: false,
-    });
-  }
+type Push<T extends any[], V> = [...T, V];
 
-  // 设置不能新增属性、不能更换圆形
-  Object.preventExtensions(obj);
+type UnionToTuple<T, L = LastOf<T>> = [T] extends [never]
+  ? []
+  : Push<UnionToTuple<Exclude<T, L>>, L>;
 
-  // 用 Object.defineProperty 给所有属性设置 configureble 为 false ，并调用 Object.preventExtensions()
-  // Object.seal(obj);
+// type：["a", "b"]
+type T2 = UnionToTuple<"a" | "b">;
 
-  return obj;
-}
+// 元祖转联合类型
+type T3 = T2[number];
 ```
 
-## 3 函数式编程
+### 3.3 类型运算
 
-（1）纯函数
-
-相同的输入都能得到同样的结果，且无副作用的函数就是纯函数：
-
-* 如 Array 的 push 会修改原数组，那么每次得到的输出就不一样，就不是纯函数
-
-* 无副作用，即不会修改外部作用域的变量，没有定时器、修改 DOM 等异步操作
+（1）type
 
 ```
-// 纯函数
-function func1(a, b) {
-  return a + b;
-}
+type Obj = { a: number };
 
-// 非纯函数
-let a = 0;
-function func2() {
-  // 返回值依赖外部变量，而外部变量是不确定的，可能会被修改
-  return a + 1;
-}
-function func3(arr) {
-  // 修改了外部作用域的 arr ，产生了副作用
-  arr[0] = 1;
-}
+// type：number ，可以用索引获取类型，若不存在则 err
+type ObjA = Obj["a"];
 
-function func3() {
-  // 副作用
-  setTimeout(() => {});
-}（2）高阶函数
-```
+// type：string ，数组类型用 number 类型作索引得到元素的类型
+type ObjK = string[][number];
 
-形参或返回值是 function 的函数，就是高阶函数，其中作为形参的函数称为回调函数
+// 配合泛型约束 extends 可以用三目运算符
+type Not<T, U> = T extends U ? never : U;
 
-```
-function func1(fn) {
-  fn();
-}
-
-function func2() {
-  return function () {};
-}
-
-function func3(fn) {
-  fn();
-  return function () {};
-}
-
-// 纯粹的函数式编程中没有对象，但 JS 混合了多种编程思想，所以 JS 中这样也算高阶函数
-function func4(options) {
-  options.fn();
-}
-```
-
-（3）惰性函数
-
-当函数中某些逻辑只需要执行一次时，就可以写成惰性函数，提高性能：
-
-```
-function nextTick(callback) {
-  if (Promise) {
-    nextTick = function (callback) {
-      Promise.resolve().then(callback);
-    };
-  } else {
-    nextTick = function (callback) {
-      setTimeout(() => callback);
-    };
-  }
-
-  // 执行修改后的函数
-  nextTick(callback);
-}
-```
-
-```
-// 另一种方式，在项目最开始就判断，缺点是会增加初始化时间
-const nextTick = ((callback) => {
-  if (Promise) return (callback) => Promise.resolve().then(callback);
-  else return (callback) => setTimeout(() => callback);
-})();
-```
-
-（4）闭包
-
-编译原理的概念，只要函数形成了嵌套，且内部函数使用了外部函数的资源，那么内部函数就变成了闭包，即使外部函数被垃圾回收了，闭包使用的资源依然存在，这是非常合理的，因为内部函数还在使用就不应该被垃圾回收。
-
-直到闭包函数也被垃圾回收了，闭包的资源才会被垃圾回收：
-
-- 优点：缓存资源；也可以在外面按照自己的规则访问函数的私有资源
-
-- 缺点：不会被垃圾回收，使用不慎就会加大内存消耗，低版本 IE 则会内存泄漏，解决方法是把不适用的闭包设为 null
-
-```
-const func1 = (...args) => {
-  let num = 0;
-
-  // 内部函数使用了形参和 num ，这两个变量都不会被垃圾回收
-  return () => console.log(args[0]++, num++);
-};
-
-const func2 = (...args) => {
-  let num = 0;
-
-  // z这样也是函数嵌套，这种方式通常用来实现私有资源，只给外部提供 get 方法访问资源
-  return {
-    getNum: () => console.log(args[0]++, num++),
-  };
-};
-
-const func3 = () => {
-  const a = 1;
-
-  // 这也是函数嵌套，也形成了闭包，只不过内部函数没有被外部使用，已经被垃圾回收了
-  const func = () => a;
-};
-
-let f1 = func1(0),
-  f2 = func2(0);
-
-// 0 0 0 0
-f1();
-f2.getNum();
-
-// 1 1 1 1 ，
-f1();
-f2.getNum();
-
-// 手动回收闭包
-f1 = null;
-f2.getNum = null;
-```
-
-（5）面向切面编程
-
-将函数的核心功能和非核心功能分开，在适当的时候可以给有核心功能的函数添加一些非核心功能；
-
-实现方式一：
-
-```
-function AOP(fn, before, after) {
-  return function (...args) {
-    before?.call(this, ...args);
-    fn?.call(this, ...args);
-    after?.call(this, ...args);
-    ``;
-  };
-}
-
-// -----------------------------------------------------------------------------
-const obj = {
-  func1() {
-    console.log("func1");
-  },
-
-  func2(a, b) {
-    console.log("func2", a, b);
-  },
-};
-
-const func1 = AOP(
-  obj.func1,
-  function (...args) {
-    console.log("func1 before", this === obj, ...args);
-  },
-  function (...args) {
-    console.log("func1 after", this === obj, ...args);
-  }
-);
-
-// func1 before true
-// func1
-// func1 after true
-func1.call(obj, "\n");
-
-const func2 = AOP(
-  obj.func2,
-  function (...args) {
-    console.log("func2 before", this === obj, ...args);
-  },
-  function (...args) {
-    console.log("func2 after", this === obj, ...args);
-  }
-);
-
-// func2 before true 1 2
-// func2 1 2
-// func2 after true 1 2
-func2.call(obj, 1, 2);
-```
-
-实现方式二：
-
-```
-Function.prototype.before = function (beforeFn) {
-  const fn = this;
-
-  return function (...args) {
-    beforeFn.call(this, ...args);
-    fn.call(this, ...args);
-  };
-};
-
-Function.prototype.after = function (afterFn) {
-  const fn = this;
-
-  return function (...args) {
-    fn.call(this, ...args);
-    afterFn.call(this, ...args);
-  };
-};
-
-// -------------------------------------------------------------------------------
-const obj = {
-  test(...args) {
-    console.log("test", this === obj, ...args);
-  },
-};
-
-const fullTest = obj.test
-  .before(function (...args) {
-    console.log("before", this === obj, ...args);
-  })
-  .after(function (...args) {
-    console.log("after", this === obj, ...args);
-  });
-
-// before true 1 2
-// test true 1 2
-// after true 1 2
-fullTest.call(obj, 1, 2);
-```
-
-（6）柯里化
-
-处理一个原函数，固化其某些参数（即闭包这些参数），并生成一个新函数，新函数只需要传入剩下的参数即可。柯里化通尝将多参函数转化为参数更少的函数或单参函数。
-
-如果一个函数需要被使用多次，且其中某些参数是不变的，就可以使用柯里化，后续只需要使用新生成的函数，传入剩下的参数即可：
-
-```
-function currv(fn, ...preArgs) {
-  return (...args) => {
-    const totalArgs = [...preArgs, ...args];
-
-    // 如果参数足够 fn 使用，就调用 fn
-    if (totalArgs.length >= fn.length) return fn.apply(this, totalArgs);
-    // 否则继续 currv
-    else return currv.call(this, fn, ...totalArgs);
-  };
-}
-
-const sum1 = currv(function (a, b) {
-  return a + b;
-}, 10);
-
-// 30
-console.log(sum1(20));
-// 40
-console.log(sum1(30), "\n");
-
-const sum2 = currv(function (a, b, c) {
-  return a + b + c;
-}, 10);
-
-// 50
-console.log(sum2(20, 20));
-// 80
-console.log(sum2(30, 40), "\n");
-
-const sum3 = sum2(20);
-// 70 ，10+20+40
-console.log(sum3(40));
-```
-
-（7）函数管道
-
-将多个单参函数组合成一个新的单参函数，上一个单参函数的输出会作为下一个单参函数的输入。若传入的不是单参函数，则需要 currv ：
-
-```
-function pipe(...fns) {
-  return (value) => fns.reduce((pre, fn) => fn.call(this, pre), value);
-}
-
-const obj = {
-  num1: 2,
-  num2: 1,
-
-  double(n) {
-    return n * this.num1;
-  },
-
-  add(n) {
-    return n + this.num2;
-  },
-};
-
-const func = pipe.call(obj, obj.double, obj.add);
-
-// 5 ，2*2+1
-console.log(func(2));
-```
-
-（8）防抖、节流
-
-有对应的库：
-
-```
-npm install --save lodash
-```
-
-防抖、节流的作用都是为了限制执行次数，减少函数不必要的执行，优化性能，区别是：
-
-- 防抖：在一段时间内只允许执行一次，若在此时间段内再次触发，则重新计时
-
-- 节流：在一段时间内只允许执行一次，可以在开头或结尾执行
-* 有些场景防抖、节流都不合适，如上拉加载更多，这时候就用一个 flag 判断是否执行即可。
-
-```
-npm install --save @types/node
-```
-
-```
-function debunce<T extends any[]>(
-  func: (...args: T) => any,
-  delay: number = 1000
-) {
-  let timer: number | null = null;
-
-  return function (...args: T): void {
-    clearTimeout(Number(timer));
-    timer = setTimeout(() => func.call(this, ...args), delay);
-  };
-}
-
-function throttle<T extends any[]>(
-  func: (...args: T) => any,
-  delay: number = 1000,
-  immediate: boolean = true
-) {
-  let timer: number | null = null;
-
-  return function (...args: T): void {
-    if (!timer) {
-      immediate && func.call(this, ...args);
-
-      timer = setTimeout(() => {
-        timer = nul;
-        immediate || func.call(this, ...args);
-      }, delay);
-    }
-  };
-}
-```
-
-## 4 常用 JS 操作
-
-（1）判断数据类型
-
-```
-// typeof ，有设计缺陷，null 、Array 、Set 、Map 、WeakSet、WeakMap 都直接判断成 "object" ，而 function 则判断为 "function"
-
-// "number" "string" "boolean" "undefined" "symbol" "bigint"
-console.log(
-  typeof 1,
-  typeof "'",
-  typeof true,
-  typeof undefined,
-  typeof Symbol(),
-  typeof 1n
-);
-
-// 都是 "object"
-console.log(
-  typeof null,
-  typeof [],
-  typeof new Set(),
-  typeof new Map(),
-  typeof new WeakSet(),
-  typeof new WeakMap()
-);
-
-class Person {}
-// 都是 "function"
-console.log(typeof (() => {}), typeof Person);
-```
-
-```
-// true
-console.log(Array.isArray([]));
-```
-
-```
-// toString ，所有类型都能正常判断
-
-// "[object Undefined]" , 都是这种格式
-console.log(Object.prototype.toString.call(undefined));
-
-// 自定义输出结果
+// typeof value ，获取值的类型
 const obj = { a: 1 };
-obj[Symbol.toStringTag] = "MyType";
-// "[object MyType]"
-console.log(Object.prototype.toString.call(obj));
+const f = () => {};
+type Obj1 = typeof obj;
+type F = typeof f;
 
-// 默认情况下 Symbol.toStringTag 是 undefined ，但 async 函数就有设置
-// AsyncFunction
-console.log(async function () {}[Symbol.toStringTag]);
+// 具名函数和 class 构造函数的类型也可以用 typeof 获取
+function func() {}
+class A {}
+type Constructor1 = typeof func;
+type Constructor2 = typeof A;
 ```
 
-```
-// 判断是否是 Proxy
 
-// 方法一，拦截 new ，可以做复杂的逻辑，如判断是第几层 Proxy --------------------------------------
-Proxy = new Proxy(Proxy, {
-  construct(target, argsList) {
-    const result = new target(...argsList);
 
-    const originType = Object.prototype.toString
-      .call(result)
-      .slice(1, -1)
-      .split(" ")[1];
-
-    result[Symbol.toStringTag] = `Proxy.${originType}`;
-
-    return result;
-  },
-});
-
-const p = new Proxy([1, 2, 3], {});
-const pp = new Proxy(p, {});
-
-// [object Proxy.Proxy.Array] 表示代理两次的 Array
-console.log(Object.prototype.toString.call(p));
-
-// 方法二 ---------------------------------------------------------------------------------
-// const p = new Proxy(
-//   { a: 1 },
-//   {
-//     get(target, key) {
-//       if (key === Symbol.toStringTag) return "Proxy";
-//       return target[key];
-//     },
-//   }
-// );
-// "[object proxy]"
-// console.log(Object.prototype.toString.call(p));
-```
-
-（2）数据类型转换
-
-类型转换规则：
-
-- 原始值转原始值：
-  
-  ```
-  /**规则
-   * 转为 number：
-     - boolean: true -> 1 ，false -> 0
-     - string: "" " " "\n" -> 0，"3.14" -> 3.14 ，" 2 " -> 2 ，"1 2" -> NaN ，
-               "2n" -> NaN ，"true" -> NaN ，"2n" -> NaN
-     - undefined -> NaN ，null -> 0
-     - Symbol：无法转换，强制类型转换都不行
-     - BigInt：无法隐式，但强制可以
-  
-   * 转为 string：
-     - 3.14 -> "3.14" ，true -> "true" ，NaN -> "NaN" ，null -> "null" ，
-       undefined -> "undefined"
-     - Symbol：无法隐式转换，但是强制类型转换可以
-     - BigInt：2n -> "2"
-  
-   * 转为 boolean
-     - 非空值意义时转为 true：如 1 ，"asdf"" ，包括 Symbol
-     - 具有空值、否定意义时转为 false ，如 0 ，"" ，" " ，NaN ，null ，undefined
-   */
-  ```
-
-- 引用类型转原始值：
-  
-  ```
-  /**规则
-   * 按照 Symbol.toPrimitive > valueOf > toString 的优先级调用这些函数，其中 valueOf 和 toString 在原型链上有
-   * 上一步转为原始值后， 再进行原始值到原始值的类型转换
-   * 特殊情况：转为 boolean 直接全部转为 true ，包括空数组、空对象
-   */
-  // 自定义这 3 个函数 ----------------------------------------------------------------
-  var obj1 = {
-    [Symbol.toPrimitive]: function () {
-      // 必须 re turn 原始值 ，否则在运算时直接报错，不再去找 valueOf 和 toString
-      return 123;
-    },
-  };
-  
-  var obj2 = {
-    valueOf: function () {
-      // 自定义 valueOf 不必须 return 原始值，若 return 引用，运算时也不会报错，会直接忽略这次执行结果，这是历史遗留问题
-      // 因此 return 引用时，忽略，会再去调用 toString
-      return 456;
-    },
-  };
-  
-  var obj3 = {
-    toString: function () {
-      // 自定义 toString 必须 return 原始值，否则运算时直接报错
-      return 789;
-    },
-  };
-  
-  // 124 457 790
-  console.log(obj1 + 1, obj2 + 1, obj3 + 1, "\n");
-  
-  // 默认的 valueOf 和 toString ---------------------------------------------------------
-  // valueOf 都是返回自己，所以一般默认的 valueOf 都无效，会再去找 toString
-  var objValueOf = Object.prototype.valueOf,
-    arrValueOf = Array.prototype.valueOf,
-    funcValueOf = Function.prototype.valueOf,
-    setValueOf = Set.prototype.valueOf,
-    mapValueOf = WeakSet.prototype.valueOf,
-    weakSetValueOf = Map.prototype.valueOf,
-    weakMapValueOf = WeakMap.prototype.valueOf;
-  
-  var obj = {},
-    arr = [],
-    func = function () {},
-    set = new Set(),
-    map = new Map(),
-    weakSet = new WeakSet(),
-    weakMap = new WeakMap();
-  
-  // 都是 true
-  console.log(
-    objValueOf.call(obj) === obj,
-    arrValueOf.call(arr) === arr,
-    funcValueOf.call(func) === func,
-    setValueOf.call(set) === set,
-    mapValueOf.call(map) === map,
-    weakSetValueOf.call(weakSet) === weakSet,
-    weakMapValueOf.call(weakMap) === weakMap,
-    "\n"
-  );
-  
-  // toString ，Array 和 Function 重写了 toString
-  var objToString = Object.prototype.toString,
-    arrToString = Array.prototype.toString,
-    funcToString = Function.prototype.toString,
-    setToString = Set.prototype.toString,
-    mapToString = Map.prototype.toString,
-    weakSetToString = WeakSet.prototype.toString,
-    weakMapToString = WeakMap.prototype.toString;
-  
-  // "[object Array]"
-  console.log(objToString.call({}), "\n");
-  
-  // “【object Set】” 等,没有重写 toString ，都是 Object.prototype 的 toString
-  console.log(setToString.call(new Set([])));
-  console.log(mapToString.call(new Map([])));
-  console.log(weakSetToString.call(new WeakSet([])));
-  console.log(weakMapToString.call(new WeakMap([])), "\n");
-  
-  // "" "0" "1" "1,2"
-  console.log(arrToString.call([]));
-  console.log(arrToString.call([0]));
-  console.log(arrToString.call([2]));
-  console.log(arrToString.call([1, 2]));
-  
-  // "(a) => a" ，即整个函数的内容
-  // ES10 新特性，会保留空格和换行符
-  console.log(
-    funcToString.call((a) => a),
-    "\n"
-  );
-  ```
-
-表达式运算中的隐式类型转换：
-
-任何运算的双方都必须是原始值，否则将会隐式类型转换，运算结果也是一个原始值：
+（2）keyof
 
 ```
-/**算术运算 ---------------------------------------------------------------------------
- * 除了 string 外的原始值运算，全部转为 number ：
- * - NaN 和任何 number 运算都为 NaN ，包括 NaN 自己
- * 有 string 和引用类型参与的运算：
-   - 加法运算：全部转为 string ，引用类型转为原始值后再转为 string ，进行字符串拼接
-   - 其他运算：全部转为 number ，引用类型转为原始值后再转为 number ，进行算数运算
+type Obj = { a: number; b: number };
+
+// 得到所有 key 形成的联合类型 ----------------------------------------------------------
+// type："a" | "b"
+type K1 = keyof Obj;
+
+// type：string | symbol | number ，内置类型有些是对象类型
+type K2 = keyof any;
+type K3 = keyof never;
+
+// 得到一堆 key 形成的联合类型，因为也是对象类型
+// number ，string ，boolan ，symbol
+type K4 = keyof number;
+
+// type："length" | ... 等等
+type K5 = keyof Number[];
+
+// type："0" | "1" | "length" | ... 等等
+type K6 = keyof [number, string];
+type K7 = keyof [a: number, b: number];
+
+// type：never
+type K8 = keyof unknown;
+type K9 = keyof void;
+type K10 = keyof null;
+type K11 = keyof undefined;
+```
+
+（3）\|
+
+前置的 \| 会分开运算，如：
+
+```
+// 联合类型、交叉类型运算 --------------------------------------------------------------
+// type："a" | "b" ，等价于 ("a" & string) | ("b" & string) | (1 & string)
+type T1 = "a" | "b" | (1 & string);
+
+// 去掉 Symbol key
+// type："a"
+type T2 = keyof { a: number; [sym: symbol]: number } & string;
+
+// 模板字符串，只能用于字面量字符串类型，通常配合联合类型，运算规则和上面一样
+// symbol 无法做任何运算，所以也会配合 T2
+// type："mouseEvent" | "inputEvent"
+type T3 = `${"mouse" | "input"}Event`;
+
+// 联合类型、extends 运算 ----------------------------------------------------------
+type MyExclude<T, U> = T extends U ? never : T;
+
+/**type："a" | "c"" ，等价于：
+ * ("a" extends "b") ? never : "a" |
+   ("b" extends "b") ? never : "b" |
+   ("c" extends "b") ? never : "c"
  */
-// NaN NaN
-console.log(NaN + 1, NaN + NaN);
+type T4 = MyExclude<"a" | "b" | "c", "b">;
+```
 
-// NaN 1
-console.log(undefined + 1, null + 1);
+（4）in
 
-// "21" "2n" "3.14" "true" "undefined" "null" "NaN"
-console.log(
-  2n + "1",
-  "2n" + "1",
-  3.14 + "",
-  true + "",
-  undefined + "",
-  null + "",
-  NaN + ""
-);
+```
+// 映射类型，便利一个联合类型并得到各个 key ，相当于反向 keyof -------------------------------
+type T1 = {
+  // 设置了映射类型就不能设置其他 key
+  // 可以用 readonly 和 ? 修饰
+  [xxx in "a" | "b"]: number;
 
-// "1" "21" "1,21" "[object Object]123" "() => {}123" "null" "NaN"
-console.log(
-  [] + 1,
-  [2] + 1,
-  [1, 2] + 1,
-  {} + 123,
-  (() => {}) + 123,
-  [] + null,
-  [] + NaN
-);
+  // 与上面等价，有 & 就先运算为联合类型
+  // [xxx in "a" | ("b" & striung)]: number;
+};
+const obj: T1 = { a: 1, b: 2 };
 
-// NaN -1 -1 1 1.14 1 NaN 1
-console.log(
-  "2n" - 1,
-  "" - 1,
-  " " - 1,
-  " 2 " - 1,
-  "3.14" - "2",
-  "2" / 2,
-  "1" - NaN,
-  "1" - null
-);
+// type：number ，内置类型有些也是对象类型，下面这么做其实还是得到 number
+type T2 = {
+  [key in keyof number]: number[key];
+};
+const num: T2 = 123;
 
-// -1 2 NaN NaN NaN 123,5
-console.log(
-  [] - 1,
-  [2] - 0,
-  [1, 1] - 1,
-  {} - 1,
-  (() => {}) - 1,
-  "123" + [4, 5]
-);
+// 数组也是一样得到数组
+type Tup = [number, string];
+type T3 = {
+  [Index in keyof Tup]: Tup[Index];
 
-// err ，Symbol 和 BigInt 无法隐式转为 number ，Symbol 无法隐式转为 string
-try {
-  // console.log(Symbol() + 1, "\n");
-  // console.log(0n + 1, "\n");
-  console.log(Symbol() + "", "\n");
-} catch (err) {
-  console.log("err\n");
+  // 两种等价，比起上面少了 "length" 等
+  // [Index in "0" | "1"]: Tup[Index];
+  // [Index in 0 | 1]: Tup[Index];
+};
+const tup: T3 = [1, "a"];
+
+// 可以起别名和过滤属性
+type T4 = {
+  // type：{ keyA: any, keyB: any } ，Capitalize 是字面量字符串首字母大写的内置泛型工具
+  // [key in "a" | "b" as `key${Capitalize<key>}`]: any;
+
+  // type：{} ，key 为 never 就去掉
+  // [key in "a" | "b" as never]: any;
+
+  // type：{ a: any, c: any } ，筛选属性
+  [key in "a" | "b" | "c" as key extends "a" | "c" ? key : never]: any;
+};
+```
+
+（5）infer
+
+借助 TS 的类型推断，设计类型工具：
+
+```
+// 获取函数返回值类型
+type Reture<T> = T extends (...args: any[]) => infer R ? R : T;
+// type：number
+type R = Reture<() => number>;
+
+// 获取函数第一个形参的类型
+type First<T> = T extends (first: infer F, ...args: any[]) => any ? F : T;
+// type：number
+type F1 = First<(a: number) => void>;
+// type：unknown
+type F2 = First<() => void>;
+
+// 获取数组元素的类型
+type ArrayType<T> = T extends (infer U)[] ? U : T;
+// type：number
+type U1 = ArrayType<number[]>;
+// type：number | string
+type U2 = ArrayType<[number, string]>;
+
+// 获取元祖首尾元素形成的联合类型，可以配合扩展运算符
+type TupleFirst<T> = T extends [infer first, ...infer args, infer last]
+  ? first | last
+  : T;
+// type：number | boolean
+type TU1 = TupleFirst<[number, string, boolean]>;
+
+// 获取元祖剩下的元素
+type RemainArgs<A extends any[], PA extends PreArgs<A> | A> = A extends
+  | [...PA, ...infer Reamin]
+  | A
+  ? Reamin
+  : A;
+// type：[a: number, c:number]
+type TU2 = RemainArgs<[a: number, b: number, c: number], [a: number]>;
+
+// 递归 infer --------------------------------------------------------------------------
+// 多维数组需要递归
+type DeepArrayType<T> = T extends (infer F)[] ? DeepArrayType<F> : T;
+// type：number
+type D = DeepArrayType<number[]>;
+
+// 获取 Promise resolve 的类型，因为 resolve 的参数肯呢还是 Promise ，所以需要递归 infer
+type PromiseType<T> = T extends Promise<infer V> ? PromiseType<V> : T;
+// type：number
+type V = PromiseType<Promise<Promise<number>>>;
+
+// 翻转元祖类型
+type ReverseTuple<T> = T extends [infer first, ...infer args]
+  ? [...ReverseTuple<args>, first]
+  : T;
+// type：[string, number]
+type rt = ReverseTuple<[number, string]>;
+```
+
+### 3.4 Utility Types
+
+TS 内置的类型工具。
+
+（1）基本
+
+```
+// 筛选联合类型的某些类型
+// type："a" | "b"
+type T1 = Extract<"a" | "b" | "c", "a" | "b">;
+type MyExtract<T, U> = T extends U ? T : never;
+
+// 去掉联合类型的某些类型
+// type："a" | "b"
+type T2 = Exclude<"a" | "b" | "c", "c">;
+type MyExclude<T, U> = T extends U ? never : T;
+
+// 去掉联合类型的 null 和 undefined
+// type：number
+type T3 = NonNullable<number | null | undefined>;
+type MyNonNullable<T> = T extends null | undefined ? never : T;
+```
+
+（2）函数相关
+
+```
+// 获得返回值类型
+// type：number
+type T1 = ReturnType<() => number>;
+type MyReturnType<T> = T extends (...args: any[]) => infer R ? R : T;
+
+// 获得形参列表
+// type：[a:number, b:number]
+type T2 = Parameters<(a: number, b: number) => void>;
+type MyParameters<T> = T extends (...args: infer A) => any ? A : never;
+
+// 获得构造函数实例化对象的类型 ---------------------------------------------------------
+class Obj {
+  public a: number = 1;
 }
 
-// 逻辑运算，全部转为 boolean ------------------------------------------------------------
-if (
-  1 &&
-  -1 &&
-  1.0 &&
-  1n &&
-  "false" &&
-  Symbol() &&
-  [] &&
-  {} &&
-  (() => {}) &&
-  !(0 || -0 || 0.0 || 0n || NaN || "" || undefined || null) &&
-  !![]
-) {
-  console.log("boolean\n");
-}
-
-/** 比较运算 ----------------------------------------------------------------------------
- * 类型相同时，直接比较 value （相同引用类型则比较地址），不会类型转换；类型不同时，全部转为 number ：
-   - 引用类型先转为原始值，再转为 number
- * 特殊情况：
-   - NaN 和任何数值比较都为 false ， 包括和 NaN 自己
-   - undefined == null 不转为 number ，直接返回 true
- */
-// true
-console.log("true" == "true");
-
-// false true
-console.log(NaN == NaN, undefined == null);
-
-// false false false
-console.log("false" == false, "false" == true, undefined == NaN);
-
-// true false
-console.log([0] == false, [0] == [0], "\n");
+// type：{ a: number }
+type T3 = InstanceType<typeof Obj>;
+type MyInstanceType<T> = T extends new (...args: any[]) => infer R ? R : T;
 ```
 
-包装类中的隐式类型转换：
+（3）对象类型相关
 
 ```
-const str1 = "asdf";
+// 所有属性变成可选属性
+// type：{ a?: number}
+type T1 = Partial<{ a: number }>;
+type MyPartial<T> = { [key in keyof T]?: T[key] };
 
-// str 生成一个临时包装类 String 对象，吧 "a" 设置为 “1”
-str1.a = "1";
+// 所有属性变成必选属性
+// type：{ a: number }
+type T2 = Required<{ a?: number }>;
+type MyRequired<T> = { [key in keyof T]: T[key] };
 
-// undefined ，str 和临时生成的 String 包装类不是同一个
-console.log(str1.a);
+// 所有属性变成 readonly
+// type：{ readonly a: number }
+type T3 = Readonly<{ a: number }>;
+type MyReadonly<T> = { readonly [key in keyof T]: T[key] };
 
-// 同理，生成了临时包装类 String 对象，而且 String 也部署了 iterator
-const [s1, s2] = str1;
-// "a" "s"
-console.log(s1, s2);
+// 筛选需要的对象属性
+// type: { a: number, b: number }
+type T4 = Pick<{ a: number; b: number; c: number }, "a" | "b">;
+type MyPick<T, K extends keyof T> = { [key in K]: T[key] };
 
-const str2 = new String("asdf");
-str2.a = "1";
-// 1
-console.log(str2.a);
+// 去掉不需要的对象属性
+// type：{ c: number }
+type T5 = Omit<{ a: number; b: number; c: number }, "a" | "b">;
+type MyOmit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+
+// 生成一个所有 key 都是相同 value 的类型
+// type：{ a: number, b: number }
+type T6 = Record<"a" | "b", number>;
+type MyRecord<K extends keyof any, T> = { [key in K]: T };
 ```
 
-强制类型转换：
-
-都不改变原始数据：
+（4）自定义
 
 ```
-var n = 1;
-var str = "3.14";
+// 部分可选
+type SubPartial<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
+// type：{ a?: number, b?:number, c:number }
+type T1 = SubPartial<{ a: number; b: number; c: number }, "a" | "b">;
 
-// "1" "1"
-console.log(n.toString(), String(n));
-
-// 3 3.14 3.14
-console.log(Number.parseInt(str), Number.parseFloat(str), Number(str));
-
-// 都是 false
-console.log(Boolean(null), Boolean(undefined), Boolean(NaN), Boolean(""));
-
-// 都是 true
-console.log(Boolean([]), Boolean({}));
-
-// "Symbol()" "Symbol(123)" true ， SYMbol 只能强制转换为 string 、boolean
-console.log(String(Symbol()), String(Symbol("123")), Boolean(Symbol()));
-
-// err
-try {
-  console.log(Number(Symbol()));
-} catch (err) {
-  console.log("err");
-}
-```
-
-（3）数组、对象判空
-
-```
-const arr = [], obj = {};
-
-// 推荐做法
-// true ，数组判空
-console.log(Array.isArray(arr) && arr.length === 0);
-// true true ，对象判空
-console.log(Object.keys(obj).length === 0);
-console.log(Object.getOwnPropertyNames(obj).length === 0);
-
-// ------------------------------------------------------------------------
-// false false ， 错误做法，因为这是判断两个引用的地址
-console.log(arr === [], obj === {});
-
-// true ture ，不推荐，性能差，且 stringify() 本身有些限制，如 undefined 会被忽略
-console.log(JSON.stringify(arr) === "[]", JSON.stringify(obj) === "{}");
-
-// 不推荐，for...in 会便利到圆形上的自定义属性，for...of 虽然不会到圆形，但也只能用于 arr ，且麻烦
-let arrIsEmpty = true, objIsEmpty = true;
-arr.__proto__.a = 123;
-obj.__proto__.a = 123;
-for (const i of arr) arrIsEmpty = false;
-for (const i in obj) objIsEmpty = false;
-// true false
-console.log(arrIsEmpty, objIsEmpty);
-```
-
-（4）判断对象中是否有某属性
-
-以下方法都无法判断 Symbol key 属性：
-
-```
-const obj = {
-  a: undefined,
+// 深度可选
+type DeepPartial<T> = {
+  [key in keyof T]: DeepPartial<T[key]>;
 };
 
-obj.__proto__.b = undefined;
-obj.__proto__.c = 123;
-
-// 判断是否连圆形上都不存在 -----------------------------------------------------------
-// 都是 undefined ，原型链上都找不到，但是无法确定是否 a 和 b 本身就是 undefined
-console.log(obj.a, obj.b, obj["a"], obj["b"]);
-// 123 123
-console.log(obj.c, obj["c"]);
-
-// 都是 true ，在原型链上找，同时可以确定是否值本身就是 undefined
-console.log("a" in obj, "b" in obj, "c" in obj);
-
-// 只判断对象本身是否有该属性，不去原型链上找 -----------------------------------------------
-// true false ，可以判断值本身就是 undefined 的属性
-console.log(obj.hasOwnProperty("a"), obj.hasOwnProperty("b"));
-
-// 同上，只是变成获取所有属性，包括非枚举属性
-console.log(Object.getOwnPropertyNames(obj));
-
-// ES13 新增 hasOwn() ，等价于 hasOwnProperty
-// 写法更简单，且不在 Object 圆形上，就不容易被修改调或意外的不可用
-console.log(Object.prototype.hasOwnProperty.call(obj, "a"));
-console.log(Object.hasOwn(obj, ""));
-```
-
-判断对象中是否有 Symbol key 属性：
-
-常规方法无法看到 Object 中的 Symbol key （Map 可以）：
-
-```
-const obj = {
-  a: "a",
-  [Symbol("b")]: "b",
+// 筛选出可选属性，{} 是 {a?: any} 的子类型
+type PickPartial<T extends object> = {
+  [key in keyof T as {} extends Pick<T, key> ? key : never]: any;
 };
-
-const map = new Map();
-map.set("a", "a");
-map.set(Symbol("b"), "b");
-
-// 无法看到 Objct 中的 Symbol key
-for (const i in obj) console.log(i);
-console.log(Object.keys(obj));
-console.log(Object.getOwnPropertyNames(obj));
-console.log(JSON.stringify(obj), "\n");
-
-// Map 就可以
-for (const i of map) console.log(i);
-console.log("\n");
-
-// 只能看到 Symbol key
-console.log(Object.getOwnPropertySymbols(obj), "\n");
-
-// 全部非圆形属性都能看到
-console.log(obj, map);
+// type：{ a?: number }
+type T2 = PickPartial<{ a?: number; b: number }>;
 ```
 
-获取所有非圆形 key，包括 Symbol key ：
+## 4 模块、配置
+
+（1）模块
+
+node 环境也可以直接使用 ESM ：
 
 ```
-const obj = {
-  a: 1,
-  [Symbol("b")]: 2,
-};
-obj.__proto__.c = 3;
+// 2.ts
 
-// ["a", Symbol(b)]
-console.log(Reflect.ownKeys(obj));
+export let a = 1;
+export type T1 = number;
 ```
 
-# 七、JS 编码技巧
-
-（1）条件分支优化
-
-多个 || 条件，可以简化为：
-
 ```
-if(a == 'asdf' || a == 'qwer' || a == 'zxcv'){}
-//简化
-if(['asdf','qwer','zxcv'].includes(a)){}
-```
+// 1.ts
 
-简单的if...else...可简化为三元运算符：
+// 不要加后缀 .ts ，会自动识别，加了就 err ，因为编译后 JS 文件导入 TS 就出错了
+import { a } from "./2";
 
-```
-let res = '';
-if(a > 100){
-  res = '>100'
-}
-else {
-  res = '<100'
-}
-//简化
-res = a > 100 ? '>100' : '<100';
+// 不加 type 也可以导入类型，加了有更好的类型提示
+import type { T1 } from "./2";
+
+// 一起导入时也可以加上 type 同样的也可以不加
+// import { a, type T1 } from "./2";
+
+// 如果没有导入，点击快速修复也能加上导入语句，前提不能是 export default ，因为需要知道名字
+console.log(a);
 ```
 
-空值/布尔值检查优化
+如果使用 CommpnJS ，会失去类型提示，全部变成 any ，需要改一下代码：
 
 ```
-let res = '';
-if(!a){
-  res = a;
-}
-//简化，类似的运算符还有 || && ?. ??= &&= ||=
-res = a ?? '';
-```
+// ts
 
-（2）变量相关
-
-声明简化
-
-```
-let a;
-let b;
-//简化
-let a, b;
-```
-
-赋值简化
-
-```
-let a,b,c;
-a = 1;
-b = 2;
-c = 3;
-//简化
-let [a,b,c] = [1,2,3];
-```
-
-运算赋值简化：
-
-```
 let a = 1;
-a = a + 1;
-//简化，类似的还有++ -- -= *= /= %= ^=
-a += 1;
+
+// 失去类型提示
+// module.exports = { a };
+
+// 修改后
+export = { a };
 ```
 
-（3）函数
+```
+// 1.ts
 
-在函数内有多层条件嵌套时，可以简化，增加可读性：
+// 失去类型提示
+// const { a } = require("./");
+
+// 修改后
+import MyModule = require("./2");
+
+// 1
+console.log(MyModule.a);
+```
+
+命名空间，可以实现内部模块，内部是独立的作用域，其实编译成 JS 后就是立即执行函数：
 
 ```
-//简化前
-function func(a, b){
-  if(a < 0){
-    if(b < 0)[
-      return true;
-    ]  
+namespace A {
+  export type T1 = number;
+  export let a = 1;
+}
+
+// 重复声明则加上没有的 export 资源，export 的资源不能相同，否则 err
+namespace A {
+  export let b = 2;
+}
+
+namespace B {}
+
+// { a: 1, b: 2 } 1
+console.log(A, A.a);
+// err ，空的 namespace 不会编译
+// console.log(B);
+
+// 可以嵌套
+namespace C {
+  export namespace CC {
+    export let a = 1;
   }
 }
 
-//简化后
-function func(){
-  if(a < 0)  return;
-  if(b < 0)  return;
-  return true;
+// { CC: {a: 1} }
+console.log(C);
+
+// 起别名
+import CCa = C.CC.a;
+// 1
+console.log(CCa);
+
+// 也可以 export 给其他文件使用
+exports = {
+  A,
+  C,
+};
+```
+
+（2）配置
+
+tsconfig\.json ，与其他 json 文件不同的是这个可以写注释：
+
+```
+{
+  "compilerOptions": {
+    // 编译的 JS 版本，默认是 ES3
+    "target": "ES5",
+    // 去掉编译后的注释，默认 false
+    "removeComments": true,
+
+    // 模块解析方式，默认 node ，老版本是 classic
+    "moduleResolution": "node",
+    // 编译后的模块化语法，默认跟随 TS 代码
+    "module": "es2015",
+    // 是否允许导入时加上 .ts ，默认 false
+    "allowImportingTsExtensions": false,
+
+    // 开启所有严格的类型检查（如不允许 null 和 undefined 为子类型），默认 false
+    // 也可以单独设置各种类型检查，默认部分为 true
+    // 注意，这些只是编码时的提示，不影响编译
+    "strict": true
+  }
 }
+```
+
+有时候可以临时关闭类型检查：
+
+```
+const a: number = 1;
+
+// 只有下面一行会关闭类型检查
+// @ts-ignore
+const b: string = a;
 ```

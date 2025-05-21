@@ -68,67 +68,160 @@ aaa[0].value = 456;
 
 ### 1.1 变量
 
-var ，没有快级作用域：
+作用域：
+
+- 全局作用域
+
+- 局部作用域，即函数内部
+
+- 块级作用域，if 、for 等内部，let 、const 具有块级作用域，而 var 没有。
+
+var 以及 ES6 的 let 、const ：
 
 ```
-// undefined ， 变量提升，相当于把声明放在了最前面，所以不报错
-console.log(b);
+/**预编译（预解析）会有提升，提升到当前作用域最前面 --------------------------------------------
+ * var 和保存在变量的匿名函数的声明会提升，但不提升值，所以使用不报错且值为 undefined
+ * 具名函数也会提升且保留值
+ * let 、cosnt 、class 等也会提升，但是在声明之前是暂时性死区（TDZ），不允许使用
+ */
+// undefined
+console.log(a);
 
-var a;
+// err
+try {
+  console.log(b, c);
+} catch {
+  console.log("err");
+}
 
-// 设计缺陷，重复声明不报错
-var b = 1;
-var b = 2;
+// hasNameFunc undefined
+console.log(hasNameFunc, notNameFunc);
 
-var c = 3, d = 4;
+// err ，只会提升到当前作用域
+try {
+  console.log(testVar);
+} catch {
+  console.log("err");
+}
 
-// 与 C 唯一不同是还可以用 $
-var e = a_1$;
+function test() {
+  // undefined func
+  console.log(testVar, func, "\n");
 
-// undefined 2 3 4 ，未初始化值就为 undefined
-console.log(a, b, c, d);
+  var testVar = "test";
+  function func() {}
+}
+test();
 
-// 10 ，没有快级作用域
+/**声明 -----------------------------------------------------------------------------------
+ * let 变量、const 敞亮，const 由于不能修改所以必须初始化
+ * 未初始化的 var 、let 为 undefined
+ * const 声明的引用类型自己的引用无法修改，但是堆内存的数据可以修改
+ */
+var a = 1;
+let b = 2;
+const c = 3;
+
+// 标识符命名与 C 语言唯一不同是还可以用 $
+var a_1$;
+
+// 具名函数、匿名函数
+function hasNameFunc() {}
+var notNameFunc = function () {};
+
+/**重复声明 ---------------------------------------------------------------------------------
+ * var 设计缺陷，重复声明不报错
+ * 用了 let 、const 就不能重复声明，即使是 let 声明之前的 var
+ */
+// ok
+var a = 1;
+
+// err
+// let b = 22;
+// let a = 11;
+// var b = 222;
+
+// 块级作用域 -----------------------------------------------------------------------------
 for (var i = 0; i < 10; i++);
+for (let j = 0; j < 10; j++);
+
+// 10 err ，var 设计缺陷，没有快级作用域，而 let 、const 都有
 console.log(i);
+// console.log(j);
 ```
 
-ES6 新特性，let 、const ，具有块级作用域：
-
-- let 声明变量
-
-- const 声明常量，必须初始化且初始化后就无法修改，但如果是引用类型，堆内存的数据是可以修改的
-
-let 、const 也会变量提升，但在声明之前是暂时性死区（TDZ），不允许使用：
+全局污染：
 
 ```
-// err ，暂时性死区
-try {
-  console.log(a, b);
-} catch {
-  console.log("err");
-}
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
 
-let a = 1;
-const b = 2;
-const arr = [123];
+  <script>
+    /**全局污染
+     * 全局作用域中的 var 和具名函数会加入到 window 中，let 、cosnt 则不会
+     * node 则不会加到 node 全局对象中
+     */
+    var a = 1;
+    let b = 2;
+    const c = 3;
 
-// err ，const 无法修改
-try {
-  b = 5;
-  arr = [];
-} catch {
-  console.log("err");
-}
+    function func1() {}
+    var func2 = function () {};
+    let func3 = function () {};
+    const func4 = function () {};
 
-// 456 ，可以修改堆内存数据，const 只是无法修改 arr 的地址
-arr[0] = 456;
-console.log(arr[0]);
+    // 1 undefined unfined func1 func2 undefined unfined
+    try {
+      // 浏览器环境
+      console.log(
+        window.a,
+        window.b,
+        window.c,
+        window.func1,
+        window.func2,
+        window.func3,
+        window.func4
+      );
+    } catch {
+      // undefined ，node 环境
+      console.log(
+        globalThis.a,
+        globalThis.b,
+        globalThis.c,
+        globalThis.func1,
+        globalThis.func2,
+        globalThis.func3,
+        globalThis.func4
+      );
+    }
+  </script>
 
-// 0 ，let、const 有块级作用域
-let i = 0;
-for (let i = 0; i < 10; i++);
-console.log(i);
+  <script>
+    // 但是 var 、let 、const 、函数都会跨 script 标签
+    console.log(a, b, c, func1, func2);
+  </script>
+
+  <script>
+    /**若变量未使用 var 、let 、cosnt 声明
+     * 此时必须赋值，否则 err
+     * 不管哪一个作用域，浏览器都会放到 window ，node 都会放到 node 全局对象
+     * 严格模式下，不允许这种情况，直接 err
+     */
+    // 下面的情况等价于 window.xxx = value 或 globalThis.xxx = value
+    aa = 1;
+    ff2 = function () {};
+
+    function ff1() {
+      bb = 2;
+    }
+    // 必须运行 ff1 ， bb 才会加入到 window 和 node 全局对象
+    ff1();
+
+    // 1 2 func ，当然调用时 globalThis 可以省略
+    console.log(globalThis.aa, globalThis.bb, globalThis.ff2);
+  </script>
+</html>
 ```
 
 ### 1.2 数据类型
@@ -276,9 +369,9 @@ console.log(2n == 2, 2n === 2, 2n > 1, 2n > 2);
 
 （1）判断数据类型
 
-```
-// typeof ，有设计缺陷，null 、Array 、Set 、Map 、WeakSet、WeakMap 都直接判断成 "object" ，而 function 则判断为 "function"
+typeof ，有设计缺陷，null 、Array 、Set 、Map 、WeakSet、WeakMap 等都直接判断为 object ，而函数判断为 function ；
 
+```
 // "number" "string" "boolean" "undefined" "symbol" "bigint"
 console.log(
   typeof 1,
@@ -304,27 +397,94 @@ class Person {}
 console.log(typeof (() => {}), typeof Person);
 ```
 
+数组判断：
+
 ```
-// true
+// true ，用底层 C++ 判断数据结果是否符合数组的特征，所以和原型无关
+// 伪数组本质是对象所以判断为 false
 console.log(Array.isArray([]));
 ```
 
+toString  ，所有类型都能正常判断：
+
 ```
-// toString ，所有类型都能正常判断
+// "[object Arguments]"，伪数组也能判断
+(function () {
+  console.log(Object.prototype.toString.call(arguments));
+})();
 
-// "[object Undefined]" , 都是这种格式
-console.log(Object.prototype.toString.call(undefined));
-
-// 自定义输出结果
+// ES6 新特性，自定义输出结果
 const obj = { a: 1 };
 obj[Symbol.toStringTag] = "MyType";
 // "[object MyType]"
 console.log(Object.prototype.toString.call(obj));
-
-// 默认情况下 Symbol.toStringTag 是 undefined ，但 async 函数就有设置
-// AsyncFunction
-console.log(async function () {}[Symbol.toStringTag]);
 ```
+
+Symbol\.toStringTag 基本上 ES6 后的新对象都有部署；
+
+```
+// ES5 这些就能判断了，所以没部署 Symbol.toStringTag ----------------------------------------
+const num = (123)[Symbol.toStringTag];
+const arr = [][Symbol.toStringTag];
+const obj = {}[Symbol.toStringTag];
+const func = (() => {})[Symbol.toStringTag];
+const args = (function () {
+  return arguments[Symbol.toStringTag];
+})();
+
+// undefined
+console.log(num, arr, obj, func, args, "\n");
+
+// ES6 新增的大部分都有 Symbol.toStringTag ----------------------------------------------------
+const sym = Symbol()[Symbol.toStringTag];
+const bigInt = 123n[Symbol.toStringTag];
+
+function* genFunc() {}
+const gen = genFunc[Symbol.toStringTag];
+const genIte = genFunc()[Symbol.toStringTag];
+const promise = new Promise(() => {})[Symbol.toStringTag];
+const asyncFunc = async function () {}[Symbol.toStringTag];
+
+const set = new Set()[Symbol.toStringTag];
+const weakMap = new WeakMap()[Symbol.toStringTag];
+const reflect = Reflect[Symbol.toStringTag];
+
+// "Symbol" "BigInt"
+// "GeneratorFuncFunction" "Genertor" "Promise" "AsyncFunction"
+// "Set" "WeakMap" "Reflect"
+console.log(
+  sym,
+  bigInt,
+  gen,
+  genIte,
+  promise,
+  asyncFunc,
+  set,
+  weakMap,
+  reflect,
+  "\n"
+);
+
+// class 、迭代器 、proxy 则没有 -----------------------------------------------------------
+class A {}
+const proxy = new Proxy({}, {});
+const ite = [][Symbol.iterator];
+
+const cls = A[Symbol.toStringTag];
+const pro = proxy[Symbol.toStringTag];
+const it = ite[Symbol.toStringTag];
+
+// undefined
+console.log(cls, pro, it);
+// "[object Function]" "[object Objct]" "[object Function]"
+console.log(
+  Object.prototype.toString.call(A),
+  Object.prototype.toString.call(pro),
+  Object.prototype.toString.call(ite)
+);
+```
+
+判断 Proxy ：
 
 ```
 // 判断是否是 Proxy
@@ -742,6 +902,8 @@ let obj, arr, func;
 obj?.a;
 arr?.[0];
 func?.();
+// err ，由于可能是 undefined ，所以不能赋值
+// obj?.a = 1;
 
 // ES11 ，空值合并运算符 ?? ，类似 || 但限制更大，只有 null、undefined 才会执行后面代码
 // 1 2 0 false ""
@@ -1037,6 +1199,7 @@ for (const i of { a: 1, b: 2 }) console.log(i);
 当代码出错时，会报错并终止运行，可以使用异常处理使报错后不终止运行：
 
 ```
+// ES5 --------------------------------------------------------------------------------------
 try {
   出错了;
   console.log("出现异常后，try 中后续代码不会执行，直接进入 catch");
@@ -1044,10 +1207,31 @@ try {
   // 也可以手动抛出异常
   // throw "myErr";
 } catch (err) {
-  console.log("err\n");
+  console.log("err");
 }
 
-// ES9 新特性，catch 可以不 用传入参数
+// 无法捕获异步代码的异常
+try {
+  setTimeout(() => {
+    // throw "async err";
+  });
+} catch (err) {
+  console.log(err);
+}
+
+// err2 ，嵌套的异常只有出错的那一层会捕获
+try {
+  try {
+    throw 123;
+  } catch {
+    console.log("err2\n");
+  }
+} catch (err) {
+  console.log("err1");
+}
+
+// ES6 --------------------------------------------------------------------------------------
+// ES9 新特性，catch 可以不 用传入参数，此时 catch 小括号必须去掉
 try {
 } catch {}
 
@@ -1178,165 +1362,7 @@ var i = 0;
 console.log(i);
 ```
 
-（2）作用域、预编译
-
-三种作用域：
-
-- 全局作用域
-
-- 局部作用域，即函数内部
-
-- 块级作用域，if 、for 等内部，let 、const 具有块级作用域，而 var 没有。
-
-预编译，也叫与解析，JS 运行分为预编译和编译运行两部分。在预编译阶段，会有变量提升和函数提升，作用是吧 var 声明和函数声明的代码放到当前作用域的最前面：
-
-- var 只提升声明，不提升赋值；let、const 也会提升，只不过在声明之前是暂时性死区：
-  
-  ```
-  // undefined 10
-  console.log(a);
-  var a = 10;
-  console.log(a);
-  
-  // err
-  try {
-    console.log(b);
-  } catch {
-    console.log("err\n");
-  }
-  let b = 10;
-  
-  // 10 ，由于 var 没有块级作用域，所以 var 当前处于全局作用域
-  for (var i = 0; i < 10; i++) {}
-  console.log(i);
-  
-  // 0
-  let j = 0;
-  for (let j = 0; j < 10; j++) {}
-  console.log(j, "\n");
-  
-  // err ，因为 funcVar 提升的位置是它的当前作用域，也就是局部作用域
-  try {
-    console.log(funcVar);
-  } catch {
-    console.log("err");
-  }
-  
-  // undefined 10
-  function func() {
-    console.log(funcVar);
-    var funcVar = 10;
-    console.log(funcVar);
-  }
-  func();
-  ```
-
-- 函数也只提升声明，只有具名函数会提升，连 var 定义的匿名函数都不会提升：
-  
-  ```
-  // 1
-  func();
-  function func() {
-    console.log(1);
-  }
-  
-  // err
-  try {
-    notNameFunc();
-  } catch {
-    console.log("err\n");
-  }
-  var notNameFunc = function () {};
-  
-  //  2，内部函数也会提升到当前作用域最前面
-  function f() {
-    func();
-    function func() {
-      console.log(2);
-    }
-  }
-  f();
-  ```
-
-注意事项：
-
-- 浏览器全局 this 为 window ，node 全局 this 为 {} ；浏览器 globalThis 为 window ，node 中 globalThis 为 node 全局对象：
-  
-  ```
-  console.log(this, globalThis);
-  ```
-
-- 全局作用域中，具名函数和 var 声明的变量、var 声明的匿名函数，在浏览器中会加到 window 中（let、const 不会），node 则不会加到 {} 和 node 全局对象中：
-  
-  ```
-  var a = 1;
-  let b = 2;
-  const c = 3;
-  
-  function func1() {}
-  var func2 = function () {};
-  let func3 = function () {};
-  const func4 = function () {};
-  
-  // 1 undefined unfined func1 func2 undefined unfined
-  try {
-    // 浏览器环境
-    console.log(
-      window.a,
-      window.b,
-      window.c,
-      window.func1,
-      window.func2,
-      window.func3,
-      window.func4
-    );
-  } catch {
-    // {}、undefined ，node 环境
-    console.log(
-      this,
-      globalThis.a,
-      globalThis.b,
-      globalThis.c,
-      globalThis.func1,
-      globalThis.func2,
-      globalThis.func3,
-      globalThis.func4
-    );
-  }
-  ```
-
-- 若声明变量时没有使用 var 、let 、const ，此时必须赋值，否则报错；浏览器会吧变量放到 window 中，node 会放到 globalThis 中。
-  
-  严格模式下，这种情况浏览器和 node 都会直接报错：
-  
-  ```
-  // 下面的情况等价于 window.xxx = value 或 globalThis.xxx = value
-  
-  // err ，必须赋值
-  try {
-    a;
-  } catch {
-    console.log("err");
-  }
-  
-  a = 1;
-  func = function () {};
-  
-  function func1() {
-    b = 2;
-  }
-  func1();
-  
-  // func1 必须运行，b 才会加到 window、globalThis 中
-  // 1 2 func ，当然调用时 window、globalThis 可以省略
-  try {
-    console.log(window.a, window.b, window.func);
-  } catch {
-    console.log(globalThis.a, globalThis.b, globalThis.func);
-  }
-  ```
-
-（3）作用域链
+（2）作用域链
 
 用于查找变量，先从自己作用域开始，直到全局，找不到就是 undefined 。规则：
 
@@ -2438,9 +2464,9 @@ console.log(arrIsEmpty, objIsEmpty);
 
 解决 JS 函数二义性的另一个方案，实例对象专门由 class 的 constructor 构造。
 
-class 里的 this 永远不会指向 window ，硬要指向 window 也会指向 undefined 。
-
 （1）基本
+
+使用：
 
 ```
 // err ，class 此时是暂时性死区，无法使用
@@ -2457,20 +2483,20 @@ class A {
     this.b = 2;
   }
 
-  // 定义方法，方法内的 this 为实例对象
+  // 放到 A 原型上
   func1() {
-    return this;
+    return this;  
   }
 
   // class 是局部作用域，所以箭头函数 this 为实例对象
   func2 = () => this;
 
   // ES13 新特性 --------------------------------------------------------------------
-  // 在 constructor 外定义属性
+  // 在 constructor 外给 this 定义属性
   c = 3;
   [Symbol("d")] = 5;
 
-  // 用 # 定义私有属性、私有方法 ，外部无法使用
+  // 用 # 定义私有属性、私有方法 ，外部无法使用；私有方法是只读的
   #e = 5;
   #func3 = () => 6;
   getPrivate = () => this.#e + this.#func3();
@@ -2513,12 +2539,78 @@ console.log("a" in obj, obj.hasPrivate("e"));
 console.log("f" in A);
 ```
 
-（2）class 转为构造函数
-
-（3）类的继承
+class 转 ES5 构造函数：
 
 ```
-// 父类
+class A {
+  constructor(name) {
+    this.name1 = name;
+    this.run2 = function () {};
+  }
+
+  name2 = "asdf";
+  run3 = function () {};
+  run4 = () => {};
+
+  run1() {}
+  static staticFunc() {}
+
+  static staticProp = "static";
+  static run5 = () => {};
+  static {
+    console.log("staic block");
+  }
+
+  #privateFunc() {}
+}
+
+// 转化成 ES5 构造函数 --------------------------------------------------------------
+// ES13 的 # 私有属性方法，由于是语法底层实现的，所以自己无法实现，原型上也没有
+function B(name) {
+  "use strict";
+  if (!(this instanceof B)) throw new TypeError("只能 new 调用");
+
+  this.name1 = name;
+  this.name2 = "asdf";
+  this.run2 = function () {};
+  this.run3 = function () {};
+  this.run4 = () => {};
+}
+
+[
+  { target: B.prototype, funcs: [{ key: "run1", value: A.prototype.run1 }] },
+  { target: B, funcs: [{ key: "staticFunc", value: A.staticFunc }] },
+].forEach((item) => {
+  for (var i = 0; i < item.funcs.length; i++) {
+    var index = i;
+
+    Object.defineProperty(item.target, item.funcs[i].key, {
+      value: function () {
+        if (typeof this !== "function" && !(this instanceof B)) {
+          throw new TypeError("不能 new 调用");
+        }
+
+        item.funcs[index].value.call(this);
+      },
+
+      writable: true,
+      configurable: true,
+      enumerable: false,
+    });
+  }
+});
+
+(function () {
+  this.staticProp = "static";
+  this.run5 = () => {};
+
+  console.log("static block");
+}).call(B);
+```
+
+（2）类的继承
+
+```
 class A {
   constructor(a) {
     this.a = a;
@@ -2529,12 +2621,11 @@ class A {
   }
 }
 
-//子类继承父类
+// 只能单继承
 class B extends A {
   constructor(a, b, c) {
-    // 子类中必须有 super() 调用父类的 constructor ，才能使用 this
+    // 子类中必须有 super() 调用父类的 constructor ，否则 new 时会 err
     super(a);
-
     this.b = b;
     this.c = c;
   }
@@ -2545,24 +2636,25 @@ class B extends A {
     console.log("sonFunc", "\n");
   }
 
-  /* 重写父类方法
-   * 内部无法使用 super() 调用父类同名方法
-   */
+  // 重写父类方法
   fatherFunc() {
+    // 可以使用父类同名方法
+    // super.fatherFunc();
+
     console.log("rewrite fatherFunc");
   }
 }
 
 const son = new B(1, 2, 3);
 
-// 1 2 3
-console.log(son.a, son.b, son.c);
+// // 1 2 3
+console.log(son.a, son.b, son.c, "\n");
 
 son.sonFunc();
 son.fatherFunc();
 ```
 
-（4）实现私有属性
+（3）实现私有属性
 
 ES6 的访问器使用 _name 在命名上区分私有属性，但约束力不强；用 Symbol key 实现私有属性和也有办法访问。
 
@@ -3015,6 +3107,78 @@ console.log(globalThis);
 显示绑定规则：
 
 - call ，apply ，bind 显示修改 this ：
+  
+  ```
+  function func(a, b) {
+    console.log(this, a, b);
+  }
+  
+  const obj = { a: 1 };
+  
+  func.call(obj, 1, 2);
+  func.apply(obj, [1, 2]);
+  
+  const fn = func.bind(obj, 1);
+  fn(2);
+  
+  // 实现 call 、apply 、bind --------------------------------------------------------------
+  Function.prototype.myCall = function (ctx, ...args) {
+    // 原版 call 中传入的 this 是 undefined 、null 时就用 globalThis
+    ctx = ctx ?? globalThis;
+  
+    // 使用后，若 this 为基本类型则转为包装类对象，引用类型则不变
+    ctx = Object(ctx);
+  
+    // 把函数挂到 ctx 中再调用，this 就指向 ctx 了
+    const tempKey = Symbol();
+    // 防止在函数调用期间用到这个临时 key
+    Object.defineProperty(ctx, tempKey, {
+      value: this,
+      enumerable: false,
+    });
+  
+    ctx[tempKey](...args);
+    delete ctx[tempKey];
+  };
+  
+  Function.prototype.myApply = function (ctx, args) {
+    if (
+      typeof args !== "object" &&
+      typeof args !== "function" &&
+      args !== undefined
+    ) {
+      throw "err";
+    }
+  
+    if (
+      [
+        "[object Undefined]",
+        "[object Null]",
+        "[object Set]",
+        "[object Map]",
+      ].includes(Object.prototype.toString.call(args))
+    ) {
+      args = [];
+      console.log(123);
+    } else {
+      args = Array.from(args);
+    }
+  
+    this.myCall(ctx, ...args);
+  };
+  
+  Function.prototype.myBind = function (ctx, ...args) {
+    const fn = this;
+  
+    return function (...subArgs) {
+      const allArgs = [...args, ...subArgs];
+  
+      // 原版 bind 是支持 new 这个函数的，且最终 new 的是调用 bind 的函数而不是返回的函数
+      if (new.target) return new fn(...allArgs);
+      else return fn.myCall(ctx, ...allArgs);
+    };
+  };
+  ```
 
 new 绑定：
 
@@ -3940,11 +4104,19 @@ console.log(m);
 
 都是弱引用，若资源不需要再使用，WeakSet 、WeakMap 就不再引用它们：
 
-* WeakSet 的成员必须是引用类型；WeakMap 的 key 必须是引用类型，但 value 可以是任何类型
+* WeakSet 的成员必须是引用类型或 Symbol ；WeakMap 的 key 必须是引用类型或 Symbol ，但 value 可以是任何类型
 
 * 由于弱引用的不确定性，WeakSet 、WeakMap 就没有 size 、clear ，也无法便利，因此也没有 iterator 接口
 
 ```
+// 大部分情况都是强引用，Set 、Map 也是
+let obj1 = {};
+let obj2 = obj1;
+
+// 不会回收
+obj1 = null;
+
+// --------------------------------------------------------------------------------------------
 const obj = {
   a: {},
   b: {},
@@ -3953,17 +4125,18 @@ const obj = {
 const s = new Set([obj.a]);
 const m = new Map([[obj.a, 1]]);
 
-// 成员只能是引用类型
+// 成员只能是引用类型、Symbol
 const ws = new WeakSet([obj.b]);
 
-// key 只能是引用类型，value 可以是任何类型
+// key 只能是引用类型、Symbol ；value 可以是任何类型
 const wm = new WeakMap([[obj.b, 1]]);
 
 // Set 、Map 是强引用，引用不会被垃圾回收
 delete obj.a;
 console.log(s, m);
 
-// WeakSet 、WeakMap 是若引用，大概率会被垃圾回收，是否回收了要看垃圾回收机制是否到了这里
+// WeakSet 、WeakMap 是若引用，会被垃圾回收
+// 垃圾回收是优先级比较低的县城，所以此时可能还未被回收，但最终都会回收
 delete obj.b;
 console.log(ws, wm, "\n");
 
@@ -3971,6 +4144,8 @@ console.log(ws, wm, "\n");
 console.log(ws.size, wm.size, ws.clear, wm.clear);
 console.log(ws.forEach, wm.forEach);
 ```
+
+强引用：
 
 ES12 新特性，WeakRef ，获得一个弱引用：
 
@@ -3981,6 +4156,28 @@ const wr = new WeakRef(obj);
 // { a: 1 } ，若 obj 被垃圾回收了，则是 undefined
 console.log(wr.deref());
 ```
+
+（4）垃圾回收
+
+为了防止内存泄漏，浏览器的垃圾回收器会对没有使用或不再使用的资源自动地进行回收来释放内存，遵循以下基本规则：
+
+- 全局作用域的资源是否回收不确定，因为垃圾回收器难以判断开发者是否还需要这个资源，可能直到程序结束才回收。所以可以手动释放：
+  
+  ```
+  // 占内存存放 obj 的地址，堆内存存放 a 的值和 o 的地址，b 的值
+  let obj = { a: 1, o: { b: 2 } };
+  
+  // 手动释放，若其他地方都没有再强引用这个对象，就可以回收了
+  // obj.o = null;
+  // delete obj.o;
+  
+  // 直接释放 obj
+  obj = null;
+  ```
+
+- 函数、块级作用域执行完，就会释放内部资源
+
+- 闭包资源直到闭包的函数被回收才会回收
 
 ### 3.10 其他内置对象
 
@@ -4059,126 +4256,139 @@ ES6 提供了生成器、Promise、async/await ，使异步代码更清晰。
 
 ### 4.1 生成器
 
-本质是一个函数，但是语法与传统函数完全不同,进行异步编程。
+（1）基本
+
+将函数氛围多个代码块，手动决定是否执行：
 
 ```
-// 定义：三种都一样
-function* xxx() {}
-function * xxx() {}
-function *xxx() {}
+// 定义
+function* func1() {}
+function*func2() {}
+function *fun3() {}
 
-/// 调用：生成器定义后是一个迭代器对象，所以：
-xxx().next();
-// 或：
-const x = xxx();
-x.next();
-```
+// GeneratorFunction
+console.log(func1[Symbol.toStringTag]);
+console.log(Object.prototype.toString.call(func1), "\n");
 
-yield 语句：
+// 用 yield 分割代码块
+function* func() {
+  console.log(0);
 
-在生成器函数体中定义，将代码区域上下分割，n 条 yield 语句将代码分割成 n + 1 个代码块，每次调用 next() 都只执行当前代码块，然后将指针指向下一个代码块。
-
-```
-function* xxx() {
+  yield "block 1";
   console.log(1);
-  yield "分割线 1";
+
+  // 接收 next 传入的参数
+  const x = yield "block 2";
+  console.log(x);
+}
+
+// 调用生成器会得到一个迭代器对象
+const ite = func();
+
+// 每次 next 会执行当前代码块，并吧指针指向下一个代码块
+// 0 1 2
+const block1 = ite.next();
+const block2 = ite.next();
+const end = ite.next(2);
+
+// { value: 'block 1', done: false }
+// { value: 'block 2', done: false }
+// { value: undefined, done: true }
+console.log(block1, block2, end, "\n");
+
+// 不再输出
+const endend = ite.next();
+
+// for...of
+const it = func();
+// 0 "block1" 1 "block2" undefined
+for (const i of it) console.log(i);
+```
+
+（2）异步
+
+只使用生成器：
+
+```
+// 回调地狱 ---------------------------------------------------------------------------------
+setTimeout(() => {
+  console.log(1);
+
+  setTimeout(() => {
+    console.log(2);
+
+    setTimeout(() => {
+      console.log(3);
+    }, 1000);
+  }, 1000);
+}, 1000);
+
+// 改写成生成器 ----------------------------------------------------------------------
+function* func() {
+  yield (step) => {
+    setTimeout(() => {
+      console.log(1);
+      step();
+    }, 1000);
+  };
+
+  yield (step) => {
+    setTimeout(() => {
+      console.log(2);
+      step();
+    }, 1000);
+  };
+
+  yield (step) => {
+    setTimeout(() => {
+      console.log(3);
+      step();
+    }, 1000);
+  };
+}
+
+function run(genFunc) {
+  const gen = genFunc();
+
+  (function step() {
+    const result = gen.next();
+    if (!result.done) result.value(step);
+  })();
+}
+
+run(func);
+```
+
+也可以结合 Promise ：
+
+```
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function* func() {
+  yield wait(1000);
+  console.log(1);
+
+  yield wait(1000);
   console.log(2);
-  yield "分割线 2";
+
+  yield wait(1000);
   console.log(3);
 }
 
-// 不能是 xxx().next() 因为这样是不同的迭代器对象
-const x = xxx();
+function run(genFunc) {
+  const gen = genFunc();
 
-/* res
-  1
- {}value: "分割线 1", done: false}
-  2
- {}value: "分割线 2", done: false}
-  3
- {}value: undefined, done: true}
- */
-console.log(x.next());
-console.log(x.next());
-console.log(x.next());
+  function step() {
+    const result = gen.next();
+    if (!result.done) result.value.then(step);
+  }
 
-// for...of
-/* res
-  1
-  分割线 1
-  2
-  分割线 2
-  3
-  */
-console.log("\n\n\n");
-for (i of xxx()) console.log(i);
-```
-
-生成器函数参数：
-
-- 生成器可以定义形参
-
-- next() 可传实参，生成器用 let x = yield 123 接收，x的值就是实参的值
-
-- 第 n 次调用的 next，则第 n - 1 个yield 接收
-
-```
-function* func(a) {
-  console.log(a);
-
-  const b = yield "接收参数 b";
-  console.log(b);
-
-  const c = yield "接收参数 c";
-  console.log(c);
+  step();
 }
 
-const f = func(1);
-console.log(f.next());
-console.log(f.next(2));
-console.log(f.next(3));
-```
-
-应用：
-
-回调地狱的代码：
-
-```
-setTimeout(() => {
-  console.log(111);
-
-  setTimeout(() => {
-    console.log(222);
-
-    setTimeout(() => {
-      console.log(333);
-    }, 3000);
-  }, 2000);
-}, 1000);
-```
-
-同样的逻辑用生成器实现，简化代码：
-
-```
-function* xxx(a) {
-  yield setTimeout(() => {
-    console.log(111);
-    x.next();
-  }, 1000);
-
-  yield setTimeout(() => {
-    console.log(222);
-    x.next();
-  }, 2000);
-
-  yield setTimeout(() => {
-    console.log(333);
-    x.next();
-  }, 3000);
-}
-
-const x = xxx();
-x.next();
+run(func);
 ```
 
 ### 4.2 Promise
@@ -4201,16 +4411,21 @@ const flag = true;
 /* 格式：
  * new Promise((resolve, reject) => {}).then(res => {}).catch(err => {})
  * new Promise((resolve, reject) => {}).then(res => {}, err => {})
+ * ES9 新特性，可以再加一个 finally(() => {}) ，除了 pedding 无论成功失败都会在 then 、catch 后面回调；
+   但 then 还是最多只能传两个参数
  */
 new Promise((resolve, reject) => {
   setTimeout(() => {
     /* resolve, reject
-     * resolve: 表示成功，执行后进入 then 的回调
-     * reject： 表示失败，执行后进入 catch 的回调
+     * resolve: 表示成功，状态变成 fullfilled ，若 then 已注册则把 then 的回调放到微任务，没有则等到 then 注册了再放到微任务
+     * reject： 表示失败，状态变成 rejected ，其他同上，只是变成 catch
      * 若 resolve、reject 都没有，则状态为 Pending， thern、catch 都不执行
      */
     if (flag) resolve("this is res");
     else reject("err");
+
+    // resolve ，reject 后面的代码也会执行，而不是直接截断
+    console.log("run");
   }, 1000);
 })
   .then((res) => {
@@ -4218,233 +4433,611 @@ new Promise((resolve, reject) => {
   })
   .catch((str) => {
     console.log(str);
-  });
-```
-
-resolve ，reject 后面的代码也会执行，也是同步任务：
-
-```
-// 输出结果：1 2 3 4
-
-new Promise((resolve, reject) => {
-  console.log(1);
-  resolve();
-  console.log(2);
-}).then(() => {
-  console.log(4);
-});
-
-console.log(3);
-```
-
-then，catch 都可以链式调用，具体则根据内部是 return 还是 throw ：
-
-```
-// 1 3 2 4
-
-new Promise((resolve, reject) => {
-  resolve();
-})
-  .then(() => {
-    console.log(1);
   })
-  .then(() => {
-    console.log(2);
+  .finally(() => {
+    console.log("this is finally");
   });
 
-new Promise((resolve, reject) => {
-  reject();
-})
-  .catch(() => {
-    console.log(3);
-  })
-  .then(() => {
-    console.log(4);
-  });
-```
+//
 
-但如果没有 resolve 也没有 reject ，Promise 就是 Pending 状态，then，catch 都不执行：
+// 若 resolve 时还没有注册 then ，则只有到了 then 才会放到微任务 ---------------------------------
+// 2 1 ，第一个 resolve 时还没有 then 所以无法放到微任务
+new Promise((resolve) => {
+  resolve(1);
 
-```
-// 无结果
-
-const p = new Promise((resolve, reject) => {
-  // resolve();
-})
-  .then(() => {
-    console.log(1);
-  })
-  .then(() => {
-    console.log(2);
-  });
-console.log(p);
-```
-
-（2）then ，catch
-
-then、catch 返回的也是 Promise ：
-
-- 若内部正常 return （默认 return undefined），则返回的 Promise 状态为 Fullfilled ，return 的值会成为下一个链式调用的 then 的参数
-  
-  ```
   new Promise((resolve) => {
-    resolve();
-  })
-    .then(() => {
-      console.log(0);
-  
-      return 123;
-    })
-    .then((res) => {
-      // 123
-      console.log(res);
-    });
-  ```
+    resolve(2);
+  }).then((res) => console.log(res));
+}).then((res) => console.log(res, "\n"));
 
-- 若内部 throw 了，则返回的 Promise 状态为 Rejected ，throw 的值的值会成为下一个链式调用的 catch 的参数
-  
-  ```
-  new Promise((resolve) => {
-    resolve();
-  })
-    .then(() => {
-      console.log(0);
-  
-      throw 123;
-    })
-    .catch((res) => {
-      // 123
-      console.log(res);
-    });
-  ```
+// 1 2 ，第一个 resolve 时，then 已经有了，直接放到微任务
+new Promise((resolve) => {
+  setTimeout(() => {
+    resolve(1);
 
-- 特殊情况，若 return 的是一个 Promise （这里记为 p1），则状态和 p1 的状态一样，且p1.then() 整个表达式入队为队列，而不是常规的 then 中的回调函数入队：
-  
-  ```
-  new Promise((resolve) => {
-    resolve();
-  })
-    .then(() => {
-      console.log(0);
-  
-      // .then 或 .catch(finallyFn) 的状态和 p1 一样
-  
-      // Fullfilled，执行 then
-      const p1 = Promise.resolve(123);
-      // const p1 = new Promise((resolve) => resolve(123));
-      // const p1 = new Promise((resolve) => resolve(123)).then(() => 123);
-  
-      // Rejected，执行 catch
-      // const p1 = Promise.reject(123);
-      // const p1 = new Promise((resolve, reject) => reject(123));
-      // const p1 = new Promise((resolve, reject) => reject(123)).catch(() => {
-      //   throw 123;
-      // });
-  
-      // Pending，then ，catch 都不入队，也就不执行
-      // const p1 = new Promise((resolve) => resolve());
-  
-      // return 一个 Promise，会变成把 p1.then(fn) 入队微任务
-      return p1;
-    })
-    // 这里的 then，catch 的回调函数记为 finallyFn
-    .then((res) => console.log(res))
-    .catch((res) => console.log(res));
-  
-  /* p1.then(fn) , p1.catch() 会整体入队微任务
-   * 1. 微任务中，执行 p1.then(fn) ，结果是把 fn 入队
-   * 2. 微任务中，执行 fn 《结果是 p1 完成，将最终的 finallyFn 入队
-   * 执行 finallyFn
-   */
-  ```
+    new Promise((resolve) => {
+      resolve(2);
+    }).then((res) => console.log(res, "\n"));
+  });
+}).then((res) => console.log(res));
 
-Promise 的 then 和 catch 的回调函数是微任务，如果要把某些任务直接放入微任务人咧时，也可以：
-
-```
+// 可以用 Promise 把任务放到微任务 -----------------------------------------------------
 Promise.resolve().then(() => {});
 Promise.reject().catch(() => {});
 ```
 
-ES9 新特性：.finally() ，无论时 Fullfilled 还是 Rejected 都会回调，但是 Pending 依然不会回调：
+then ，catch 、finally 返回 Promise ，此 Promise 的状态由 then 、catch 返回值决定，
+
+* 正常 return 则 fullfilled ，throw 则 rejected 
+
+* 若 return 的又是一个 Promise ，则需要状态吸收，生成一个微任务，内部调用 then 让状态保持一致。
+
+* finally 特殊，正常 return 或 return 非 rejected 的 Promise ，就穿透前一个 Promise 的值；若 finally 回调异常或 return rejected 的 Promise ，finally 就是 rejected
+
+（2）async 、await
+
+ES8 新特性，简化 Promise ，以类似同步代码的方式编写异步代码：
 
 ```
-new Promise((resolve, reject) => {
-  resolve();
-  // reject();
-}).finally(() => {
-  console.log(123);
-});
-```
-
-（3）处理多个 Promise
-
-当一个请求需要多个子请求的结果时，是不好判断子请求的完成顺序的，代码写起来就复杂。使用 Promise.all() 会方便很多。
-
-Promise.all() ：
-传入一个 Promise 数组，数组中所有的 Promise 状态都是 Fullfilled 时，外部 Promise 才是 Fullfilled 。
-
-由于封装的都是异步，所以all执行总时间就是执行最慢的那一个异步操作的时间。
-
-```
-const p1 = new Promise((resolve, reject) => {
+const testP = new Promise((resolve, reject) => {
   resolve(1);
+  // reject(2);
+  // resolve({ data: 123 });
 });
 
-const p2 = new Promise((resolve, reject) => {
-  resolve(2);
-});
+// async 函数返回一个 Promise ，状态由返回值决定，规则和 then 返回值一样 ---------
+async function func1() {
+  // console.log(0);
 
-const p3 = new Promise((resolve, reject) => reject("err"));
+  return 1;
+  // throw 2;
+  // return testP;
+}
 
-Promise.all([p1, p2]).then((resArr) => {
-  // resArr 时一个数组，元素分别是各个 Promise 中 resolve 传入的参数
-  console.log("FullFilled", resArr);
-});
+// 等价于
+function func2() {
+  return new Promise((resolve, reject) => {
+    // console.log(0);
 
-Promise.all([p1, p3]).catch((err) => {
-  console.log(err);
-});
+    resolve(1);
+    // reject(2);
+    // Promise.resolve().then(() => testP.then(resolve, reject));
+  });
+}
+
+func1().then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
+
+// await 只能用在 async 函数中，用于等待一个 Promise 完成 ----------------------------------------
+async function func3() {
+  // console.log(0);
+
+  let result;
+  try {
+    result = await testP;
+
+    // 若 await value ，value 不是一个 Promise ，则会转化为 Promise.resolve(value)
+    // result = await 3;
+
+    // await 的优先级闭 . [] () 等低
+    // result = (await testP).data;
+  } catch (err) {
+    result = err;
+  } finally {
+    console.log("finally", result);
+  }
+
+  // 下面都是 then 、catch 中的代码，多个 wait 则相当于嵌套 then 、catch
+  console.log("ok");
+  return result;
+  // throw result;
+}
+
+// 等价于
+function func4() {
+  return new Promise((resolve, reject) => {
+    // console.log(0);
+
+    let result;
+    testP.then(
+      (res) => {
+        result = res;
+        resolve(result);
+
+        // 不是放在 .finally
+        console.log("finally", result);
+        console.log("ok");
+      },
+      (err) => {
+        result = err;
+        reject(err);
+
+        // 不是放在 .finally
+        console.log("finally", result);
+        console.log("ok");
+      }
+    );
+  });
+}
+
+func3().then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
 ```
 
-ES12 新特性：Promise.any() ，也是传入 Promise 的数组，不同的是，只要其中一个成功就成功，且 then 只能处理成功 Promise 的信息，有点像多个 Promise 竞速。
-
-所有 Promise 失败才会失败。
+表达式中不要混合同步代码和异步代码，会出问题：
 
 ```
-const p1 = new Promise((resolve) => {
-  setTimeout(() => resolve("p1"), 1000);
-});
+let sum1 = 0;
+let sum2 = 0;
 
-const p2 = new Promise((resolve) => {
-  setTimeout(() => resolve("p2"), 2000);
-});
+async function getData(data, duration) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(data), duration);
+  });
+}
 
-const p3 = new Promise((resolve, reject) => {
-  reject();
-});
+async function add1(data, duration) {
+  sum1 = sum1 + (await getData(data, duration));
+  console.log(sum1);
+}
 
-const p4 = new Promise((resolve, reject) => {
-  reject();
-});
+// 2 3 ，同步异步混合一起运算，两次分别是 0+2 0+3 ，导致结果出错
+add1(2, 1000);
+add1(3, 2000);
 
-// ------------------------------------------------------------------
-Promise.any([p1, p2]).then((res) => {
-  //'p1'，1秒后输出
-  console.log(res);
-});
+// 正确做法，同步异步分开
+async function add2(data, duration) {
+  const n = await getData(data, duration);
+  sum2 += n;
+  console.log(sum2);
+}
 
-Promise.any([p2, p3]).then((res) => {
-  //‘p2’，2秒后输出
-  console.log(res);
-});
-
-Promise.any([p3, p4]).catch((err) => {
-  // err 信息
-  console.log(err);
-});
+// 2 5 ，0+2 和 2+3
+add2(2, 3000);
+add2(3, 4000);
 ```
 
-ES11 新特性，Promise.allSettle() ，传入 Promise 数组，数组中的 Promise 无论成功失败，外部 Promise 都是 Fullfilled ，成功的值为对象数组，保存每个 Promise 的状态和值：
+ES9 新特性，异步迭代器 for await of ：
+
+```
+const p = new Promise((resolve) => {
+  resolve(0);
+});
+
+// "start" "sync" 1 0 2 0 "end" ，其中 "start" "sync" 是同步任务
+(async function () {
+  console.log("start");
+
+  /**等价于
+   * for await of start
+     const res1 = await p;
+     console.log(res1);
+     const res2 = await p;
+     console.log(res2);
+   */
+  for await (const i of [1, 2]) {
+    console.log(i);
+    const res = await p;
+    console.log(res);
+  }
+
+  console.log("end");
+})();
+
+// 其他 for 结合异步的情况 -----------------------------------------------------------
+// "start" 1 "sync" 0 2 0 "end" ，其中 "start" 1 "sync" 是同步任务
+(async function () {
+  // console.log("start");
+
+  for (const i of [1, 2]) {
+    // console.log(i);
+    const res = await p;
+    // console.log(res);
+  }
+
+  // console.log("end");
+})();
+
+// 1 2 "sync" 0 0 ，其中 1 2 "sync" 是同步任务
+for (const i of [1, 2]) {
+  // console.log(i);
+  // p.then((res) => console.log(res));
+}
+
+console.log("sync");
+```
+
+（3）实现 Promise
+
+通过自己实现一个 Promise ，可以完整理解 Promise 的执行过程，其中特别需要注意的是 then 、catch 返回 Promise 的情况、 static resolve 的情况和 \.finally ：
+
+```
+/**两个与原版 Promise 不同的地方
+ * 微瑞列的实现不同，所以和原版 Promise 混用的话执行顺序会有问题，await 也是
+ * 原版 rejected 若没有 catch 会抛出异常，这里没有处理，比较难实现
+ */
+
+const MY_PROMISE_STATU = {
+  PEDDING: "pedding",
+  FULLFILLED: "fullfilled",
+  REJECTED: "rejected",
+};
+
+class MyPromise {
+  #statu = MY_PROMISE_STATU.PEDDING;
+  #result = undefined;
+  #handler = [];
+
+  constructor(executor) {
+    try {
+      executor(this.#resolve, this.#reject);
+    } catch (err) {
+      this.#reject(err);
+    }
+  }
+
+  #resolve = (data) => {
+    this.#changeStatu(MY_PROMISE_STATU.FULLFILLED, data);
+  };
+
+  #reject = (reson) => {
+    this.#changeStatu(MY_PROMISE_STATU.REJECTED, reson);
+  };
+
+  // 修改状态，只能修改一次
+  #changeStatu(statu, result) {
+    if (this.#statu !== MY_PROMISE_STATU.PEDDING) return;
+
+    if (this.#isPromiseLike(result)) {
+      this.#statuAssimilater(result, this.#resolve, this.#reject);
+    } else {
+      this.#statu = statu;
+      this.#result = result;
+      this.#run();
+    }
+  }
+
+  // 最核心的 then 方法
+  then(onFullfilled, onRejected) {
+    return new MyPromise((resolve, reject) => {
+      /**
+       * then 的时候肯呢还没有 resolve ，reject ，先记录起来
+       * handler 是一个数组，因为 Promise 对象肯呢个会调用多次 then
+       * 保存 resolve ，reject 是为了控制 then 链式调用返回的 Promise 的状态
+       */
+      this.#handler.push({
+        onFullfilled,
+        onRejected,
+        resolve,
+        reject,
+      });
+
+      this.#run();
+    });
+  }
+
+  // Promise 规范规定只要有一个符合规范的 then 方法，就是一个 Promise ，也叫 thenable
+  // 只要都是 thenable ，就具有互操作性，如都可以使用 await 等
+  #isPromiseLike(value) {
+    if (
+      typeof value !== null &&
+      (typeof value === "object" || typeof value === "function")
+    ) {
+      return typeof value.then === "function";
+    }
+  }
+
+  // 放到微队列
+  #runMicroTask(func) {
+    try {
+      // node
+      process.nextTick(func);
+    } catch (err) {
+      // 浏览器
+      if (typeof MutationObserver === "function") {
+        const ob = new MutationObserver(func);
+
+        const textNode = document.createTextNode("1");
+        ob.observe(textNode, {
+          characterData: true,
+        });
+        textNode.data = "2";
+      }
+      // 不支持微队列
+      else setTimeout(func);
+    }
+  }
+
+  // 状态吸收，当 then 、catch 、async 函数返回一个 Promise ，或 resolve 、reject 接收一个 Promise ，就需要状态吸收
+  #statuAssimilater(myPromise, resolve, reject) {
+    if (!this.#isPromiseLike(myPromise)) return;
+    this.#runMicroTask(() => myPromise.then(resolve, reject));
+  }
+
+  // 处理 then 的回调
+  #runOne(callback, resolve, reject) {
+    if (this.#statu === MY_PROMISE_STATU.PEDDING) return;
+
+    // 若没有传入回调，则 return 的 Promise 状态要和之前的 Promise 保持一致，达成穿透
+    this.#runMicroTask(() => {
+      if (typeof callback !== "function") {
+        if (this.#statu === MY_PROMISE_STATU.FULLFILLED) resolve(this.#result);
+        else reject(this.#result);
+      } else {
+        // 正常 return 则 resolve ，throw 则 reject
+        // 若 return Promise ，则这个 Promise 状态要和 then 的 Promise 保持一致
+        try {
+          const data = callback(this.#result);
+
+          if (this.#isPromiseLike(data)) {
+            this.#statuAssimilater(data, resolve, reject);
+          } else resolve(data);
+        } catch (err) {
+          reject(err);
+        }
+      }
+    });
+  }
+
+  // 处理 then 的回调
+  #run() {
+    // 只有 fullfilled 、rejected 才 run
+
+    if (this.#statu === MY_PROMISE_STATU.PEDDING) return;
+
+    while (this.#handler.length !== 0) {
+      const { onFullfilled, onRejected, resolve, reject } =
+        this.#handler.shift();
+
+      this.#runOne(
+        this.#statu === MY_PROMISE_STATU.FULLFILLED ? onFullfilled : onRejected,
+        resolve,
+        reject
+      );
+    }
+  }
+
+  // Promise 规范之外的方法 ----------------------------------------------------------------
+  catch(onRejected) {
+    return this.then(null, onRejected);
+  }
+
+  /**finally
+   * onFinally 不接收参数，正常情况下状态要和之前的 Promise 保持一致
+   * 若 finally 正常 return 或 return 一个非 rejected 的 Promise ，就穿透前一个 Promise 的值
+   * 若 finally 回调异常，或 return 一个 rejected 的 Promise ，那 finally 就是 rejected
+   */
+  finally(onFinally) {
+    return this.then(
+      (data) => {
+        // 用 Promise.resolve 就能处理 finally 的所有情况
+        return MyPromise.resolve(onFinally()).then(() => data);
+      },
+      (err) => {
+        return MyPromise.resolve(onFinally()).then(() => {
+          throw err;
+        });
+      }
+    );
+  }
+
+  static resolve(value) {
+    // 如果传入的是自己实现的 Promise ，就直接 return
+    if (value instanceof MyPromise) return value;
+
+    let tempResolve;
+    let tempReject;
+    const temp = new MyPromise((resolve, reject) => {
+      tempResolve = resolve;
+      tempReject = reject;
+    });
+
+    // 如果是其他人实现的 Promise，返回自己的 Promise 且状态和 value 保持一致
+    if (temp.#isPromiseLike(value)) value.then(tempReject, tempReject);
+    // 其他情况
+    else tempResolve(value);
+
+    return temp;
+  }
+
+  static reject(value) {
+    // 不管 value 是什么，都返回一个新的 Promise
+    return new MyPromise((resolve, reject) => {
+      reject(value);
+    });
+  }
+```
+
+测试：
+
+```
+// 测试 1 ，调用多次 then -----------------------------------------------------------
+const p1 = new MyPromise((resolve, reject) => {
+  // 状态只能改变一次
+  // resolve(1);
+  // reject(2);
+  // throw 3
+  // 和原版 Promise 一样无法捕获异步异常
+  // setTimeout(() => {
+  //   throw 4;
+  // });
+});
+
+p1.then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
+
+p1.then(
+  (res) => console.log(res),
+
+  (err) => console.log(err)
+);
+
+// 测试 2 ，Promise 静态方法 ------------------------------------------------------------
+const temp = new MyPromise(() => {});
+
+// true
+// console.log(MyPromise.resolve(temp) === temp);
+
+// 其他 thenable
+MyPromise.resolve(
+  new Promise((resolve, reject) => {
+    // resolve("resolve");
+    // reject("reject");
+  })
+).then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
+
+// 其他情况
+// MyPromise.resolve(123).then((res) => console.log(res === 123));
+// MyPromise.reject(123).catch((res) => console.log(res === 123));
+
+// 测试 3 ，resolve 、then 先后顺序不同影响执行顺序 -----------------------------------------------
+// "b" "a" ，resolve("b") -> resolve("a") -> then("a") -> then("b")
+new MyPromise((resolve, reject) => {
+  // resolve("a");
+  // reject("a");
+
+  new MyPromise((resolve, reject) => {
+    // resolve("b");
+    // reject("b");
+  }).then(
+    (res) => console.log(res),
+    (err) => console.log(err)
+  );
+}).then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
+
+// "a" "b" ，then("a") -> resolve("a") -> resolve("b") -> then("b")
+new MyPromise((resolve, reject) => {
+  setTimeout(() => {
+    // resolve("a");
+    // reject("a");
+
+    new MyPromise((resolve, reject) => {
+      // resolve("b");
+      // reject("b");
+    }).then(
+      (res) => console.log(res),
+      (err) => console.log(err)
+    );
+  });
+}).then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
+
+// 测试 4 ，穿透 ----------------------------------------------------------------------------
+new MyPromise((resolve, reject) => {
+  // resolve(1);
+  // reject(2);
+})
+  .then()
+  .then(
+    (res) => console.log(res),
+    (err) => console.log(err)
+  );
+
+// 2
+new MyPromise((resolve, reject) => {
+  // reject(2);
+})
+  .then(
+    () => {},
+    (err) => console.log(err)
+  )
+
+  .catch((err) => console.log(err + 1));
+
+// 测试 5 ，finally 返回值 ---------------------------------------------------------------
+const pf = new MyPromise((resolve, reject) => {
+  resolve("ok");
+  // reject("err");
+});
+
+new MyPromise((resolve) => {
+  // resolve(0);
+})
+  .then((res) => console.log(res))
+  .finally(() => {
+    return pf;
+  })
+  .then(
+    (res) => console.log(res),
+    (err) => console.log(err)
+  );
+
+// 测试 6 ，结合 finally 的穿透 ------------------------------------------------------------
+// 1 2 4 3
+const f1 = new MyPromise((resolve, reject) => {
+  // resolve();
+})
+  .then(() => console.log(1))
+  .catch(() => console.log(1))
+  .catch(() => console.log(1))
+  .catch(() => console.log(1))
+  .then(() => console.log(3));
+
+const f2 = new MyPromise((resolve, reject) => {
+  // resolve();
+})
+  .finally(() => console.log(2))
+  .then(() => console.log(4));
+
+// 测试 7 ，状态吸收 ----------------------------------------------------------------------
+// 1 2 3 4
+const pa = new MyPromise((resolve) => {
+  resolve(3);
+});
+
+const pb = new MyPromise((resolve) => {
+  // resolve(pa);
+}).then((res) => console.log(res));
+
+new MyPromise((resolve) => {
+  // resolve();
+})
+  .then(() => console.log(1))
+  .then(() => console.log(2))
+  .then(() => console.log(4));
+
+// // 0 1 2 3 4 5
+// MyPromise.resolve()
+//   .then(() => {
+//     console.log(0);
+//     return MyPromise.resolve(4);
+//   })
+//   .then((res) => console.log(res));
+
+// MyPromise.resolve()
+//   .then(() => {
+//     console.log(1);
+//   })
+//   .then(() => {
+//     console.log(2);
+//   })
+//   .then(() => {
+//     console.log(3);
+//   })
+//   .then(() => {
+//     console.log(5);
+//   });
+```
+
+（4）处理多个 Promise
+
+这些函数接收一个可迭代对象，返回 Promise，若成员不是 Promise 则会转为 Promise 。
+
+当所有 Promise resolve 或 reject 后才决定返回的这个 Promise 的状态。
 
 ```
 const p1 = new Promise((resolve) => {
@@ -4459,342 +5052,81 @@ const p3 = new Promise((resolve, reject) => {
   reject(3);
 });
 
-/*输出
- [
-   { status: 'fulfilled', value: 1 },
-   { status: 'fulfilled', value: 2 },
-   { status: 'rejected', reason: 3 }
- ]
+/**all -----------------------------------------------------------------------------------------
+ * 所有 Promise fullfilled 时才 fullfilled ，总时间为最晚完成的 Promise ，或最早 rejected 的时间
+ * res 为数组，err 为单个值
  */
-const res = Promise.allSettled([p1, p2, p3]);
-res.then((res) => {
-  console.log(res);
-});
-```
+// [1, 2] ，fillfilled
+Promise.all([p1, p2]).then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
 
-（4）顶层 await
+// 3 ，rejected
+Promise.all([p1, p2, p3]).then(
+  (res) => console.log(res),
+  (err) => console.log(err, "\n")
+);
 
-ES13 新特性，允许在全局作用域使用 await 。在之前，如果 import 的资源是异步加载的，需要这么做：
+/**allSettle ，ES11 新特性 ------------------------------------------------------------------------
+ * 所有 Promise 完成后，不管成功失败，返回的 Promise 状态都是 fullfilled
+ * res 为数组，保存每个 Promise 成功失败的信息
+ */
+// [ { statu: "fullfilled", value: 1 }, ... ]
+Promise.allSettled([p1, p2, p3]).then((res) => console.log(res, "\n"));
 
-```
-// 1.js
-export let data;
+/**any ，ES12 新特性 -----------------------------------------------------------------------------
+ * 所有 Promise rejected 时才 rejected ，总时间为最晚完成的 Promise ，或最早 fullfilled 的时间
+ * 只要有 Promise fullfilled 就直接 fullfilled ，类似竞速
+ * res 为单个值；err 为对象，有个 key 保存失败值的数组
+ */
+// 1 ，fullfilled
+Promise.any([p1, p2, p3]).then(
+  (res) => console.log(res),
+  (err) => console.log(err)
+);
 
-export default new Promise((resolve) => {
-  setTimeout(() => {
-    data = 123;
-    resolve();
-  }, 1000);
-});
-```
-
-```
-// 2.js
-import p, { data } from "./1.js";
-
-p.then(() => {
-  console.log(data);
-});
-```
-
-比较繁琐，而用顶层 await 会方便很多：
-
-```
-// 1.js
-export let data = await 异步;
-```
-
-```
-// 2.js
-import { data } from "./1.js";
-console.log(data);
-```
-
-其他用途：
-
-- 动态加载模块
-  
-  ```
-  const str = await import(`/i18n/${navigator.language}`);
-  ```
-
-- 资源初始化
-  
-  ```
-  const con = await dbConnector();
-  ```
-
-- 依赖回退
-  
-  ```
-  let translations;
-  try {
-    translations = await import('https://app.fr.json');
-  } catch {
-    translations = await import('https://fallback.en.json');
+/** 这些 key 都是不可枚举的
+ * {
+     stack: "AggregateError: All promises were rejected"
+     message: "All promises were rejected"
+     errors:  [ 3 ]
+   }
+ */
+Promise.any([p3]).then(
+  (res) => console.log(res),
+  (err) => {
+    for (const key of Reflect.ownKeys(err)) console.log(key, ": ", err[key]);
+    console.log("\n");
   }
-  ```
-
-### 4.3 async/await
-
-ES8 新特性，以类似同步的方式使用异步。
-
-（1）async
-
-用来声明 async 函数，该函数一定会返回一个 Promise ，return 的值是 reslove 传入的参数，根据 async函数 返回的 Promise 的成状态，可以使用 then 、catch：
-
-```
-async function func1() {
-  return 123;
-}
-
-func1().then((val) => {
-  console.log(val); //输出123
-});
-
-//上面代码相当于
-new Promise((resolve) => {
-  resolve(123);
-}).then((val) => {
-  console.log(val);
-});
+);
 ```
 
-若 async 函数的返回值为：
+实现 all（any 、allSettle 都差不多）：
 
-- *没有 return 或只有 return ，rereturn undefined，返回的 Promise 状态为 Fullfilled ，then 参数值为 undefined
+```
+// 接收一个可迭代对象
+function myAll<T>(promiseList: Iterable<any>) {
+  return new Promise((resolve, reject) => {
+    const result: any[] = [];
 
-- return xxx ，返回的 Promise 状态为 Fuillfilled ，then 的参数值为 xxx
+    let cnt = 0;
+    for (const promise of promiseList) {
+      const index = cnt++;
 
-- return Promise ，记为 p，返回的 Promise 状态即 p 的状态，then 、catch 的参数值为 p 内 resolve ，reject 的值
-
-- 该函数内跑出异常，返回的 Promise 状态为 Rejected
-
-（2）await
-
-后面可以放一个表达式，称为await 表达式（一般为Promise对象）。
-
-- *await 必须放在 async 函数中，不过 async 函数中不一定要有 await 。
-
-- await 下面的代码若 await 成功 ，则相当于 then ，若有多个 await ，则相当于嵌套的 then
-
-- await 之前的代码就相当于 Promise 的 (resolve, reject) => {}
-
-await 后面的表达式，若为：
-
-- Promise，若该 Promise 状态为 Fullfilled ，则 await 表达式结果为 resolve 传入的值；若状态为 Rejected ，则需要 try...catch 捕获异常，catch 获得的值即 reject 传入的值：
-  
-  ```
-  /* 输出结果
-   * resolve：1 2 end
-   * reject：1 err 3 end
-   */
-  
-  const p = new Promise((resolve, reject) => {
-    resolve();
-    // reject();
-  });
-  
-  async function func() {
-    try {
-      const res = await p;
-      console.log(2);
-    } catch (err) {
-      console.log("err");
-      console.log(3);
+      // 若成员不是 Promise 就转为 Promise
+      Promise.resolve(promise).then((res) => {
+        result[index] = res;
+        if (--cnt <= 0) resolve(result);
+      }, reject);
     }
-  
-    // 若 resolve ，则这里相当于把下面的代码放入 then 中的后面
-    // 若 reject ， 则这里相当于把下面的代码放入 catch 中的后面
-    console.log("end");
-  }
-  
-  func();
-  console.log(1);
-  ```
-  
-  await 失败的另一种写法，虽然比 try...catch 简洁，但是只能获取 Promise 自己的成功失败，获取不到 Promise 内部代码的错误：
-  
-  ```
-  const p = new Promise((resolve, reject) => {
-    resolve(1);
-    // reject(2);
-  });
-  
-  async function func() {
-    const [res, err] = await p
-      .then((res) => [res, null])
-      .catch((err) => [null, err]);
-  
-    console.log(res, err);
-  }
-  
-  func();
-  ```
 
-- 不是 Promise ，则 await jscode 会转化成 await Promise.resolve(jscode) ：
-  
-  ```
-  // 输出结果：1 2 3 undefined
-  
-  async function func() {
-    // 转化成 await Promise.resolve(123)
-    const res1 = await 2;
-    console.log(res1);
-  
-    // 转换成 await Promise.resolve((() => console.log(3))())
-    const res2 = await (() => console.log(3))();
-    console.log(res2);
-  }
-  
-  func();
-  console.log(1);
-  ```
-
-await 的优先级低于 ] 和 . ：
-
-```
-const p1 = new Promise((resolve) => {
-  resolve({ a: 123 });
-});
-
-const p2 = new Promise((resolve) => {
-  resolve([5, 7]);
-});
-
-async function func() {
-  const res1 = (await p1).a;
-  const res2 = (await p2)[0];
-  console.log(res1, res2);
-
-  // 也可以直接解构赋值
-  const { a } = await p1;
-  const [res3] = await p2;
-  console.log(a, res3);
-}
-
-func();
-```
-
-### 4.4 异步迭代器
-
-ES9 新特性，即异步循环 for...await...of 。
-
-普通的在 for 中若有异步操作，其实就是把循环体按顺序执行 n 次，先执行同步任务再执行异步任务，本质上还是正常的 JS 执行机制：
-
-```
-function func(i) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(i);
-    }, 1000);
+    if (cnt <= 0) resolve(result);
   });
 }
-
-console.log("start");
-
-for (let i = 0; i < 3; i++) {
-  console.log(`同步${i}`);
-  func(i).then((res) => {
-    console.log(`异步${res}`);
-  });
-}
-console.log("end");
-
-/* 整个 for 循环其实就是 3 次 console...Promise
-start
-同步0
-同步1
-同步2
-end
-异步0
-异步1
-异步2
-*/
 ```
 
-async ，await 也一样：
-
-```
-function func(i) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(i);
-    }, 1000);
-  });
-}
-
-async function run1() {
-  console.log("start");
-
-  for (let i = 0; i < 3; i++) {
-    console.log(`${i}`);
-    const res = await func(i);
-    console.log(`异步${res}`);
-  }
-
-  console.log("for执行完我才执行"); //这是最后一次await后的then
-}
-
-run1();
-console.log("end");
-
-/*
-start
-0
-end
-异步0
-1
-异步1
-2
-异步2
-for执行完我才执行
-*/
-```
-
-而异步迭代器 for...await...of ，在上面代码的基础上，把整个 for 的循环体放入一个 Promise 的 then 中：
-
-```
-function func(i) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(i);
-    }, 1000);
-  });
-}
-
-async function run2() {
-  console.log("start");
-
-  for await (let i of [0, 1, 2]) {
-    console.log(i);
-    const res = await func(i);
-    console.log(`异步${res}`);
-  }
-
-  console.log("for执行完我才执行"); //这是最后一次await后的then
-}
-run2();
-console.log("end");
-
-/*
-start
-end
-0
-异步0
-1
-异步1
-2
-异步2
-for执行完我才执行
-*/
-```
-
-### 4.5 并发 Promise
-
-当需要处理多个 Promise 可以用 Promise.allSettle() 并行处理，或 for await 穿行处理。但如果想要并行处理，且需要控制同一时间的并发量，就需要手写了，如大文件上传。
-
-此外，若 reject 了，也可以按需求看是否需要重新执行，如请求重传。
+控制并发两；
 
 ```
 /**可控制并发量的 Promise
@@ -4878,336 +5210,974 @@ myAllSettle(taskList, 3, 2).then((res) => {
 
 ## 5 模块化
 
-解决导入多个 JS 文件后冲突的问题。模块化的核心是导入、导出。
+### 5.1 基本
 
-ES5 模块化：
+（1）基本
 
-```
-<script type="module" src="..."></script>
-<script type="module">
-  import ... from '...'
-</script>
-```
-
-模块化规范：ES6 ，CommonJS ，AMD ，CMD 。其中 AMD 用在 requireJS ，CMD 用在 sealS ，不太常用。
-
-绝对路径：完整的路径
-
-相对路径：./ 当前目录 ，../ 上一级目录 ，../../ 上两级目录。
-
-（1）ES6 模块化
-
-方式一：
+模块化可[以解决多个 script 变量冲突的问题：]()
 
 ```
-// 1.js
-const a = 1, b = 2;
-export { a, b };
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
+
+  <!-- 不使用模块化，多个 script 会有变量冲突 -->
+  <script>
+    const a = 1;
+  </script>
+  <script>
+    // 1
+    console.log(a);
+  </script>
+
+  <!-- 使用模块化，形成独立的作用域 -->
+  <script type="module">
+    const b = 2;
+  </script>
+  <script>
+    // err
+    try {
+      console.log(b);
+    } catch {
+      console.log("err");
+    }
+
+    const c = 3;
+  </script>
+
+  <!-- 但是模块也可以使用非模块化的变量，所以最好都加上 type = "module" -->
+  <script type="module">
+    // 3
+    console.log(c);
+  </script>
+</html>
+```
+
+文件路径：
+
+* ,相对路径：\./ 当前目录 ，\.\./ 上一级目录 ，\.\./\.\./ 上两级目录
+
+* 绝对路径
+
+（2）模块化规范
+
+模块化规范，其中最常用的是 esmodule 和 CommonJS 。：
+
+- ES6 的 esmodule
+
+- node 的 CommonJS
+
+- requireJS 的 AMD
+
+- sealS 的 CMD
+
+CommonJS ，node 环境的默认模块化方式，是早期没有 ESM 时社区自己提供的 API ，因此没有语法层面的改变，也只能支持运行时，且是同步的：
+
+```
+// 2.js 导出
+
+const a = 1, b = 2, c = 3;
+
+module.exports = { a, b, c };
+
+// 或者
+// this.a = a;
+// exports.b = b;
+// module.exports.c = c;
 ```
 
 ```
-// 2.js
-export const c = 3;
+// 1.js 导入，导入的是一个对象，可以解构赋值
+const m = require("./2.js");
+const { a, b, c } = require("./2.js");
+
+// 1 2 3
+console.log(m.a, m.b, m.c);
+
+// 1 2 3
+console.log(a, b, c);
 ```
 
-```
-// 3.js
-const { a, b } from "./1.js";
-```
+esmodule ，适用于浏览器环境，是 ECMA 在语法层面上的新特性，支持静态依赖（编译时）和动态依赖（运行时，ES11）。
+
+若在 node 环境使用 esmodule ，需要在 package\.json 中：
 
 ```
-// 4.js
-export * from "./1.js";
-```
-
-```
-import { a, b } from "./1.js";
-import { c } from "./2.js";
-
-console.log(a, c);
-```
-
-```
-import * as js1 from "./1.js";
-import * as js2 from "./2.js";
-
-console.log(js1.a, js2.c);
-```
-
-方式二：
-
-default 一个文件只能有一个：
-
-```
-// 1.js
-export default a = 1;
-```
-
-```
-import js1 from "./1.js";
-// 1
-console.log(js1);
-```
-
-（2）CommonJS 模块化
-
-nodejs ，Browserify 使用。
-
-```
-// 1.js
-const a = 1, b = 2;
-module.exports = {
-  a, b
+{
+  "type": "module"
 }
 ```
 
 ```
-const { a, b } = require("./1.js");
+// 2.js 导出 
+const a = 1, b = 2;
+
+// 可以声明时就导出
+export const c = 3;
+
+const d = 4;
+
+// 导出多个，要求之前不能已经 export
+export { a, b };
+
+// 默认导出，每个文件只允许有一个
+export default d;
 ```
 
-（3）新特性
+```
+/**1.js 导入，导入的都是 const
 
-ES11 新特性，动态 import
+// 按需导入，语法不是解构赋值，只是 import 的语法
+import { a, b, c } from "./2.js";
 
-ES6的是静态 import，这里的动态 import 实现按需加载（懒加载）：
+// 导入全部并重命名，js2 本身是 const ，成员也是导出的资源所以也是 const 但成员的成员就不是了
+import * as js2 from "./2.js";
+
+// 导入 export default 的资源
+import d from "./2.js";
+
+// 导入全部后再导出
+export * from "./2.js";
+
+// 1 2 3
+console.log(a, b, c);
+
+// { a: 1, b: 2, c: 3, default: 4 }
+console.log(js2);
+
+// 4
+console.log(d);
+```
 
 ```
-import(‘./1.js’).then(res => {
-  console.log(res);
-})
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
 
-// 路由懒加载
-const a = import(‘xxx’);
+  <!-- 
+    html 中导入模块，需要通过 http 或 localhost 导入，所以需要 express 
+    弄一个静态资源文件夹才行，且需要同源
+  -->
+  <script type="module">
+    import { a } from "./2.js";
+
+    // 1
+    console.log(a);
+  </script>
+</html>
 ```
 
-ES11 新特性，import.meta
+（3）符号绑定
 
-是一个 JS 模块暴漏的特定上下文的元数据的对象，包含了这个模块的信息，如模块的 url ：
+ESM 的导入导出会形成符号绑定（即 C++ 中的引用），会共享内存空间，所以 ESM 才不允许导入的资源进行修改，但若模块导出了 set 函数就容易出问题，因此最好导出的资源都设置为 const ：
 
 ```
-console.log(import.meta);
+// 2.js
+
+export let cnt = 0;
+export const obj = { a: 0 };
+
+export const add = () => {
+  cnt++;
+  console.log("2.js", cnt);
+};
+
+setTimeout(() => console.log("2.js", obj.a));
 ```
+
+```
+// 1.js
+
+import { cnt, obj, add } from "./2.js";
+
+// err ，无法修改
+try {
+  // cnt++;
+  // obj = null;
+} catch {
+  console.log("err");
+}
+
+// 2.js 的 cnt 变为 1 ，没问题，但由于符号绑定，1.js 的 cent 也变为 1
+add();
+console.log(cnt);
+
+// 2.js 的 obj.a 也变为 1 ，这就和符号绑定无关了，本身就是浅拷贝
+obj.a = 1;
+```
+
+CommonJS 中不会符号绑定，导入的资源和导出的那个模块是不同的内存空间，不会冲突，但导入引用类型也是浅拷贝：
+
+```
+// 2.js
+
+const obj = { a: 1 };
+
+setTimeout(() => console.log(obj.a));
+
+module.exports = { obj };
+```
+
+```
+// 1.js
+
+const { obj } = require("./2.js");
+
+// 定时器输出 2
+obj.a = 2;
+```
+
+（4）ESM 动态依赖
+
+ES11 新特性，运行时异步加载模块：
+
+```
+// 2.js
+export const a = 1;
+
+// ES11 新特性，包含了该模块的原信息，如 url
+console.log(import.meta, import.meta.url);
+```
+
+```
+// ES11 新特性，动态 import ，可以实现运行时按需加载、按条件加载等，如懒加载
+import("./2.js")
+  .then((module) => {
+    // 1
+    console.log(module.a);
+  })
+  .catch((err) => {
+    console.error("加载模块失败", err);
+  });
+
+// 2 ，ES13 新特性，顶层 await，允许在全局作用域使用 await
+try {
+  const module = await import("./2.js");
+  console.log(module.a + 1);
+} catch {
+  console.log("err");
+}
+
+const p = new Promise((resolve) => {
+  resolve(3);
+});
+
+// 3
+const c = await p;
+console.log(c);
+```
+
+### 5.2 原理
+
+（1）node 模块查找策略
+
+和模块化规范无关。ts 、工程化都会用到：
+
+- 文件查找、文件夹查找，当使用绝对路径、相对路径时的查找策略：
+  
+  - ```
+    import { a } from "./xxx";
+    ```
+
+- 先再目标路径中查找。若没有则补上后缀名 .js ，再没有就补 .json ，
+
+- 若没有，则把路径看成文件夹，默认情况下找 index.js ，可以在 package.json 中修改：
+  
+  ```
+  {
+    "name": "main"
+  }
+  ```
+  
+  配置之后若找不到 main.js ，则再去找 index.js
+
+- 再找不到就 err
+
+- 内置模块查找、第三方模块查找，当只写了模块名的查找策略：
+  
+  - ```
+    import express from "express";
+    ```
+
+- 先看是否为内置模块，若不是则认为是第三方模块，先看当前目录是否有 node_modules 文件夹，若没有则去上一级找，直到根目录为止，若都没有 node_modules 则 err
+
+- 进入 node_module 并使用文件、文件夹的查找策略
+
+（2）CommonJS 工作流程
+
+运行时才确定依赖关系；
+
+* 核心就是 require 函数，require 是 node 本地实现的，这里只能伪代码模拟：
+  
+  ```
+  const path = require("path");
+  
+  const cache = new Map();
+  
+  function myRequire(modulePath) {
+    // JS 的文件路径作为 moduleId
+    const moduleId = "绝对路径" + modulePath;
+  
+    // 判断 JS 是否执行过，执行过就使用缓存的导出结果，不在执行
+    if (cache.has(moduleId)) return cache.get(moduleId);
+  
+    // 将整个 JS 文件的代码放入一个函数内执行
+    function _require(exports, require, module, __filename, __dirname) {
+      // 防止循环依赖进入死循环
+      cache.set(moduleId, {});
+  
+      // 运行模块 ...
+  
+      // 运行完成，缓存导出结果
+      cache.set(moduleId, module.exports);
+  
+      return module.exports;
+    }
+  
+    const module = { exports: {} };
+  
+    return _require.call(module.exports, [
+      module.exports,
+      myRequire,
+      module,
+      moduleId,
+      path.dirname(moduleId),
+    ]);
+  }
+  ```
+
+* node 执行任何一个 JS 其实都是在 require 环境内：
+  
+  ```
+  // 5
+  console.log(arguments.length);
+  
+  // {} true
+  console.log(this, this === exports && this === module.exports);
+  
+  // require 导入函数
+  console.log(require);
+  
+  // 文件绝对路径，目录绝对路径
+  console.log(__filename, __dirname);
+  
+  // 最终导出的是 { a: 1, b: 2, c: 3}
+  this.a = 1;
+  exports.b = 2;
+  module.exports.c = 3;
+  
+  // exports 指向新对象，就和导出无关了
+  // exports = {};
+  
+  // 这样导出的就是一个新对象 { d: 4 }
+  // module.exports = { d: 4 };
+  ```
+
+* 执行顺序和 ESM 一样，输出 2 1 main 
+  
+  ```
+  // main.js
+  const m1 = require("./1.js");
+  const m2 = require("./2.js");
+  
+  console.log("main");
+  ```
+  
+  ```
+  // 1.js
+  const m2 = require("./2.js");
+  console.log("1");
+  ```
+  
+  ```
+  // 2.js
+  console.log("2");
+  ```
+
+（3）ESM 工作流程
+
+在编译时就确定依赖关系，以浏览器环境为例，node 会略有不同：
+
+* ```
+  <script type="module" src="./main.js"></script>
+  ```
+  
+  ```
+  // main.js
+  import { a } from "./1.js";
+  import { b } from "./2.js";
+  console.log("main");
+  ```
+  
+  ```
+  // 1.js
+  import { b } from "./2.js";
+  console.log("1");
+  export const a = 1;
+  ```
+  
+  ```
+  // 2.js
+  console.log("2");
+  export const b = 2;
+  ```
+
+* 解析模块（不会执行 JS）：
+  
+  * 从入口 JS 开始，将路径转为 url 并进行下载，下载完成后解析入口 JS ，下载所有顶层静态依赖，并把导入语句放到代码最前面
+  
+  * 下载完成后先解析 1\.js ，发现导入的 2\.js 已下载或下载中，就不用重复下载
+
+* 执行模块：
+  
+  * 从入口 JS 文件开始，发现导入语句就先执行导入的 JS ，上例会先执行 1\.js ，里面发现 2\.js ，就执行，所以 JS 执行完成的顺序是 2\.js ，1\.js ， main\.js 
+  
+  * 执行过程中遇到动态模块就异步解析下载执行，执行完成后导出和导入会进行符号绑定，共享内存空间
+  
+  * 每执行完一个 JS ，浏览器就把导出结果缓存起来，每个模块都用一个独立的缓存表保存所友导出的资源，后续如果其他文件再次导入此模块，就直接使用缓存，不在执行 JS ，所以上例的输出结果为 2 1 main 而不是 2 1 2 main
+
+（4）循环依赖
+
+当模块之间互相依赖，就会形成循环依赖，这种情况不会死循环，但获取不到未执行完成模块的资源：
+
+```
+// 1.js
+
+// const m2 = require("./2.js");
+// module.exports = { a: 1 };
+
+import m2 from "./2.js";
+export default { a: 1 };
+
+// 正常，因为此时 2.js 执行完了
+console.log(m2);
+```
+
+```
+// 2.js
+
+// const m1 = require("./1.js");
+// module.exports = { b: 2 };
+
+import m1 from "./1.js";
+export default { b: 2 };
+
+// ESM：err ，CommonJS：{} 不报错但有提示
+try {
+  console.log(m1);
+} catch {
+  console.log("err");
+}
+```
+
+```
+node ./1.js
+```
+
+解决方法：
+
+* 运行时异步加载：
+  
+  ```
+  // 2.js
+  
+  // CommonJS
+  // module.exports = { b: 2 };
+  // setTimeout(() => {
+  //   const m1 = require("./1.js");
+  //   console.log(m1);
+  // });
+  
+  // ESM
+  export default { b: 2 };
+  import("./1.js").then((m1) => {
+    console.log(m1);
+  });
+  ```
+
+* 解开循环依赖，全局导入，模块使用全局传入的资源：
+  
+  ```
+  // 1.js
+  
+  // module.exports = {
+  //   a: 1,
+  //   show: (m) => console.log(m),
+  // };
+  
+  export default {
+    a: 1,
+    show: (m) => console.log(m),
+  };
+  ```
+  
+  ```
+  // 2.js
+  
+  // module.exports = {
+  //   b: 2,
+  //   show: (m) => console.log(m),
+  // };
+  
+  export default {
+    b: 2,
+    show: (m) => console.log(m),
+  };
+  ```
+  
+  ```
+  // main.js
+  
+  // const m1 = require("./1.js");
+  // const m2 = require("./2.js");
+  
+  import m1 from "./1.js";
+  import m2 from "./2.js";
+  
+  m1.show(m1);
+  m2.show(m2);
+  ```
 
 # 二、Web API
 
 ## 1 DOM
 
-DOM，文档对象模型，使 JS 可以操作 HTML。
+DOM ，文档对象模型，使 JS 可以操作 HTML。
 
-DOM树：整个html页面是一个 DOM 树，根元素是 \<html\>，叫文档 document ，每一个html 标签，叫元素 element ，所有页面内容，包括每个标签/属性/文本/注释等，叫节点 node 。
+DOM 树：整个html页面是一个 DOM 树，根元素是 \<html\>，叫文档 document ，每一个html 标签，叫元素 element ，所有页面内容，包括每个标签/属性/文本/注释等，叫节点 node 。
 
 ### 1.1 基本操作
 
-（1）获取元素
+（1）获取元素、节点操作
 
 ```
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
   <body>
-    <div id="app"></div>
-    <div class="box"></div>
+    <ul id="box">
+      <li class="item"></li>
+      <li class="item"></li>
+    </ul>
   </body>
+
   <script>
-    // id 只返回一个，tag、class 返回 HTMLCollection
-    var app = document.getElementById("app");
-    var div = document.getElementsByTagName("div");
-    var box1 = document.getElementsByClassName("box");
+    // 获取元素 --------------------------------------------------------------------------
+    // 单个 ul 元素
+    const box1 = document.getElementById("box");
 
-    // <html> <body>
-    var html = document.documentElement;
-    var body = document.body;
+    // 伪数组 HTMLCollection
+    const itemArr1 = document.getElementsByClassName("item");
+    const itemArr2 = document.getElementsByTagName("li");
 
-    /**html5 新特性，必须加上 # .
-     * querySelector() 只返回找到的第一个
-     * querySelectorAll() 返回伪数组
-     */
-    var box2 = document.querySelector(".box");
-    var boxArr = document.querySelectorAll(".box");
+    // html 和 body
+    const html = document.documentElement;
+    const body = document.body;
 
-    console.log(app);
-    console.log(div);
-    console.log(box1);
-    console.log(html);
-    console.log(body);
-    console.log(box2);
-    console.log(boxArr);
+    // 获取父子 node 、元素 ----------------------------------------------------------------
+    // 获取子 node ，node 即元素、属性、文本等，nodeType 为节点类型
+    const firstNode = box1.firstChild;
+    const lastNode = box1.lastChild;
+    console.log(firstNode, firstNode.nodeType);
+
+    // 获取所有子 node ，结果为伪数组 NodeList
+    const ietmNodes = box1.childNodes;
+
+    // 获取子元素
+    const firstElement = box1.firstElementChild;
+    const lastElement = box1.lastElementChild;
+    console.log(firstElement, firstElement.nodeType);
+
+    // 获取所有子元素，结果为伪数组 HTMLCollection
+    const itemElements = box1.children;
+
+    // 父 node 、父元素
+    const parentNode = itemArr1[0].parentNode;
+    const parentElement = itemArr1[0].parentElement;
+
+    // true true true ，判断是否为所包含的节点，如果就是本身也是 true
+    console.log(
+      box1.contains(box1),
+      box1.contains(firstNode),
+      box1.contains(firstElement)
+    );
+
+    // 获取兄弟 node 、元素 ----------------------------------------------------------------
+    // 下一个兄弟 node 、元素
+    const nextNode = itemArr1[0].nextSibling;
+    const nextElement = itemArr1[0].nextElementSibling;
+
+    // 上一个兄弟 node 、元素
+    const preNode = itemArr1[1].previousSibling;
+    const preElement = itemArr1[1].previousElementSibling;
+
+    // 创建、添加、删除元素 ---------------------------------------------------------------
+    // 添加、插入元素时，若待添加、待插入的是已存在的元素，则会移动，添加、插入到其他容器也是移动
+
+    const newItem1 = document.createElement("li");
+    const newItem2 = document.createElement("li");
+    newItem1.innerText = 123;
+    newItem2.innerText = 456;
+
+    // push 到最后面
+    box1.appendChild(newItem2);
+
+    // 插入到某元素前面
+    // box1.insertBefore(newItem1, itemArr1[0]);
+
+    // 删除元素
+    // box1.removeChild(itemArr1[1]);
+
+    // 拷贝所有 node
+    const newBox1 = box1.cloneNode(true);
+    // 只拷贝元素本身，不拷贝子元素、文本等信息
+    const newBox2 = box1.cloneNode();
+
+    // HTML5 新特性 ，获取元素 ------------------------------------------------------------
+    // 获取第一个符合条件的元素，可以传入任何 CSS 选择器，如属性选择器 ".box[data-item-id]"
+    const box2 = document.querySelector("#box");
+
+    // 伪数组 NodeList
+    const itemArr3 = document.querySelectorAll(".item");
+    const itemArr4 = document.querySelectorAll("li");
+
+    // HTMLCollection 和 NodeList 区别 ---------------------------------------------------
+    // HTMLCollection 的数据和页面实施绑定，如下会死循环
+    // for (const ietm of itemArr2) {
+    //   const newItem = document.createElement("li");
+    //   box1.appendChild(newItem);
+    // }
+
+    // NodeList 则不绑定，就不会死循环
+    for (const item of itemArr4) {
+      const newItem = document.createElement("li");
+      box2.appendChild(newItem);
+    }
+
+    // 但是，有时候获得的 NodeList 也是动态的，如 childNodes
+    // 解决方法是用 ... 或者 Array.from 生成一个新数组再使用
+    const itemArr5 = [...box2.childNodes];
   </script>
 </html>
 ```
 
-（2）读写文本，属性、样式
-
-文本、原生属性：
+（2）读写节点值，样式、属性
 
 ```
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <style>
+      #box2 {
+        font-weight: 700;
+        background-color: gray;
+
+        /* CSS3 新特性，CSS 变量，也叫 CSS 自定义属性，用 -- 定义 */
+        /* 这个变量会放在当前选中的元素中 */
+        /* CSS 变量也有作用域链，当前作用域没有就会往上找 */
+        --my-width: 10px;
+
+        /* 使用变量 */
+        border: var(--my-font-size) solid #000;
+
+        /* 运算 */
+        border: calc(var(--my-font-size) / 2) solid #000;
+
+        /* 若变量不存在，就会使用默认值 */
+        border-radius: var(--my-radius, 100px);
+      }
+
+      .box::before {
+        color: red;
+      }
+
+      /* 设置 <html> 的样式 */
+      :root {
+        --my-font-size: 15px;
+        border: 1px solid #000;
+      }
+    </style>
   </head>
+
   <body>
-    <div class="box1"></div>
-    <div class="box2"></div>
-    <input class="inp" type="text" value="asdf" />
+    <div id="box1">
+      <!-- desc -->
+      <span>123</span>
+      <span style="display: none">456</span>
+      <script>
+        let a;
+      </script>
+    </div>
+
+    <div id="box2" style="font-size: 50px">123</div>
+
+    <input id="inp" type="text" data-inp-id="0" />
   </body>
+
   <script>
-    var box1 = document.querySelector(".box1");
-    var box2 = document.querySelector(".box2");
-    var inp = document.querySelector(".inp");
+    const box1 = document.querySelector("#box1");
+    const box2 = document.querySelector("#box2");
+    const inp = document.querySelector("#inp");
 
-    // 读写文本、html
-    box1.innerText = "123";
-    box2.innerHTML = "<p>456</p>";
-    console.log(box1.innerText, box2.innerHTML);
+    // HTMLDivElement -> HTMLElement -> Element -> Node -> EventTarget -> Object 原型 -> null
+    let proto = box1.__proto__;
+    while (proto) {
+      console.log(proto);
+      proto = proto.__proto__;
+    }
 
-    // 读写原生属性
+    // 读写节点值 ----------------------------------------------------------------------
+    // 123 ，获取所有非隐藏节点、非注释节点的内容C
+    console.log(box1.innerText);
+    // undefined ，获取不到注释节点的内容
+    console.log(box1.childNodes[1].innerText);
+
+    // 123 456 let a; ，获取包括隐藏节点，不包括注释节点所有子节点内容
+    console.log(box1.textContent);
+    // desc ，只有当前就是注释节点时，才能获取注释内容
+    console.log(box1.childNodes[1].textContent);
+
+    // null
+    console.log(box1.nodeValue);
+    // desc ，nodeValue 专门用来获取注释节点、文本节点的内容
+    console.log(box1.childNodes[1].nodeValue);
+
+    // 整个 HTML 的内容
+    console.log(box1.innerHTML);
+    // undefined ，如果当前是注释节点就获取不到注释内容，但文本节点可以
+    console.log(box1.childNodes[1].innerHTML);
+
+    // 修改注释内容
+    box1.childNodes[1].nodeValue = " csed ";
+
+    // 无论哪种方式，修改后都只有修改后内容
+    // box1.innerText = 789;
+    // box1.textContent = 789;
+    // box1.innerHTML = 789;
+
+    // 尽量不要这样修改 HTML 内容，容易被 XSS 攻击
+    // box1.innerHTML = "<div>000</div>";
+
+    // 读写样式 ---------------------------------------------------------------------------
+    // 获取样式表
+    console.log(document.styleSheets);
+
+    /**读写 DOM 树行内样式
+     * 单个：dom.style.color
+     * 多个：都会覆盖所有行内样式，dom.style.cssText ，后续可以 += 追加属性；setAttribute 后续无法通过 cssText += 追加
+     * 增加、删除：dom.style.setProperty() ，dom.style.removeProperty()
+     */
+    box2.style.fontSize = "100px";
+    box2.setAttribute("style", "font-size:100px");
+    box2.style.cssText = "font-size: 100px; border: 50px solid #000";
+    box2.style.cssText += "text-align: center";
+    box2.style.setProperty("height", "1000px");
+    box2.style.removeProperty("height");
+
+    /**getComputedStyle() ，window 的 API
+     * 获取 SOM 树最终显示在页面的非几何样式，如黑色模式下获取的背景色都是黑色；样式修改后需要重新获取
+     * 几何样式至少都需要在布局树后的阶段才能获取正确值；transition 变化后的样式都无法获取
+     * 不符合 JS 命名规范的 CSS 属性需要 getPropertyValue() 获取
+     */
+    console.log(getComputedStyle(box2).fontSize);
+    console.log(getComputedStyle(box2).backgroundColor);
+    console.log(getComputedStyle(box2).getPropertyValue("--my-width"));
+    // 获取伪元素的样式
+    console.log(getComputedStyle(box2, "::before").color);
+    // 读写 CSS 变量
+    box2.style.setProperty("--my-color", "black");
+    console.log(box2.style.getPropertyValue("--my-color"));
+
+    /**读写 class
+     * className 会覆盖所有 class
+     * HTML5 新特性 classList ，可以单独读写 class
+     */
+    box2.className = "cls1 cls2";
+    box2.className += "cls3";
+    box2.classList.add("cls3");
+    box2.classList.remove("cls1");
+    console.log(box2.classList);
+    // 切换，即存在就删除，不存在就添加
+    box2.classList.toggle("cls4");
+
+    /**读写属性 ---------------------------------------------------------------------------
+     * 获得的结果都是 string ，不存在则 undefined
+     * dom.propName 只能读取原生属性
+     * setAttribute() ，removeAttribute() ，getAttribute() 原生属性、自定义属性都可以读写，自定义属性通常在标签中以 data-xxx 命名
+     * HTML5 新特性 dataset ，专门用于读写自定义属性，省略 data- ，且会变成小驼峰
+     *
+     */
     inp.disabled = true;
     inp.value = 123;
+    inp.setAttribute("data-inp-name", "name1");
+    console.log(inp.getAttribute("data-inp-name"));
+    inp.removeAttribute("data-inp-name");
+    inp.dataset.inpId = "1";
+    console.log(inp.dataset.inpId);
   </script>
 </html>
 ```
 
-自定义属性：
-
-为了和原生属性区分，建议加上 data\- ：
+（3）读写几何信息
 
 ```
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div class="box" data-box-id="1" data-box-type="box"></div>
-  </body>
-  <script>
-    var box = document.querySelector(".box");
-
-    // 读写自定义属性，原生属性
-    console.log(box.getAttribute("data-box-id"));
-    box.setAttribute("data-box-id", "2");
-    console.log(box.getAttribute("data-box-id"));
-
-    // 删除自定义属性
-    box.removeAttribute("data-box-id");
-    console.log(box.getAttribute("data-box-id"));
-
-    /**html5 新增
-     * 自动加上 data-
-     * data-xxx-yyy 得到 xxxYyy
-     */
-    console.log(box.dataset["boxType"]);
-    console.log(box.dataset.boxType);
-  </script>
-</html>
-```
-
-样式、类名：
-
-```
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
     <style>
-      .box {
-        font-size: 20px;
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        position: relative;
+        margin: 50px;
+        padding: 50px;
+        border: 5px solid #000;
+      }
+
+      .box1 {
+        margin: 2px;
+        padding: 2px;
+        width: 100px;
+        height: 100px;
+        border: 10px solid #000;
+        background-color: blue;
+      }
+
+      .box2 {
+        overflow: scroll;
+      }
+
+      .box2 > .item {
+        height: 30px;
+      }
+
+      .box3 {
+        margin-top: 300px;
+        transform: scale(2);
+      }
+
+      .box4 {
+        transition: all 1s;
+      }
+
+      .box4-move {
+        display: flex;
+        border-width: 0;
       }
     </style>
   </head>
   <body>
-    <div class="box">123</div>
-  </body>
-  <script>
-    var box = document.querySelector(".box");
-
-    // 读取任意属性
-    console.log(getComputedStyle(box).fontSize);
-
-    // 读写行内样式
-    console.log(box.style.fontWeight);
-    box.style.backgroundColor = "red";
-
-    // 修改 class
-    box.className = "cls1 cls2 cls3";
-    console.log(box.className);
-
-    // html5 新增，单独操作 class
-    box.classList.add("cls4");
-    box.classList.remove("cls4");
-    // 切换，即存在就删除，不存在就添加
-    box.classList.toggle("cls5");
-    console.log(box.classList);
-  </script>
-</html>
-```
-
-（3）节点操作
-
-```
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div class="box">
-      <div class="item"></div>
-      <div class="item"></div>
-      <div class="item"></div>
+    <div class="container">
+      <div class="box1"></div>
     </div>
+
+    <div class="box1 box2">
+      <div class="item">1</div>
+      <div class="item">2</div>
+      <div class="item">3</div>
+      <div class="item">4</div>
+      <div class="item">5</div>
+    </div>
+
+    <div class="box1 box3"></div>
+
+    <div class="box1 box4"></div>
   </body>
+
   <script>
-    var box = document.querySelector(".box");
-    console.log(box.nodeType);
+    const box1 = document.querySelector(".box1");
+    const box2 = document.querySelector(".box2");
+    const items = document.querySelectorAll(".item");
+    const box3 = document.querySelector(".box3");
+    const box4 = document.querySelector(".box4");
 
-    // 获取子 node 数组，node 包括元素、属性、文本等
-    var itemsNode = box.childNodes;
-    var firstNode = box.firstChild;
-    var lastNode = box.lastChild;
-    console.log(itemsNode[0].nodeType, firstNode.nodeType);
+    // "" ，可读写，获取行内样式，即 DOM 树 -------------------------------------------------
+    console.log(box1.style.width);
 
-    // 获取子 element
-    var items = box.children;
-    var first = box.firstElementChild;
-    var last = box.lastElementChild;
-    console.log(items[0].nodeType, first.nodeType, items.length);
+    // "100px" ，只读，获取 SOM 树样式 ------------------------------------------------------
+    console.log(getComputedStyle(box1).width);
 
-    // 父 node
-    console.log(first.parentElement, first.parentNode);
+    // 获取布局树样式 ----------------------------------------------------------------------
+    /**滚动条
+     * 无论什么盒子模型，滚动条都会压缩 content 大小
+     * 滚动条大小会随着视口缩放而改变
+     */
+    // offset ，只读 ------------------------
+    // 124 ，content + padding + border + 滚动条
+    console.log(box1.offsetWidth);
 
-    // 获取兄弟
-    var nestNode = items[0].nextSibling;
-    var nestElement = items[0].nextElementSibling;
-    var preNode = items[1].previousSibling;
-    var preElement = items[1].previousElementSibling;
+    // 52 ，margin + 最近一级非 static 祖先 padding ，直到 body 为止，即使 body 是 static 也不会网上找了
+    // 若该祖先是 body ，还需要加上 body 的 border
+    console.log(box1.offsetLeft);
 
-    // 创建、添加 element
-    var p1 = document.createElement("p");
-    var p2 = document.createElement("p");
-    p1.innerText = 123;
-    p2.innerText = 456;
-    box.appendChild(p2);
-    box.insertBefore(p1, items[1]);
+    // .container ，最近一级非 static 祖先
+    console.log(box1.offsetParent);
 
-    // 删除
-    box.removeChild(items[items.length - 1]);
+    // client ，只读 ---------------------------
+    // 104 ，content + padding - 注意 content 会被滚动条压缩
+    console.log(box1.clientWidth);
 
-    // clone，无参只拷贝元素，不拷贝文本等信息；true 拷贝全部
-    var newBox = box.cloneNode(true);
+    // 10 ，border
+    console.log(box1.clientLeft);
+
+    // scroll 。只读 ----------------------------
+    // 154 ，滚动总高度 + padding ，即 30*5+2*2 ，此时不计算滚动条大小
+    console.log(box2.scrollHeight, box2.clientHeight);
+
+    // 输出一样 ，若内容没有溢出形成滚动，则的 clientWidth 相同，content 被滚动条压缩
+    console.log(box2.scrollWidth, box2.clientWidth, box2.clientHeight);
+
+    // 0 随滚动变化，获取滚动元素距滚动开始的偏移
+    console.log(box2.scrollTop);
+    box2.addEventListener("scroll", function () {
+      console.log(box2.scrollTop);
+    });
+
+    // 获取最终当前显示的样式，即渲染流程的最终结果，但无法获取 transition 后的样式 ---------------
+    // 获取的是当前举行区域，如果后续元素移动了，新位置需要重新获取举行
+    const rect = box3.getBoundingClientRect();
+
+    // 248 ，offsetWidth * transform: scale(2)
+    // 如果旋转了，则得到的是外接举行的 width
+    console.log(rect.width);
+
+    // -60 ，计算 transform 后距 body border 外边缘的偏移，类似于相对于 body 的 offsetLeft ，只是 offset 得不到 transform 后的结果
+    console.log(rect.left, box3.offsetLeft);
+
+    // 获取到视口的偏移
+    window.addEventListener("scroll", function () {
+      // console.log(rect.top - document.documentElement.scrollTop);
+    });
+
+    // 获取 transition 后的样式 ---------------------------------------------------------
+    box4.addEventListener("click", function (e) {
+      e.target.style.backgroundColor = "red";
+      e.target.style.transform = "translateX(100px)";
+      e.target.classList.add("box4-move");
+
+      // 已经写入的属性和无法 transition 的属性就能马上获取到
+      console.log(
+        e.target.style.backgroundColor,
+        e.target.style.transform,
+        getComputedStyle(e.target).display
+      );
+
+      // 无法获取 transition 后的样式
+      requestAnimationFrame(() => {
+        const { backgroundColor: bgc, border: bd } = getComputedStyle(e.target);
+        const x = e.target.getBoundingClientRect().left;
+        console.log(bgc, bd, x);
+      });
+    });
+
+    // 正确做法
+    box4.addEventListener("transitionend", function (e) {
+      const { backgroundColor: bgc, border: bd } = getComputedStyle(e.target);
+      const x = e.target.getBoundingClientRect().left;
+      console.log(bgc, bd, x);
+    });
   </script>
 </html>
 ```
@@ -5221,35 +6191,60 @@ DOM树：整个html页面是一个 DOM 树，根元素是 \<html\>，叫文档 d
 ```
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
   <body>
-    <div class="box1">123</div>
-    <div class="box2">456</div>
+    <ul>
+      <li class="item" onclick="func1(event, 1)">1</li>
+      <li class="item">2</li>
+      <li class="item">3</li>
+      <li class="item">4</li>
+    </ul>
   </body>
-  <script>
-    var box1 = document.querySelector(".box1");
-    var box2 = document.querySelector(".box2");
-    var box3 = document.querySelector(".box3");
 
-    function myEvent(e) {
-      console.log(this, e);
+  <script>
+    // 可以直接在元素标签内绑定，如果需要事件对象则必须传入 event
+    // 其实就是在标签内写一个表达式，如也可以是 cnt++
+    function func1(e, num) {
+      console.log(e, "click" + num);
     }
 
-    // 绑定
-    box1.onclick = myEvent;
-    box2.addEventListener("click", myEvent);
+    const items = document.querySelectorAll(".item");
 
-    // 可以在 JS 中手动触发事件
-    box1.click();
-    box2.click();
+    // JS 绑定，这种方式无法传入自己的参数
+    items[1].onclick = function (e) {
+      console.log(e, "click2");
+    };
 
-    // 删除
-    // box1.onclick = null;
-    // box2.removeEventListener("click", myEvent);
+    // 可以 JS 主动触发事件，不用传参数会自动带上 event ，无法传入自定义参数
+    items[1].click();
+
+    // 删除绑定
+    // items[1].onclick = null;
+
+    // HTML5 新特性 --------------------------------------------------------------------
+    items[2].addEventListener("click", function (e) {
+      console.log(e, "click3");
+    });
+
+    // 可以多次绑定不同的函数引用，若之前 onclick 绑定了也会触发，所以执行三次
+    items[2].onclick = function (e) {
+      console.log('click3"');
+    };
+    items[2].addEventListener("click", function (e) {
+      console.log("click3");
+    });
+
+    // 如果是相同的函数引用，则只保留一个，但 onclick 不会去掉，所以下面执行两次
+    function func() {
+      console.log("click4");
+    }
+
+    items[3].onclick = func;
+
+    items[3].addEventListener("click", func);
+    items[3].addEventListener("click", func);
+
+    // 删除绑定
+    // items[3].removeEventListener("click", func);
   </script>
 </html>
 ```
@@ -5318,267 +6313,652 @@ document.addEventListener("selectstart", function (e) {
 });
 ```
 
+自定义事件：
+
+Vue 、React 的自定义事件并不是使用这种方法实现的，有自己的机制。
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
+
+  <script>
+    // 创建自定义事件
+    const myEvent = new CustomEvent("myCustomEvent", {
+      // 通信的数据，必须写在 detail
+      detail: { a: 1 },
+    });
+
+    // 监听该事件
+    document.addEventListener("myCustomEvent", function (e) {
+      console.log(e.detail.a);
+    });
+
+    // 触发该事件
+    document.dispatchEvent(myEvent);
+
+    // 如果需要添加属性方法，则需要 继承 ---------------------------------------------------
+    class MyCustomEvent extends CustomEvent {
+      constructor(type, options) {
+        super(type, { detail: options.detail });
+
+        for (const key in options) {
+          if (key === "detail") continue;
+          this[key] = options[key];
+        }
+      }
+    }
+
+    const myE = new MyCustomEvent("myE", {
+      detail: { a: 1 },
+      b: 2,
+    });
+
+    document.addEventListener("myE", function (e) {
+      console.log(e.detail?.a, e.b);
+    });
+    document.dispatchEvent(myE);
+  </script>
+</html>
+```
+
 （3）事件对象
 
-通用：
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      .box {
+        margin: 20px;
+        border: 5px solid #000;
+        width: 60px;
+        height: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box"></div>
+    <div class="box"></div>
+  </body>
 
-| 属性/方法                   | 描述                                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| event.type              | 事件类型                                                                                  |
-| .event.preventDefault() | addEventListener中阻止默认行为，如a的跳转，button的提交。如果是on...中，则改成event.returnValue 或 return false |
-| event.stopPropagation() | 阻止事件冒泡                                                                                |
+  <script>
+    const box = document.querySelectorAll(".box");
 
-鼠标事件对象：
+    // 通用的属性方法 -----------------------------------------------------------------
+    box[0].addEventListener("click", function (e) {
+      // 阻止浏览器对该事件的默认行为
+      e.preventDefault();
 
-鼠标坐标是右边下边为正。
+      // 阻止事件冒泡
+      e.stopPropagation();
 
-| 属性                            | 说明                      |
-| ----------------------------- | ----------------------- |
-| event.offsetX 和 event.offsetY | 当前鼠标距离触发事件的元素边缘的距离      |
-| event.clientX 和 event.clientY | 当前鼠标距浏览器视口边缘的距离         |
-| event.pageX 和 event.pageY     | 当前鼠标距页面边缘的距离，即包括滚动卷去的距离 |
-| event.screenX 和 event.screenY | 当前鼠标距电脑屏幕边缘的距离          |
+      // 事件类型\，事件触发时的时间戳
+      console.log(e.type, e.timeStamp);
 
-### 1.3 获取几何信息
+      // 监听此事件的元素
+      console.log(this, e.currentTarget);
 
-（1）offset
+      // 触发此事件的元素，注意事件冒泡中 e.target 也始终是触发事件的元素
+      console.log(e.target);
+    });
 
-只读属性，获取结果是 number ，宽高是 border + padding + content ，偏移是 border 外部距最近非 static 定位的块盒祖先的 content 边缘：
+    // 鼠标相关事件中的事件对象，如拖拽 ---------------------------------------------------
+    box[1].addEventListener("mouseenter", function (e) {
+      // 鼠标点击相关的事件特有 ------------------------------------------------------------------
+      // 点击的鼠标键，左中右分别为 0 1 2 ，不是点击事件就为 0
+      console.log(e.button);
+
+      // 是否按下了修饰键，布尔值
+      console.log(e.ctrlKey, e.shiftKey, e.altKey, e.metaKey);
+
+      // enter、leave 等进入离开相关的事件特有 -----------------------------------------------
+      // enter 等进入的事件为从何处进入的元素；leave 等事件为离开后到达的元素
+      console.log(e.relatedTarget);
+      // 低版本 IE 中没有 relateedTarget ，但类似的有非标准属性 toElement
+      // console.log(e.toElement);
+
+      // 所有鼠标事件都有，左上角为坐标轴的原点 --------------------------------------------------------
+      // 鼠标距 e.target 元素 content + padding 的偏移
+      console.log(e.offsetX, e.offsetY);
+      // 鼠标距视口的偏移
+      console.log(e.clientX, e.clientY);
+      // 鼠标距视口的偏移 + 页面滚动的偏移，即距整个页面的偏移
+      console.log(e.pageX, e.pageY);
+      // 鼠标距显示器的偏移
+      console.log(e.screenX, e.screenY);
+    });
+
+    // 键盘事件对象 ------------------------------------------------------------------------
+    window.addEventListener("keydown", function (e) {
+      // 如 "1" "Numberpad1" 97
+      // keyCode 已弃用
+      console.log(e.key, e.code, e.keyCode);
+
+      // 是否按下了修饰键，布尔值
+      console.log(e.ctrlKey, e.shiftKey, e.altKey, e.metaKey);
+
+      // 是否正在长按
+      console.log(e.repeat);
+    });
+  </script>
+</html>
+```
+
+（3）事件流
+
+事件处理包括事件捕获、事件冒泡两个阶段。默认情况下，事件在冒泡阶段触发。
+
+- 事件捕获：从 DOM 树根结点出发到叶子结点捕获事件
+
+- 事件冒泡：从触发事件的对象出发，到根结点，若该事件对象的祖先有定义相同事件，则也会触发，注意 e\.target 始终为触发事件的元素，和冒泡无关：
+  
+  ```
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <style>
+        .box {
+          border: 1px solid #000;
+        }
+  
+        .big {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 200px;
+          height: 200px;
+          background-color: #000;
+        }
+  
+        .mid {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100px;
+          height: 100px;
+          background-color: #00f;
+        }
+  
+        .small {
+          width: 50px;
+          height: 50px;
+          background-color: #f00;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="big box">
+        <div class="mid box">
+          <div class="small box"></div>
+        </div>
+      </div>
+    </body>
+    <script>
+      /**
+       * 当 click small 时，3 个事件都会触发
+       * 可以用 e.stopPropagation() 关闭事件冒泡
+       */
+  
+      var big = document.querySelector(".big");
+      var mid = document.querySelector(".mid");
+      var small = document.querySelector(".small");
+  
+      big.addEventListener("click", function (e) {
+        console.log("big", e.target);
+      });
+  
+      mid.addEventListener("click", function (e) {
+        console.log("mid", e.target);
+      });
+  
+      small.addEventListener("click", function (e) {
+        // e.stopPropagation();
+        console.log("small", e.target);
+      });
+    </script>
+  </html>
+  ```
+
+利用事件冒泡，当有很多子元素需要绑定相同事件，可以只把这个事件绑定到父元素，让父元素做事件委托，减少事件绑定数，提高性能：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head> </head>
+  <body>
+    <ul class="list">
+      <li data-id="1">1</li>
+      <li data-id="2">2</li>
+      <li data-id="3">3</li>
+    </ul>
+  </body>
+  <script>
+    var list = document.querySelector(".list");
+    var items = document.querySelector(".item");
+
+    list.addEventListener("click", function (e) {
+      // 只有 click li 时，才处理
+      if (!e.target.getAttribute("data-id")) return;
+
+      console.log(e.target.innerText);
+    });
+  </script>
+</html>
+```
+
+### 1.3 常用 API
+
+（1）拖拽
+
+需要在元素标签添加 draggable="true" ：
 
 ```
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
+      .container {
+        display: flex;
+        flex-wrap: wrap;
       }
 
-      .container {
-        position: relative;
-        margin: 100px;
-        border: 1px solid #000;
-        padding: 10px;
+      .box {
+        margin: 20px 0;
+        border: 10px solid #000;
         width: 300px;
         height: 300px;
       }
 
-      .box {
-        margin: 50px;
-        border: 1px solid #000f;
-        padding: 10px;
-        width: 100px;
-        height: 100px;
+      .item {
+        margin: 20px;
+        height: 30px;
+        border: 1px solid #000;
+        background-color: red;
+        line-height: 30px;
+        text-align: center;
+        color: #fff;
+        transition: margin-top 0.5s;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .enter {
+        margin-top: 50px;
       }
     </style>
   </head>
+
   <body>
     <div class="container">
-      <div class="box"></div>
+      <div class="box" data-can-dragged="true">
+        <div class="item" draggable="true" data-item-id="0">1</div>
+        <div class="item" draggable="true" data-item-id="1">2</div>
+        <div class="item" draggable="true" data-item-id="2">3</div>
+        <div class="item" draggable="true" data-item-id="3">4</div>
+        <div class="item" draggable="true" data-item-id="4">5</div>
+      </div>
+
+      <div class="box" data-can-dragged="true"></div>
+      <div class="box" data-can-dragged="true"></div>
     </div>
   </body>
-  <script>
-    var box = document.querySelector(".box");
 
-    // 50 50
-    console.log(box.offsetLeft, box.offsetTop);
-    // 122 122
-    console.log(box.offsetWidth, box.offsetHeight);
-    // 最近的非 static 定位祖先，container
-    console.log(box.offsetParent);
+  <script src="./1.js"></script>
+
+  <script>
+    const boxes = document.querySelectorAll(".box");
+    const items = document.querySelectorAll(".item");
+    const flip = new Flip(items);
+
+    /**拖拽
+     * 被拖拽元素的标签才需要加 draggable 属性，目标不用
+     * 最好写成 draggable="true" ，若简写成 draggable ，拖拽会有问题
+     * 被拖拽元素监听 dragstart 、drag 、dragend ；目标监听 dragenter 、dragover ，dragleave，drop ，dragend
+     */
+    let activateBox = null;
+    let activateItem = null;
+    let enterItem = null;
+
+    for (const box of boxes) {
+      // 拖拽开始时触发一次，draggable 的元素才会触发
+      box.addEventListener("dragstart", function (e) {
+        // 被拖拽的元素
+        // console.log("start", e.target);
+
+        // 修改鼠标行为，即拖拽时鼠标的样式
+        // e.dataTransfer.dropEffect = "copy";
+
+        // 修改拖拽缩略图，需要创建一个 img 元素并设置 src
+        // e.dataTransfer.setDragImage(myImgElement, 0, 0);
+
+        activateItem = e.target;
+        activateBox = box;
+
+        // 拖拽开始时，会产生一个样式基于被拖拽元素的拖拽缩略图，所以才需要异步修改被拖拽元素的样式，才不影响拖拽缩略图
+        setTimeout(() => {
+          e.target.classList.add("hidden");
+          flip.play();
+        });
+      });
+
+      // 拖拽时一直触发
+      // box.addEventListener("drag", function (e) {
+      //   // 被拖拽的元素，不是拖拽缩略图
+      //   // console.log(e.target);
+      // });
+
+      // 拖拽结束时触发一次
+      box.addEventListener("dragend", function (e) {
+        // 被拖拽的元素
+        // console.log(e.target);
+
+        flip.refreshPosition();
+        flip.refreshPosition(e.target, e.clientX, e.clientY);
+        e.target.classList.remove("hidden");
+
+        flip.play();
+      });
+
+      // 拖拽到刚进入某个元素后触发一次
+      box.addEventListener("dragenter", function (e) {
+        // 拖拽经过的元素
+        // console.log("enter", e.target);
+
+        if (!e.target.dataset.itemId) return;
+        if (enterItem) enterItem.classList.remove("enter");
+        if (e.target === enterItem) {
+          enterItem = null;
+          return;
+        }
+
+        enterItem = e.target;
+        e.target.classList.add("enter");
+      });
+
+      // 拖拽经过某个元素后触发多次
+      box.addEventListener("dragover", function (e) {
+        e.preventDefault();
+
+        // 拖拽经过的元素
+        // console.log("over", e.target);
+      });
+
+      // 拖拽离开某个元素后触发一次
+      box.addEventListener("dragleave", function (e) {
+        // 拖拽离开的元素
+        // console.log(e.target);
+
+        if (enterItem && !box.contains(e.relatedTarget)) {
+          enterItem.classList.remove("enter");
+          enterItem = null;
+        }
+      });
+
+      // 松手后触发一次，闭 dragend 执行早
+      // 有些元素如 div ，table 、td 等不允许其他元素被拖拽到它们上面，不会触发 drop，需要在 dragover 事件中取消默认行为
+      box.addEventListener("drop", function (e) {
+        // 松手后被压在下面的元素
+        // console.log("drop", e.target);
+
+        const parentEl =
+          e.target.dataset.canDragged === "true"
+            ? e.target
+            : e.target.parentElement;
+
+        if (enterItem?.parentElement === box) {
+          parentEl.insertBefore(activateItem, enterItem);
+        } else parentEl.appendChild(activateItem);
+
+        enterItem?.classList?.remove("enter");
+      });
+    }
   </script>
 </html>
 ```
 
-（2）client
-
-只读属性，获取结果是 number ，宽高是 padding + content ，偏移是 border 的大小：
+（2）剪切板
 
 ```
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-      }
-
-      .container {
-        position: relative;
-        margin: 100px;
-        border: 1px solid #000;
-        padding: 10px;
-        width: 300px;
-        height: 300px;
-      }
-
-      .box {
-        margin: 50px;
-        border: 1px solid #000f;
-        padding: 10px;
+      .img-box {
         width: 100px;
         height: 100px;
+        border: 1px solid #000;
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="box"></div>
-    </div>
-  </body>
-  <script>
-    var box = document.querySelector(".box");
+    <p class="text">123456789</p>
+    <input type="text" />
 
-    // 1 1
-    console.log(box.clientLeft, box.clientTop);
-    // 120 120
-    console.log(box.clientWidth, box.clientHeight);
+    <div class="img-box" contenteditable="true"></div>
+  </body>
+
+  <script>
+    const text = document.querySelector(".text");
+
+    // 监听复制并添加内容 -----------------------------------------------------------------
+    text.addEventListener("copy", function (e) {
+      // 阻止复制的内容
+      e.preventDefault();
+
+      // 复制的内容，阻止了默认行为也能获取，因为得到的其实是选中的内容
+      const selectedText = window.getSelection().toString();
+      console.log(selectedText);
+
+      // 添加内容
+      navigator.clipboard.writeText(selectedText + "hello world");
+    });
+
+    // 获取剪切板内容，如根据剪切板内容进入某个页面 ---------------------------------------------
+    // 为了隐私安全，浏览器会提示用户剪切板内容正在被读取，所以是一个 Promise
+    navigator.clipboard
+      .readText()
+      .then((text) => {
+        console.log(text);
+      })
+      .catch((err) => console.log("用户拒绝"));
+
+    // 粘贴图片 ------------------------------------------------------------------------
+    // 设置了 contenteditable="true" 的元素会变成可粘贴图片的 input ，但如果不用 JS 处理，不能保证每个浏览器都支持，且只能粘贴截图，不能粘贴复制的图片文件
+    const imgBox = document.querySelector(".img-box");
+
+    imgBox.addEventListener("paste", function (e) {
+      // 若粘贴的是文本，则长度为 0
+      if (e.clipboardData.files.length === 0) return;
+
+      e.preventDefault();
+
+      const reader = new FileReader();
+      reader.onload = (res) => {
+        const base64 = res.target.result;
+
+        const img = document.createElement("img");
+        img.src = base64;
+
+        imgBox.appendChild(img);
+      };
+
+      for (const file of e.clipboardData.files) reader.readAsDataURL(file);
+    });
   </script>
 </html>
 ```
 
-（3）scroll
+（3）IntersectionObserver
 
-只读属性，获取结果是 number ，宽高是 padding + content 加上 content 超出部分的大小，偏移是滚动卷去的距离：
+观察两个元素是否交叉，即被观察元素是否已经进入、离开某个元素，可以替代需要监控浏览器滚动的需求；
 
 ```
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-      }
-
-      .container {
-        position: relative;
-        margin: 100px;
-        border: 1px solid #000;
-        padding: 10px;
-        width: 300px;
-        height: 3000px;
-      }
-
-      .box {
-        margin: 50px;
-        border: 1px solid #000f;
-        padding: 10px;
-        width: 100px;
-        height: 100px;
-      }
-    </style>
-  </head>
   <body>
-    <div class="container">
-      <div class="box"></div>
-    </div>
+    <ul class="list"></ul>
+    <div class="loading">loading...</div>
   </body>
+
   <script>
-    var box = document.querySelector(".box");
+    const list = document.querySelector(".list");
+    const loading = document.querySelector(".loading");
 
-    // 0 0
-    console.log(box.scrollLeft, box.scrollTop);
-    // 120 120
-    console.log(box.scrollWidth, box.scrollHeight);
+    function addItem(num) {
+      const start = document.querySelectorAll("li").length + 1;
+      const frag = document.createDocumentFragment();
 
-    // 浏览器水平、垂直滚动的距离
-    console.log(window.scrollX, window.scrollY);
+      for (let i = start; i < num + start; i++) {
+        const li = document.createElement("li");
+        li.textContent = "" + `${i}`;
+        frag.appendChild(li);
+      }
+
+      list.appendChild(frag);
+    }
+
+    const ob = new IntersectionObserver(
+      // 交叉到不交叉，或者不交叉到交叉就执行
+      (entries) => {
+        // 参数为一个数组，保存了这个 ob 对象所有 sbserve 的对象
+        console.log(entries.length);
+
+        // 如果不需要观察了，如图片懒加载，可以卸载
+        // ob.unobserve(entries[0].target);
+
+        if (entries[0].isIntersecting) {
+          // 被观察的元素
+          console.log(entries[0].target);
+
+          addItem(50);
+        }
+      },
+
+      {
+        // 和哪个元素交叉，只能是祖先元素，默认为 null ，即视口
+        root: null,
+
+        // 交叉范围，默认 0 ，即被观察元素的大小
+        rootMargin: "0px",
+
+        // 交叉阈值，默认 0 ，范围从 0 ~ 1 ，交叉到交叉范围多少百分比才触发
+        threshold: 1,
+      }
+    );
+
+    ob.observe(loading);
   </script>
 </html>
 ```
 
-（4）获取元素到视口边缘的偏移
-
-如果父元素是body或者祖先都没有设置定位，那使用offsetLeft，offsetTop就可以了，但是其他情况就需要 rect 。
-
-offset 、client 、scroll 无法计算 transform 的偏移，而 rect 可以。
+（4）监听页面显示隐藏
 
 ```
-console.log(e.getBoundingClientRect());
-/*top，left，bottom，right*/
-```
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
 
-（5）获取元素到整个页面边缘的偏移
+  <script>
+    // 浏览器兼容性
+    let hidden, visibilityChange;
+    if (document.hidden !== undefined) {
+      hidden = "hidden";
+      visibilityChange = "visibilitychange";
+    }
+    // 低版本 chrome
+    else if (document.webkitHidden !== undefined) {
+      hidden = "webkitHidden";
+      visibilityChange = "webkitvisibilitychange";
+    }
+    // IE
+    else if (document.msHidden !== undefined) {
+      hidden = "msHidden";
+      visibilityChange = "msvisibilitychange";
+    } else throw "不支持";
 
-元素到body的距离 = 元素到视口的距离 + 浏览器滚动的距离
-
-```
-function offsetPage(el) {
-  const rect = el.getBoundingClientRect();
-
-  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-
-  return {
-    left: rect.left + scrollLeft,
-    top: rect.top + scrollTop,
-  };
-}
-```
-
-（6）获取鼠标指针在元素内的相对位置
-
-```
-const box = document.querySelector(".box");
-
- small.addEventListener("mousemove", function (e) {
-    //方法一，不推荐，只有在祖先元素都没有设置定位时才可用
-    let innerX1 = e.pageX - small.offsetLeft;
-    let innerY2 = e.pageY - small.offsetTop;
-
-    //方法二，缺点是部分低版本浏览器不支持
-    let innerX2 = e.offsetX;
-    let innerY2 = e.offsetY;
-
-    //方法三
-    let innerX3 = e.clientX - box.getBoundingClientRect().left;
-    let innerY3 = e.clientY - box.getBoundingClientRect().top;
-
-    //方法四，offsetPage()是自定义的函数，见上面笔记
-    let innerX4 = e.pageX - offsetPage(box).left;
-    let innerY4 = e.pageY - offsetPage(box).top;
-});
+    // 页面显示、隐藏后触发
+    document.addEventListener(visibilityChange, function (e) {
+      const info = document[hidden] ? "隐藏" : "显示";
+      console.log(info);
+    });
+  </script>
+</html>
 ```
 
 ## 2 BOM
 
 BOM，浏览器对象模型，API 都放在 window ，使用时可以省略 window 。
 
-（1）BOM 事件
+（1）BOM 常用事件
 
-| 页面事件             | 描述                                                             |
-| ---------------- | -------------------------------------------------------------- |
-| load             | 页面所有内容，包括标签文本图片样式都加载完才触发                                       |
-| DOMContentLoaded | 当DOM加载完（即所有标签），就触发                                             |
-| pageshow         | 与onload基本一样，但是在火狐浏览器中，前进页面后，之前的页面会缓存，再后退不会触发onload，而pageshow可以 |
+window 和 document 可注册的事件有些不同，但如果是都可以注册的事件如 click ，则区别在于时间补货和事件冒泡， window 是 document 的外层。
 
-注意事项：
+页面加载：
 
-* 若引入 JS 在 html 页面之前 ，JS 就拿不到页面元素，此时就要 load ：
-  
-  ```
-  // 多个 onload 事件只执行最后一个
-  window.onload = function () {
-    // 此时 JS 就能拿到页面元素了
-  };
-  ```
+```
+<!DOCTYPE html>
+<html lang="en">
+  <script>
+    // 执行顺序：readystatechange - DOMContentLoaded - readystatechange - load - pageshow ------------
 
-| 窗口事件   | 描述             |
-| ------ | -------------- |
-| scroll | 滚动             |
-| resize | 浏览器窗口大小发生变化时触发 |
+    // 不太常用，文档状态变化时触发，如 loading → interactive → complete
+    document.onreadystatechange = function () {
+      console.log("readyState:", document.readyState);
+    };
+
+    // DOM 树构建完成，不等待图片、CSS 加载，可以安全操作 DOM 元素
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOMContentLoaded");
+    });
+
+    // 页面所有资源（图片、CSS、iframe、音视频等）完全加载完后触发，当 script 在 body 之前拿不到最终 DOM 就可以用 load
+    window.addEventListener("load", function () {
+      console.log("load");
+    });
+
+    // 与onload基本一样，但是在火狐浏览器中，前进页面后，之前的页面会缓存，再后退不会触发 load，而pageshow可以
+    window.addEventListener("pageshow", function () {
+      console.log("pageshow");
+    });
+
+    // 用户试图离开页面前触发，可用于弹出“是否确定离开”的提示
+    window.addEventListener("beforeunload", function () {
+      console.log("beforeunload");
+    });
+
+    // 页面完全卸载时触发。现在常用于性能分析，不建议做复杂操作
+    window.addEventListener("unload", function () {
+      console.log("unload");
+    });
+  </script>
+
+  <body></body>
+</html>
+```
+
+窗口：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
+
+  <script>
+    // 滚动
+    window.addEventListener("scroll", function () {
+      console.log("scroll");
+    });
+
+    // 缩放
+    window.addEventListener("resize", function () {
+      console.log("resize");
+    });
+  </script>
+</html>
+```
 
 （2）定时器
 
@@ -5799,15 +7179,13 @@ setTimeout(() => console.log(6), 10);
   console.log(2);
   ```
 
-* 定时器设置为 0ms 也是一步任务，延时参数默认值是 0ms 
+* 定时器设置为 0ms 也是异步任务，延时参数默认值是 0m s 
 
 * 相同延时的定时器，按照代码先后顺序入队
 
 * 定时器无法做到精确计时，因为：
   
-  * 计算机硬件本身就有微小偏差
-  
-  * 定时器函数调用的操作系统的函数，本身也有微小偏差
+  * 计算机硬件本身就有微小偏差；定时器函数调用的操作系统的函数，本身也有微小偏差
   
   * W3C 标准中规定，若嵌套超过 5 层，从第 6 层开始，若 \< 4ms ，则会自动变成 4ms ：
     
@@ -5836,8 +7214,10 @@ setTimeout(() => console.log(6), 10);
       }, 0);
     }, 0);
     ```
-
-* JS 执行同步任务也需要时间，计时完成可能同步任务还没有完成
+  
+  * 切换页面后，浏览器为了优化性能，会吧隐藏页面的定时器延长
+  
+  * 执行同步任务也需要时间，计时完成可能同步任务还没有完成
 
 大致模拟事件循环的过程：
 
@@ -6101,102 +7481,6 @@ Promise.resolve()
  */
 ```
 
-（5）事件流
-
-事件处理包括事件捕获、事件冒泡两个阶段。默认情况下，事件在冒泡阶段触发。
-
-- 事件捕获：从 DOM 树根结点出发到叶子结点捕获事件
-
-- 事件冒泡：从触发事件的对象出发，到根结点，若该事件对象的祖先有定义相同事件，则也会触发：
-  
-  ```
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <style>
-        .box {
-          border: 1px solid #000;
-        }
-  
-        .big {
-          width: 200px;
-          height: 200px;
-          background-color: #000;
-        }
-  
-        .mid {
-          width: 100px;
-          height: 100px;
-          background-color: #00f;
-        }
-  
-        .small {
-          width: 50px;
-          height: 50px;
-          background-color: #f00;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="big box">
-        <div class="mid box">
-          <div class="small box"></div>
-        </div>
-      </div>
-    </body>
-    <script>
-      /**
-       * 当 click small 时，3 个事件都会触发
-       * 可以用 e.stopPropagation() 关闭事件冒泡
-       */
-  
-      var big = document.querySelector(".big");
-      var mid = document.querySelector(".mid");
-      var small = document.querySelector(".small");
-  
-      big.addEventListener("click", function () {
-        console.log("big");
-      });
-  
-      mid.addEventListener("click", function () {
-        console.log("mid");
-      });
-  
-      small.addEventListener("click", function (e) {
-        // e.stopPropagation();
-        console.log("small");
-      });
-    </script>
-  </html>
-  ```
-
-利用事件冒泡，当有很多子元素需要绑定相同事件，可以只把这个事件绑定到父元素，让父元素做事件委托，减少事件绑定数，提高性能：
-
-```
-<!DOCTYPE html>
-<html lang="en">
-  <head> </head>
-  <body>
-    <ul class="list">
-      <li data-id="1">1</li>
-      <li data-id="2">2</li>
-      <li data-id="3">3</li>
-    </ul>
-  </body>
-  <script>
-    var list = document.querySelector(".list");
-    var items = document.querySelector(".item");
-
-    list.addEventListener("click", function (e) {
-      // 只有 click li 时，才处理
-      if (!e.target.getAttribute("data-id")) return;
-
-      console.log(e.target.innerText);
-    });
-  </script>
-</html>
-```
-
 ### 3.2 渲染帧
 
 渲染任务的优先级比微任务低，但和宏任务的优先级不好比较，不同浏览器的处理不同，有的比宏任务高，有的在宏任务中间适合的时间段渲染，因此执行顺序不好判断。
@@ -6207,11 +7491,11 @@ Promise.resolve()
 
 虽然 CSS 动画已经很强大，但一些情况下还是需要 JS 做动画，此时不能使用定时器 setInterval 定时 16.67 ms 。因为浏览器会受到机器配置、卡顿等各种原因导致浏览器分配的渲染帧并不平均，就会导致空帧（小于 16.67 ms ，多个渲染帧没有做任何动画）和跳帧（大于 16.67 ms ，一个渲染帧做了多次动画，只保留了最后一个动画），
 
-HTML5 新特性提供了两个渲染帧相关的 API 。注意只有渲染任务开始了，才会有渲染帧，及也是异步的，顺序在微任务后面：
+HTML5 新特性提供了两个渲染帧相关的 API 。注意只有渲染任务开始了，才会有渲染帧，及也是异步的，顺序在微任务后面，一次渲染帧不一定为 16\.67 ms :
 
 * requestAnimationFrame ：简称 raf，每次渲染帧开始之前毁掉
 
-* requestIdleCallback ：渲染帧结束后回调，兼容性比 raf 差一点
+* requestIdleCallback ：渲染帧结束后，若此次渲染帧小于 16\.67 ms ，即还有剩余时间，就回调，兼容性比 raf 差一点
 
 ```
 <!DOCTYPE html>
@@ -6271,11 +7555,37 @@ HTML5 新特性提供了两个渲染帧相关的 API 。注意只有渲染任务
 
 （2）封装动画函数
 
-有些动画是必须使用 JS 的，如修改元素的内容。
+有些动画是必须使用 JS 的，如修改元素的内容，现在 JS 动画主要通过渲染帧 API 或 Web Animation API 实现，都是 HTML5 新特性。
 
-动画的本质就是数值的变化，因此无论是 JS 还是 CSS 动画，都只能以数值变化作为动画的基础。
+动画的本质就是数值的变化，因此无论是 JS 还是 CSS 动画，都只能以数值变化作为动画的基础：
 
-下面虽然使用了 raf 和 transform ，但是 JS 修改了样式，就会修改 DOM 树、且 raf 终究是工作在渲染主线程中，还是会有阻塞渲染的风险：
+```
+.box {
+  width: 10px;
+  border: 1px solid #000;
+  background-color: blue;
+  transition: all 1s;
+}
+
+.box-click {
+  /* 这些都有数值变化，就有动画 */
+  width: 100px;
+  border-width: 0;
+  background-color: red;
+  transform: translate((100px, 100px));
+
+  /* 没有数值变化就不能做动画 */
+  display: none;
+
+  /* 复合属性需要注意，要么写全，要么单独写数值属性 */
+  /* 没有动画 */
+  /* border: 0; */
+  border-width: 0;
+  border: 0 solid #000;
+}
+```
+
+下面虽然使用了 raf 和 transform ，但 raf 终究是工作在渲染主线程中，还是会有阻塞渲染的风险：
 
 ```
 <!DOCTYPE html>
@@ -6443,6 +7753,197 @@ HTML5 新特性提供了两个渲染帧相关的 API 。注意只有渲染任务
 </html>
 ```
 
+Web Animation API ，性能接近 CSS3 动画，通过 keyframs 实现，而不是修改 DOM 的 style ：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      .box {
+        width: 100px;
+        height: 100px;
+        border: 5px solid #000;
+        border-radius: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box"></div>
+  </body>
+
+  <script>
+    const box = document.querySelector(".box");
+
+    window.addEventListener("click", function (e) {
+      const x = e.clientX - box.offsetWidth / 2;
+      const y = e.clientY - box.offsetHeight / 2;
+      const { left, top } = box.getBoundingClientRect();
+
+      // 动画对象会保存，为了防止对象越来越多，可以手动删除不用的动画对象
+      // console.log(box.getAnimations().length);
+      box.getAnimations().forEach((i) => i.cancel());
+
+      /**两个参数
+       * keyframs ，默认不用写百分比，会平均分配，也可以用 offset 设置百分比（0 ~ 1）
+       * animation options ，可以写一个 ms 数值，也可以写一个对象
+       */
+      box.animate(
+        [
+          {
+            transform: `translate(${left}px, ${top}px)`,
+          },
+          {
+            transform: `translate(${left}px, ${top}px) scale(2)`,
+            offset: 0.5,
+          },
+          {
+            transform: `translate(${x}px, ${y}px)`,
+          },
+        ],
+        {
+          duration: 1000,
+          fill: "forwards",
+        }
+      );
+    });
+  </script>
+</html>
+```
+
+Flid 动画（First Last Invert Play），一种元素结构变化的动画解决方案，元素结构变化是非数值变化，一般无法做动画，而 flip 的思路是先记录 first 的偏移，元素结构变化后根据 last 偏移和 first 偏移计算变化偏移，在渲染之前移动到 first 位置，再动画移动到 last 位置，形成偏移数值的变化，就能做动画，Vue 的 transition 组件用的就是 flip ：
+
+```
+// flip.js
+
+class Flip {
+  constructor(dom, duration = ".5s") {
+    this.#duration = typeof duration === "number" ? `${duration}s` : duration;
+    this.#init(dom);
+  }
+
+  #dom = [];
+  #duration = "";
+
+  #getPosition(el) {
+    const rect = el.getBoundingClientRect();
+
+    return {
+      x: rect.left,
+      y: rect.top,
+    };
+  }
+
+  #createDomInfo(dom) {
+    return {
+      el: dom,
+      transition: `${getComputedStyle(dom).transition},transform ${
+        this.#duration
+      }`,
+      firstPos: this.#getPosition(dom),
+    };
+  }
+
+  // 获取初始偏移
+  #init(dom) {
+    if (!dom) return;
+
+    if (!dom.length) {
+      this.#dom.push(this.#createDomInfo(dom));
+      return;
+    }
+
+    for (const el of dom) this.#dom.push(this.#createDomInfo(el));
+  }
+
+  // 获取变化后的偏移，并开始动画
+  play(options = {}) {
+    const defaultOptions = {
+      refresh: true,
+    };
+    const { refresh } = { ...defaultOptions, ...options };
+
+    for (const info of this.#dom) {
+      const { el, firstPos } = info;
+
+      const { x, y } = this.#getPosition(el);
+      const dx = firstPos.x - x;
+      const dy = firstPos.y - y;
+
+      // 如果需要刷新新位置
+      if (refresh) info.firstPos = { x, y };
+
+      // 此时还没有到渲染任务，先让元素回到原来的位置
+      el.style.removeProperty("transition");
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+
+      // 在回到目标位置，形成数值的变化，就可以做动画了
+      requestAnimationFrame(() => {
+        el.style.transition = info.transition;
+        el.style.removeProperty("transform");
+      });
+    }
+  }
+
+  // 有时候外部可能需要手动刷新新位置
+  refreshPosition(el, x, y) {
+    if (!el) {
+      for (const info of this.#dom) info.firstPos = this.#getPosition(info.el);
+      return;
+    }
+
+    const info = this.#dom.find((i) => i.el === el);
+    if (info) info.firstPos = { x, y };
+  }
+}
+```
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      .item {
+        margin: 20px 0;
+        height: 50px;
+        border: 5px solid #fff;
+        line-height: 50px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="item">1</div>
+      <div class="item">2</div>
+      <div class="item">3</div>
+      <div class="item">4</div>
+      <div class="item">5</div>
+    </div>
+
+    <button id="btn">click</button>
+  </body>
+
+  <script src="./flip.js"></script>
+
+  <script>
+    const btn = document.querySelector("#btn");
+    const items = document.querySelectorAll(".item");
+    const flip = new FliP(items);
+
+    btn.addEventListener("click", function () {
+      // 乱序
+      for (const item of items) {
+        const index = Number.parseInt((Math.random() * 10) / 2);
+        item.parentElement.insertBefore(item, items[index]);
+      }
+
+      flip.play();
+    });
+  </script>
+</html>
+```
+
 （3）分片任务、分时函数
 
 渲染任务可能有时候在 16.67 ms 内就完成了，剩余的时间可以利用起来，只要这一次渲染帧渲染时间 \+ 剩余时间不超过 16.67 ms 就不影响流畅度。
@@ -6500,9 +8001,9 @@ HTML5 新特性提供了两个渲染帧相关的 API 。注意只有渲染任务
 
       if (typeof chunkSplitor !== "function" || !chunkSplitor) {
         /**
-         * 如果在一个渲染帧中，渲染任务在 16.67 ms 内完成了，就没必要马上到下一个渲染帧，
+         * 如果在一个渲染帧中，渲染任务在 16.67 ms 内完成了，就没必要马上开始下一个渲染任务，
            可以利用剩余空闲时间执行分片任务
-         * 之所以用 while 是因为想在下一次渲染帧前，尽量利用空闲时间执执行分片任务，当然
+         * 之所以用 while 是因为想在下一个渲染任务前，尽量利用空闲时间执执行分片任务，当然
            也可以用 if ，只不过用 if 只能在这段时间内执行一个分片了
          * 如果分片的任务执行超过了空闲时间，那还是会有卡顿的，不过这是分片没分好的问题了
          */
@@ -6567,15 +8068,98 @@ HTML5 新特性提供了两个渲染帧相关的 API 。注意只有渲染任务
 
 分片任务如果环境不支持这两个 API ，就使用 web worker，再不支持只能用定时器了，但是定时器无法准确在两个渲染帧之间执行任务，就会由卡顿，但至少比直接同步执行好。
 
+（4）性能监控
+
+服务监控，监控用户在使用软件中遇到的问题，提供给后台进行数据分析。
+
+数据埋点是服务监控的其中一个环节，在客户端实现，主要分为：
+
+* 非侵入式：程序错误、性能监控。通常封装为一个库，直接在入口文件调用，不影响原本的代码
+
+* 侵入式：行为监控，用户哪些行为导致不继续使用软件，需要在具体的代码中嵌入，开发成本较高
+
+性能监控的简单实现：
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
+
+  <script>
+    function delay(ms) {
+      const now = Date.now();
+      while (1) {
+        if (Date.now() - now >= ms) break;
+      }
+    }
+
+    // 方式一，监控 FPS ，但很局限，很多用户感受的卡顿并不一定是 PDS ，如事件延迟，图片加载，布局等
+    function FPSobserver() {
+      const now = Date.now();
+
+      requestAnimationFrame(() => {
+        if (Date.now() - now > 17) console.log("没有 60 帧");
+        FPSobserver();
+      });
+    }
+    // FPSobserver();
+
+    // 方式二，推荐使用
+    const ob = new PerformanceObserver((list) => {
+      // 便利所有需要监控的类型，目前只监控了 longtask
+      for (const i of list.getEntries()) {
+        console.log(`类型: ${i.entryType}，耗时：${i.duration} ms`);
+
+        // 如果耗时过长，就判定为卡顿，上报监控中心
+        if (i.duration > 100);
+      }
+    });
+
+    // 配置
+    ob.observe({
+      // 监控类型，其他类型查阅文档
+      entryTypes: ["longtask"],
+    });
+
+    delay(3000);
+    console.log(123);
+
+    // 网络监控 -----------------------------------------------------------------------------
+    function getNetworkInfo() {
+      let info;
+
+      if (navigator.onLine) {
+        info = {
+          type: navigator.connection.effectiveType,
+          rtt: navigator.connection.rtt,
+          downlink: navigator.connection.downlink,
+        };
+      } else info = { type: "offline" };
+
+      return info;
+    }
+
+    // 分别是在线、离线、改变网络类型触发
+    window.addEventListener("online", function (e) {});
+    window.addEventListener("offline", function (e) {});
+    navigator.connection.addEventListener("change", function (e) {});
+
+    setInterval(() => {
+      console.log(getNetworkInfo());
+    }, 1000);
+  </script>
+</html>
+```
+
 ### 3.3 Web Worker
 
-HTML5 新特性，开启一个新县城
+HTML5 新特性，开启一个新县城，缺点是无法操作 DOM 。
 
 ### 3.4 浏览器渲染原理
 
 渲染，将一个 HTML 字符串（HTML 文档）转变成页面像素信息的过程。
 
-（1）渲染过程
+（1）解析 HTML 字符串
 
 浏览器的网络进程拿到 HTML 文档后，产生一个渲染任务，交给渲染主线程的消息队列，在事件循环机制的作用下，渲染主线程取出渲染任务并处理：
 
@@ -6583,7 +8167,20 @@ HTML5 新特性，开启一个新县城
 const html = "<div>...</div>";
 ```
 
-渲染主线程解析 HTML 字符串，当解析到 \<style\> 和 \{link\> 的 CSS 时，会交给渲染进程中的与解析现成异步解析 CSS ，所以 CSS 不会阻塞 HTML 的解析；而解析到 \<script\> 时，渲染主线程会去下载或执行 JS，之所以解析 JS 不是异步的，是因为 JS 可能修改 HTML ，因此 JS 才会造成解析 HTML 的阻塞：
+渲染主线程解析 HTML 字符串：
+
+```
+const doc = new DOMParser().parseFromString("<div>123</div>", "text/html");
+
+// 123;
+console.log(doc.body.textContent);
+```
+
+当解析到 \<style\> 和 \{link\> 的 CSS 时，会交给渲染进程中的预解析现成异步解析 CSS ，解析完成后再交给渲染主线程去生成 SOM 树，所以 CSS 不会阻塞 HTML 的解析。
+
+而解析到 \<script\> 时，渲染主线程会等待 JS 下载执行完毕，之所以解析 JS 不是异步的，是因为 JS 可能修改 DOM 。
+
+因此 JS 就会造成渲染主线程的阻塞：
 
 ```
 const html = `
@@ -6602,100 +8199,129 @@ const html = `
 `;
 ```
 
-生成 DOM 树（DOM Object Model）和 SOM 树（CSS Object Model），都是对象，方便后续处理，同时让 JS 有操作 HTML 、CSS 的能力。
-
-当 JS 修改 DOM 事，就会修改 DOM 树，若修改了样式还会修改 SOM 树，即便是 JS 修改 transform 。
+script 可以使用 async 和 defer 实现异步下载、异步执行；
 
 ```
-// dom 树的根结点
-console.log(document);
+// 1.js
+const now = Date.now();
 
-// SOM 树，是一个森林，根结点时各个样式表（内部、外部、行内、浏览器默认样式表）
-console.log(document.styleSheets);
+while (1) {
+  if (Date.now() - now >= 3000) break;
+}
+```
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <!-- 阻塞渲染主线程 -->
+  <!-- <script src="./1.js"></script> -->
+
+  <!-- async 、defer 只有存在 src 时才生效 ---------------------------------------->
+  <!-- async
+    * 异步下载，下载完马上在渲染主线程执行，若此时 html 还未渲染完就会阻塞
+    * 每个 script 下载完的时间不同，所以 script 顺序会改变 
+    * 适用于独立脚本，如广澳
+  -->
+  <!-- <script async src="./1.js"></script> -->
+
+  <!-- 
+    * 异步下载异步执行
+    * script 顺序不变，在 DOMContentLoader 之前执行
+    * 适用于依赖 DOM 的 JS 
+  -->
+  <script defer src="./1.js"></script>
+  <body>
+    123
+  </body>
+</html>
+```
+
+（2）解析完成后，完成 DOM 树 、SOM 树的生成
+
+DOM Object Model 、 CSS Object Model ，都是对象，方便后续处理，同时让 JS 有操作 HTML 、CSS 的能力。
+
+JS 不会生成一个树，因为 JS 只执行一次就行了，异步也有事件循环处理。
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      .box {
+        font-size: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box" style="font-weight: 700">123</div>
+  </body>
+
+  <script>
+    // DOM 树根节点，即 <html>
+    console.log(document.documentElement);
+
+    // SOM 树，根结点保存了一个存储各个样式表的数组，得到样式表后，除了默认样式表外都可以 CURD选择器、属性等
+    // 获取内联样式表
+    console.log(document.querySelector(".box").style);
+    // 获取内部样式表、外部样式表形成的数组
+    console.log(document.styleSheets);
+  </script>
+</html>
 ```
 
 样式计算：遍历 DOM 树，每个结点进行样式计算，得到每个节点计算后的最终的样式 computed style（所有 CSS 属性都要有 value ，且都是绝对单位，如 em 变 px ，string 的 color 变 rgb\(\)），最后得到有样式的 DOM 树：
 
 ```
-// 得到计算后的最终样式
+// 得到计算后的样式
 getComputedStyle();
 ```
 
-布局：遍历 DOM 树，根据样式计算出几何信息（尺寸、相对于包含块的位置），得到布局树（Layout Tree），大部分时候 DOM 树和布局树会不同，因为：
+（3）生成布局树
 
-* 隐藏的节点没有几何信息，不会出现在布局树中
+Layout Tree ，有些 CSS 属性值如百分比， auto 到这里才能计算出来，content 的大小也在这里根据盒子模型进行计算。
 
-* 伪元素是 CSS 产生的，不会出现在 DOM 树中，但会出现在布局树中
+遍历 DOM 树，根据样式计算出几何信息（尺寸、相对于包含块的位置），得到布局树，大部分时候 DOM 树和布局树会不同，因为：
 
-* 内容只能在行盒中，行盒、块盒不能在同一级，若出现了这些情况，布局树中会用匿名行盒、匿名快盒填充，这些匿名盒子是不会渲染的
+- 隐藏的节点如 \<head\> 没有几何信息，不会出现在布局树中
 
-当 css 修改几何信息时，引起 reflow ，重新布局 。
+- 伪元素是 CSS 产生的，不会出现在 DOM 树中，但会出现在布局树中
+
+- 内容只能在行盒中，行盒、块盒不能在同一级，若出现了这些情况，布局树中会用匿名行盒、匿名快盒填充，这些匿名盒子是不会渲染的
+
+布局中的对象也不是 DOM 对象，而是如浮动对象、flex 对象等，这些对象无法用 JS 获取，但是可以获取部分信息：
 
 ```
-// 可以获取部分布局树的信息
+// offset 、client 、scroll 获取的都是布局树的信息
 console.log(body.clientWidth);
 ```
 
-分层：渲染主线程使用一条复杂的规则进行分层，好处是在将来某一层改变时仅会处理该层，提升性能，但分层不会太多，因为会加大内存消耗，具体分几层由浏览器决定：
+（4）分层
+
+渲染主线程使用一条复杂的规则进行分层，好处是在将来某一层改变时仅会处理该层，提升性能，但分层不会太多，因为会加大内存消耗，具体分几层由浏览器决定：
 
 ```
 .box {
-  /* 堆叠上下文的属性可能会影响分层，如以下属性 */
+  /* 堆叠上下文的属性可能会影响分层，是否分层浏览器视情况而定，如以下属性 */
   opacity: 1;
   z-index: 9;
   transform: translate(-50%, -50%);
 
   /* 这个属性告诉浏览器可能会经常变动，需要单独分一层，但具体分不分，由浏览器决定 */
+  /* 不要滥用，分层太多也不好 */
   will-change: transform;
 }
 ```
 
-生成绘制指令：每一层单独生成绘制指令集（类似 \<canvas\>），用来描述这一层如何绘制。
+（5）生成绘制指令
 
-当 css 修改非几何信息时，引起 repaint ，重新生成绘制指令。
+每一层单独生成绘制指令集，用来描述这一层如何绘制。
 
-至此，渲染主线程工作结束，将每层的绘制指令交给渲染进程的合成线程：
+canvas 用的就是浏览器提供的绘制指令。
 
-* 分块：合成线程从线程池中启动多个线程，共同将每一层分成一个个小块，并把每一个小块交给 GPU 进程进行光栅化
+关于回流、重绘：
 
-* 光栅化：生成包含像素信息的位图（优先光栅化视口附近的分块），交换给合成线程，合成线程生成指引信息（指引把位图花在屏幕的位置），交给硬件
-
-（2）添加 DOM
-
-```
-<!DOCTYPE html>
-<html lang="en">
-  <body></body>
-  <script>
-    // 方式一，性能最低，因为要从解析字符串开始
-    var div1 = "<div>1</div>";
-    document.body.innerHTML = div1;
-
-    // 方式二，性能一般
-    var div2 = document.createElement("div");
-    div2.textContent = "2";
-    document.body.appendChild(div2);
-
-    // 方式三，性能最高，先存储在文档片段中，再一次性 appendChild
-    // 文档片段自身不会被渲染
-    var frag = document.createDocumentFragment();
-    var div3 = document.createElement("div");
-    div3.textContent = "3";
-    frag.appendChild(div3);
-    document.body.appendChild(frag);
-  </script>
-</html>
-```
-
-（3）回流、重绘
-
-区别：
-
-* reflow，也叫重排，本质是当修改了影响几何信息的属性（windth、font-size、display、margin 等等），就会重新计算 Layout Tree ，性能下降：
-
-* repaint，本质是修改了不影响几何信息的属性（如 color），就会在分层阶段开始计算绘制指令，由于在布局之后，所以 reflow 必然 repaint ，反之则不会：
-
-reflow 、repaint 都会产生一个异步的渲染任务入队到消息队列，执行这个异步任务才会真正修改样式，修改完后进行重新渲染，进入 raf ：
+* 重绘（repaint）：当修改非几何属性如 color ，就引起 repaint ，在渲染流程中，重新计算样式后，跳过布局阶段，可能重新分层，一定生成新的绘制指令
+- 回流（reflow）：也叫重排，当修改了几何属性后或新增、删除、移动元素、修改元素位置，就会 reflow ，渲染过程中和 repaint 唯一不同的就是会更新布局树，性能较差，所以 reflow 一定会 repaint ，反之不会
 
 ```
 <!DOCTYPE html>
@@ -6706,6 +8332,10 @@ reflow 、repaint 都会产生一个异步的渲染任务入队到消息队列�
         font-size: 10px;
         transition: all 3s;
       }
+
+      .text {
+        font-size: 50px;
+      }
     </style>
   </head>
 
@@ -6713,12 +8343,19 @@ reflow 、repaint 都会产生一个异步的渲染任务入队到消息队列�
     <div>
       <button id="btn1">回流、重绘 1</button>
       <button id="btn2">强制回流、重绘 2</button>
+
+      <div>
+        <span class="text">456</span>
+        <button id="btn3">变小后变大</button>
+      </div>
     </div>
   </body>
 
   <script>
     var btn1 = document.querySelector("#btn1");
     var btn2 = document.querySelector("#btn2");
+    var btn3 = document.querySelector("#btn3");
+    const text = document.querySelector(".text");
 
     function addBox() {
       const box = document.createElement("p");
@@ -6772,19 +8409,80 @@ reflow 、repaint 都会产生一个异步的渲染任务入队到消息队列�
       // box.style.backgroundColor = "#0f0";
       // box.style.backgroundColor = "#000";
 
-      // 更好的方式是使用 raf ，效率高
+      // 更好的方式是使用 raf ，效率高，原理是 raf 在渲染任务前回调，里面修改样式产生一个新的渲染任务，使得两个渲染任务的样式不同
       // requestAnimationFrame(() => {
       // box.style.fontSize = "50px";
       // box.style.backgroundColor = "#000";
       // });
     });
+
+    // transition 同一时段只能有一次，于是下面的先变小后变大就变成了只有变大
+    btn3.addEventListener("click", function () {
+      text.style.fontSize = "25px";
+      text.style.transition = "all 1s";
+
+      // 效果：只有从 50px 到 100px ，实际上应该从 25px 开始
+      // requestAnimationFrame(() => {
+      //   text.style.fontSize = "100px";
+      // });
+
+      // 解决方法：先不设置 transition（设置了就去掉），到了第二段才开始动画
+      text.style.fontSize = "25px";
+      text.style.transition = "";
+
+      requestAnimationFrame(() => {
+        text.style.fontSize = "100px";
+        text.style.transition = "all 1s";
+      });
+    });
   </script>
 </html>
 ```
 
-（4）transform
+添加 DOM 的性能：
 
-transform 是在合成现成中起作用的，已经是渲染的后期了，又不会 reflow 、repaint，又不在渲染主线程，所以性能非常高：
+```
+<!DOCTYPE html>
+<html lang="en">
+  <body></body>
+  <script>
+    // 方式一，性能最低，因为要从解析字符串开始
+    var div1 = "<div>1</div>";
+    document.body.innerHTML = div1;
+
+    // 方式二，性能一般
+    var div2 = document.createElement("div");
+    div2.textContent = "2";
+    document.body.appendChild(div2);
+
+    // 方式三，性能最高，先存储在文档片段中，再一次性 appendChild
+    // 文档片段自身不会被渲染
+    var frag = document.createDocumentFragment();
+    var div3 = document.createElement("div");
+    div3.textContent = "3";
+    frag.appendChild(div3);
+    document.body.appendChild(frag);
+  </script>
+</html>
+```
+
+（6）合成线程
+
+至此，渲染主线程工作结束，将每层的绘制指令交给渲染进程的合成线程。
+
+* 分块：合成线程从线程池中启动多个线程，共同将每一层分成一个个小块，并把每一个小块交给 GPU 进程进行光栅化
+
+* 光栅化：生成包含像素信息的位图（优先光栅化视口附近的分块），交换给合成线程，合成线程生成指引信息（指引把位图花在屏幕的位置），交给硬件
+
+关于浏览器滚动：
+
+浏览器滚动不会修改任何 DOM 和样式，只在合成线程中再次分块、光栅化就行，所以不会被 JS 阻塞，也不会回流重绘。
+
+关于 transform ：
+
+transform 都是对位图的数学矩阵运算，这个过程其实就发生在合成线程的光栅化，且 GPU 处理矩阵运算效率很高，整个过程都不会再渲染主线程中，不会回流重绘、所以性能很高。
+
+transform 后的信息只能通过 getBoundingClientRect 获取。
 
 ```
 <!DOCTYPE html>
@@ -6856,86 +8554,7 @@ transform 是在合成现成中起作用的，已经是渲染的后期了，又�
 </html>
 ```
 
-浏览器滚动也不会 reflow、repaint ，所以不会被 JS 阻塞。
-
-### 3.5 垃圾回收机制
-
-为了防止内存泄漏，js会对没有使用或不再使用的资源自动地进行回收来释放内存，遵循以下基本规则
-
-- 全局的资源不会回收，除非手动释放或关闭网页。手动释放如下：
-  
-  ```
-  /*此时
-  栈内存划分一块内存给obj，存储堆内存中{a:1}的地址（引用）
-  堆内存划分一块内存给{a:1}，存放{a:1}
-  */
-  let obj = {a: 1};
-  
-  /*
-  手动释放，obj赋成别的值，一般是null
-  原理就是使得{a:1}不再被使用，其他地方也没有引用{a:1}，就回收了
-  */
-  et obj = null;
-  ```
-
-- 函数执行完则函数内的资源会被回收。
-
-- 闭包使用的资源不会被回收。
-
-如果是引用类型，还需要考虑强引用和弱引用：
-
-强引用：
-
-大部分情况都是强引用，如：
-
-```
-//obj强引用了{a:1}
-let obj = {a:1};
-```
-
-强引用的情况下，若垃圾回收了其中一个引用（如函数调用完），或丢失了引用（如赋值为null），则：
-
-* 若{a:1}不再被任何东西引用，将会被回收
-
-* 反之只要有任何东西还在引用它，就不回收
-
-```
-//下面由于没有任何东西再引用{a:1}，就会回收并释放内存
-//obj丢失了对{a:1}的引用且没有东西再引用{a:1}了，就户籍手{a:1}
-let obj = {a:1}
-obj = null
-//函数调用完，回收ooo，{a:2}也因为没有东西再引用它，就回收
-function test1(){
-  let ooo = {a:2};
-}
-test1();
-
-
-//下面由于还有东西在引用，就不回收
-//o1赋值为null求实了对{a:1}的引用，但是{a:1}已经被o2引用了，所以不回收{a:1}
-let o1 = {a:1};
-let o2 = o1;
-o1 = null;
-//函数调用完回收了ooo，但是{a:2}已经被o引用了，所以不回收{a:2}
-let o = null
-function test2(){
-  let ooo = {a:2};
-  o = ooo;
-}
-test2();
-```
-
-弱引用：
-
-目前js的弱引用只出现在WeakSet和WeakMap，详见对应的笔记。
-
-简单的说，若垃圾回收了其中一个引用（如函数调用完），或丢失了引用（如赋值为null），则，那么不管其引用的东西是否还再被其他东西引用，都会回收。
-
-需要注意的是，垃圾回收是优先级很低的线程，所以弱引用引用的东西在看的时候可能还未被回收，还在回收的路上，但是最终都会回收。
-
-可以看出，强引用由于可能会有不被垃圾回收的情况，所以可能会出现内存泄漏；而弱引用则没有内存泄漏的问题。
-
-# 四、TS
+# 三、TS
 
 typescript 是 javascript 的超集，具有类型检查等功能。
 
@@ -6977,8 +8596,6 @@ export declare function add(a: number, b: number): number;
 console.log(add(1, 2));
 ```
 
-
-
 也可以单独把类型声明放到 \.d\.ts 文件中：
 
 ```
@@ -6991,8 +8608,6 @@ export declare function add(a: number, b: number): number;
 import { add } from "./utils.js";
 console.log(add(1, 2));
 ```
-
-
 
 ## 1 类型
 
@@ -8242,8 +9857,6 @@ class A {}
 type Constructor1 = typeof func;
 type Constructor2 = typeof A;
 ```
-
-
 
 （2）keyof
 

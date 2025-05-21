@@ -930,54 +930,6 @@ a {
 }
 ```
 
-（6）CSS 变量
-
-CSS3 新特性，也叫 CSS 自定义属性，用 \-\- 定义：
-
-```
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      /* 放在 <html> 中 */
-      :root {
-        --my-width: 100px;
-      }
-
-      .box {
-        /* 放在当前元素中 */
-        /* css 便令也有作用域，会一直往上找，直到 :root */
-        --my-width: 200px;
-
-        /* 使用变量 */
-        width: var(--my-width);
-
-        /* 运算 */
-        height: calc(var(--my-width) / 2);
-
-        /* 默认值，不存在该变量时适用 */
-        background-color: var(--my-color, red);
-      }
-    </style>
-  </head>
-  <body>
-    <div class="box"></div>
-  </body>
-  <script>
-    var box = document.querySelector(".box");
-
-    // 操作 css 变量
-    setTimeout(() => {
-      box.style.setProperty("--my-color", "black");
-      console.log(box.style.getPropertyValue("--my-color"));
-    }, 3000);
-  </script>
-</html>
-```
-
 ## 3 选择器
 
 （1）基础选择器

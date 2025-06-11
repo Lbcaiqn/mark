@@ -1,8 +1,67 @@
+# 一、基本
+
+域名：
+
+* 127\.0\.0\.1 为本机，域名为 localhost
+
+* 从右往左解析，不区分大小写
+
+* 构成：
+  
+  * 次级域名\.顶级域名，如 www.example.com ，分别是三级、二级、顶级域名
+  
+  * 次级域名\.公共后缀，如 www.example.github.io ，分别是四级 \~ 顶级域名，其中 github\.op 是公共后缀：
+    
+    * 公共后缀是一个标准，如 \.com ，.github\.io ，具体可查阅 https://publicsuffix.org/list/
+    
+    * 顶级域名一定是公共后缀，反之则不然
+
+* 站点域：次级域名\.公共后缀，可以不断划分子域，如 sub\.example\.com 是 example\.com 的子域
+
+（2）域名映射
+
+有时在开发环境需要把 localhost 映射为其他域名，这里使用 whistle \+ Prosy Switch Omega 。
+
+```
+npm install -g whistle
+w2 start
+```
+
+管理员权限修改 hosts 文件：
+
+```
+# windows 在 C:\Windows\System32\drivers\etc\hosts
+# Linux 、mac 在 /etc/hosts
+
+127.0.0.1 a.test
+127.0.0.1 b.test
+```
+
+终端 ping 测试是否配置成功：
+
+```
+ping a.test
+ping b.test
+```
+
+浏览器输入 localhost\:8899 进入 whistle 配置页面，在 Rules 中配置：
+
+```
+a.test 127.0.0.1
+b.test 127.0.0.1
+```
+
+chrome 安装插件 Proxy Switch Omega \-\> 点击插件 \-\> 选项 \-\> 进入配置页面 \-\> 左侧栏的添加情景模式 \-> 输入代理名并配置为 http\://127.0.0.1\:8899 \-\> 左侧栏的应用选项。
+
+当需要进入 a\.test 和 b\.test 时，把 Switch Omega 的代理设置为刚才配置的代理即可，访问 localhost 依然有效，也不用代理。
+
+这样，localhost ，a\.test ，b\.test 就是三个不同的站点域。 
+
+# 一、ajax
+
 狭义的ajax就是指ajax这个技术。
 
 广义的ajax泛指通过ajax实现的网络请求技术的统称，如fetch，axios等。
-
-# 一、ajax
 
 ## 1 基本
 
@@ -479,6 +538,346 @@ F12—network—All--Name中是项目的所有html/js等，点开能看到请求
 其中，QueryString 能看到GET请求的query参数和POST请求的参数
 
 # 三、跨域
+
+（1）cookie
+
+http 是无状态的协议，也就意味着后端服务器无法判断请求是由谁发起的，于是早期的 Web 应用就使用浏览器的 cookie 来保存登录状态。
+
+可以在浏览器调试工具 \- application 中查看 cookie 。
+
+cookie 的缺陷：
+
+* 隐私泄露：对于用户来说，cookie 是非常容易泄露个人隐私的，因为 cookie 可以在不登录的情况下就能被请求携带。
+
+* 较不安全：cookie 可以被跨站的请求携带，所以需要设置 samesite
+
+cookie 的好处：
+
+* 后台具有强控制性，可以随时把 cookie 设置为过期，而 jwt 不行
+
+cookie 特性：
+
+* 每条 cookie 的存储空间为 4KB ：
+  
+  * 本地打开 html 文件无法读写 cookie ，只有通过网络 url 访问的 html 才行
+  
+  * 前端可以 document\.cookie 读写 cookie ；后端可以在响应头中设置 cookie ，浏览器收到响应且允许后就会设置 cookie
+  
+  * 同一个浏览器中，cookie 在同提个站点域共享，不在一个站点域就是跨站，跨站没有跨域严格
+
+* cookie 会再请求中携带：
+  
+  * 若是同一个站点域且不跨域的页面，发起的 ajax ，会自动携带
+  
+  * 若是跨域的页面，ajax 需要添加 credential 选项才会携带，同时后端在跨域的情况下还需要再设置允许 cookie 跨域；若是跨站的 ajax ，还需要把 samesite 设为 "none"
+  
+  * 具有请求属性的标签，如 img 、a 、iframe 、form 等，无论是否跨站，在早期的 Web 都会自动携带 cookie ，包括浏览器中其他站点域的 cookie ；但在 cookie 增加了 samesite 属性后，就由 samesite 决定，samesite 只能后端设置：
+    
+    * sameSite: "lax" ，默认值，跨站时，只允许 \<a\> 和 get 的 \<form\> 自动携带 cookie
+    
+    * sameSite\: "none" ，只有在 srcure\: true 才有效，否则视为 "lax"，无论是否跨站这些标签都会自动携带 cookie
+    
+    * sameSite: "strict" ，只有处于同一个站点域的页面，这些标签才会携带 cookie ，防止 CSRF 攻击
+  
+  * 除了 samesite 外，还有 2 个只有后端才能设置的 coolkie 属性，默认值为 false ：
+    
+    * HttpOnly ：不允许前端 JS 读写 cookie ，只允许在请求中携带，防止 XSS 攻击，不过调试工具 aplication 还能看到
+    
+    * srcure ：只允许在 https 协议中传输 cookie
+- 前后端都能设置的 cookie 属性：
+  
+  * 作用域：
+    
+    * path ：默认值为根路径 "/" ，path 表示 cookie 在静态文件夹中的哪些路径可以使用
+    
+    * domain ：默认值（前端：当前域名；后端：请求来源的域名），表示 cookie 能在哪个站点域以及它的子域使用，若设置为其他站点域，cookie 就无法使用了，若设置为子域，则父域无法使用
+  
+  * 过期时间：
+    
+    * expires ：绝对过期时间，格式必须是 GMT 时间
+    
+    * max-age ：相对过期时间，优先级高于 expires ，以秒为单位
+    
+    * 若没有设置 expirs 和 max-age ，则 expires 默认值为 session，表示为一个会画 cookie ，关闭浏览器后清除（刷新、要转、关闭页面都不会清除）
+
+前端读写 cookie ：
+
+```
+// 静态资源服务器，3000 、4000 都弄提个，用于测试
+
+const express = require("express");
+const path = require("path");
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});
+```
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    localhost:3000
+  </body>
+
+  <script>
+    /**设置 cookie ---------------------------------------------------------------------
+     * 不是普通的字符串赋值，浏览器内部会拦截处理
+     * 一次只能设置一个 cookie
+     * 由于 cookie 会在每个请求中携带，所以 cookie 最好只用于存储登录态，不存储大量数据，以免影响请求的速度
+     */
+    console.log("过期测试", document.cookie);
+
+    document.cookie = "a=0;";
+    document.cookie = "a=1;";
+    document.cookie = `b=${encodeURIComponent(JSON.stringify({ b: 2 }))};`;
+
+    // // 5s 后过期
+    document.cookie = `c=3; expires=${new Date(
+      Date.now() + 5000
+    ).toUTCString()}`;
+
+    // // 5s 后过期 ，优先级高于 expires ，若同时设置只有 max-age 有效
+    document.cookie = "d=4; max-age=5;";
+
+    console.log("seted", document.cookie, document.cookie.split(";"));
+
+    /**删除 ---------------------------------------------------------------------------
+     * 需要把过期时间修改为已经过去的时间
+     * document.cookie = "" 是无效的
+     */
+    // Thu, 01 Jan 1970 00:00:00 GMT
+    const expiredTime = new Date(0).toUTCString();
+
+    document.cookie = `a=; expires=${expiredTime}`;
+    document.cookie = "b=; max-age=-1;";
+
+    console.log("deleted", document.cookie);
+
+    // expires 、path 、domain 这里的默认值
+    document.cookie = "e=5; expiress=session; path=/; domain=localhost";
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+  <script>
+    // 第三方库更方便读写 cookie ，有浏览器端的 js-cookie 和 node 的 cookie ，以 js-cookie 为例
+
+    // 1 天后过期
+    Cookies.set("name", "value", { expires: 1 });
+    console.log(Cookies.get("name"));
+    Cookies.remove("name");
+  </script>
+</html>
+```
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    localhost:4000
+  </body>
+
+  <script>
+    // 同提个站点域共享 cookie
+    console.log(document.cookie);
+  </script>
+</html>
+```
+
+请求携带 cookie 以及 cookie 跨域：
+
+```
+// 后端， localhost:3333
+
+const express = require("express");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+
+const app = express();
+app.use(cookieParser());
+
+// 跨域
+app.use(
+  cors({
+    // cookie 跨域的 origin 不能设置为 "*"
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+
+app.get("/login", (req, res) => {
+  // 响应头中设置 cookie
+  res.cookie("token", "abc123", {
+    // 只有后端才能设置 samesite 、HttpOnly 、srcure
+
+    // 默认值都是 false
+    httpOnly: false,
+    secure: false,
+
+    // 默认值 "lax" ，若 srcure 为 false 则 sameSite 设为 "none" 无效，视为 "lax"
+    sameSite: "lax",
+  });
+
+  res.send("Cookie 已设置");
+});
+
+app.get("/data", (req, res) => {
+  console.log(req.cookies);
+  res.send("123");
+});
+
+const port = 3333;
+app.listen(port, () => {
+  console.log(`localhost:${port}`);
+});
+```
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    localhost:3000
+
+    <!-- 处于同一个站点域，自动携带 cookie -->
+    <img src="http://localhost:3333/data" />
+  </body>
+
+  <script>
+    console.log(document.cookie);
+
+    // // 请求后端设置一个 cookie
+    fetch("http://localhost:3333/login", {
+      method: "GET",
+
+      // 跨域时若没有设置 credential ，即使后端响应头携带了 cookie ，前端也不会设置这个 cookie ；同源则不用
+      credentials: "include",
+    })
+      .then((res) => res.text())
+      .then((data) => {
+        console.log(data, document.cookie);
+
+        // 请求数据接口，携带 cookie 到后端
+        fetch("http://localhost:3333/data", {
+          method: "GET",
+
+          // 跨域必须设置 credential ，才会携带 cookie ；同源则会自动携带
+          credentials: "include",
+        })
+          .then((res) => res.text())
+          .then((data) => console.log(data, document.cookie));
+      });
+  </script>
+</html>
+```
+
+（2）网络安全
+
+XSS 攻击（跨站脚本攻击）：
+
+* 模拟：
+
+* 解决方法：
+  
+  * 前端避免使用 innerHTML 等注入 html ；后端防止 SQL 注入
+  
+  * 前端使用 postMessage 时做好防范处理
+  
+  * 若是 cookie 则 HttpOnly 设为 true
+
+CSRF 攻击（跨站请求伪造），针对 session \+ cookie 的登录模式，原理是利用跨站的 img 、a 等元素请求也能携带 cookie 的特性
+
+* 模拟：
+  
+  ```
+  // 后端， localhost:3333
+  
+  const express = require("express");
+  const cors = require("cors");
+  const cookieParser = require("cookie-parser");
+  
+  const app = express();
+  app.use(cookieParser());
+  
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+    })
+  );
+  
+  app.get("/login", (req, res) => {
+    res.cookie("token", "abc123");
+    res.send("Cookie 已设置");
+  });
+  
+  app.get("/data", (req, res) => {
+    console.log(req.cookies);
+    res.send("123");
+  });
+  
+  const port = 3333;
+  app.listen(port, () => {
+    console.log(`localhost:${port}`);
+  });
+  ```
+  
+  ```
+  <!DOCTYPE html>
+  <html lang="en">
+    <body>
+      localhost:3000
+    </body>
+  
+    <script>
+      // 登录
+      fetch("http://localhost:3333/login", {
+        method: "GET",
+        credentials: "include",
+      })
+        .then((res) => res.text())
+        .then((data) => console.log("登录成功"));
+    </script>
+  </html>
+  ```
+  
+  ```
+  /**模拟 CSRF
+   * 访问 http://example.com ，调试工具中运行下面的 JS ，点击生成的 <a>（<form> 会自动 submit），就攻击成功了，已经拿到跨站的 cookie 并伪造了一个有权限的请求
+   * 由于后端是 http 协议，所以只能在 http 的页面中攻击
+   * http 协议，secure 为 false ，samesite 为 "lax" ，所以只能用 <a> 和 get 的 <form> 模拟
+   */
+  
+  // a 标签
+  (function () {
+    const a = document.createElement("a");
+    a.href = "http://localhost:3333/data";
+    a.textContent = "CSRF";
+    a.style.fontSize = "100px";
+    document.body.appendChild(a);
+  })();
+  
+  // 设置 get 请求的 form
+  (function () {
+    const form = document.createElement("form");
+    form.method = "get";
+    form.action = "http://localhost:3333/data";
+    document.body.appendChild(form);
+    form.submit();
+  })();
+  ```
+
+* 解决方法：
+  
+  * 后端接口遵循 Restful 规范，需要增删改的接口使用 POST 、PUT 、DELETE 请求，把参数放到请求体；但防不了 form 的 POST 请求
+  
+  * cookie 的 samesite 设为 '"strict' 
+
+（2）同源策略与跨域
 
 跨域问题只会出现PC端、移动端的浏览器，小程序/app则没有跨域问题，服务器与服务器之间也没有跨域问题。
 

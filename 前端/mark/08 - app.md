@@ -1155,7 +1155,7 @@ HBuilderX好像没有 vite 和 ts 的模板，可以选择在 vscode 中开发�
 
 ```
 vue -V
-pnpm install -g @vue/cli
+pnpm add -g @vue/cli
 ```
 
 创建 vite 和 ts 的 uniapp 项目：
@@ -1171,7 +1171,7 @@ ts 支持：
 官方的 types": ["@dcloudio/types 不太完善，需要再使用社区提供的 @uni-helper/uni-app-types
 
 ```
-pnpm install -D @uni-helper/uni-app-types
+pnpm add -D @uni-helper/uni-app-types
 ```
 
 ```
@@ -1242,7 +1242,7 @@ HBuilderX->工具->设置->运行配置->node
 但是vscode中就不同了，没有自带 uni-ui ，需要自行安装，且需要导入，就连 components 下的组件都需要导入才能使用：
 
 ```
-pnpm install --save @dcloudio/uni-ui
+pnpm add --save @dcloudio/uni-ui
 ```
 
 然后在 pages.json 配置自动注册和引入 uni-ui 和 自定义组件，就可以不用导入直接使用了：
@@ -1267,7 +1267,7 @@ pnpm install --save @dcloudio/uni-ui
 可以使用 pinia ，不过持久化的插件需要使用支持 uniapp 的，毕竟每个平台的本地存储都不一样：
 
 ```
-pnpm install --save pinia pinia-plugin-unistorag
+pnpm add --save pinia pinia-plugin-unistorag
 ```
 
 ```
@@ -1383,8 +1383,8 @@ export default instance;
 注意：qs 目前有兼容问题，如果 h5 正常运行但是小程序白屏，那么就是 qs 版本太高了，需要降级到 5.2.1 版本。
 
 ```
-pnpm install --save qs@5.2.1
-pnpm install -D @types/qs
+pnpm add --save qs@5.2.1
+pnpm add -D @types/qs
 ```
 
 ```
@@ -1548,7 +1548,7 @@ export default instance;
 也可以用第三方的适配器，不过有一些小问题，不过它的问题就是在状态码不为 2xx 时不会抛出异常，get 请求传不了数组参数问题也没解决，所以我才在它的代码基础上进行修改。
 
 ```
-pnpm install --save axios uniapp-axios-adapter
+pnpm add --save axios uniapp-axios-adapter
 ```
 
 （4）路由

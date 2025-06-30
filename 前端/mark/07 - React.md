@@ -41,7 +41,7 @@ cli 的入口是 index.js ，vite 的入口是 main.js。里面的严格模式�
 React 16.8 之后，使用函数式组件 \+ Hook：
 
 ```
-pnpm install --savae classnames
+pnpm add --savae classnames
 ```
 
 ```
@@ -550,7 +550,7 @@ export default class Home extends Component {
 ## 3 React Router 6
 
 ```
-pnpm install --save react-router-dom
+pnpm add --save react-router-dom
 ```
 
 ### 3.1 使用
@@ -1030,16 +1030,12 @@ React 使用 Redux 需要两个插件：
 （1）使用
 
 ```
-pnpm install --save @reduxjs/toolkit react-redux
+pnpm add --save @reduxjs/toolkit react-redux
 ```
 
 ```
-pnpm install --save redux-persist redux-thunk
+pnpm add --save redux-persist redux-thunk
 ```
-
-
-
-
 
 ```
 // /src/main.tsx
@@ -1056,8 +1052,6 @@ createRoot(document.getElementById("root")!).render(
 );
 ```
 
-
-
 持久化
 
 之前使用异步 action 能正常使用，但如果持久化还需要异步 action 就需要中间件 redux-thunk：
@@ -1069,7 +1063,7 @@ createRoot(document.getElementById("root")!).render(
 创建一个 stiore 管理状态，每次状态修改需要 dispatch 一个 action 通知 store 修改状态，store 根据 reducer 做对应的操作，最后 store 通过 subscribe 通知 react 重新 render 。
 
 ```
-pnpm install --save redux redux-thunk react-redux
+pnpm add --save redux redux-thunk react-redux
 ```
 
 ```//
@@ -1254,7 +1248,7 @@ root.render(
 代码比 Redux 简洁很多。
 
 ```
-pnpm install --save zustand
+pnpm add --save zustand
 ```
 
 基本使用：

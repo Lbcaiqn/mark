@@ -398,8 +398,6 @@ git config --global http.proxy 127.0.0.1:7890
 git config --global https.proxy 127.0.0.1:7890
 ```
 
-
-
 提交到远程库之前，必须先要配置远程库链接：
 
 ```
@@ -431,7 +429,11 @@ git push xxx 分支名
   原因：Linux用LF代表换行和回车，而windows的LF是换行，CRLF是回车，若不处理将会将LF转为CRLF，跨平台时就会出错，解决方法：
   
   ```
+  # 在 windows 默认为 true ，push：CRLF -》 LF ，pull：LF -> CRLF ，提示可能是为了防止其他系统无法读取 CRLF
   git config --global core.autocrlf false
+  
+  # 或者这样配置，push：CRLF -》 LF ，pull：LF 不转为 CRLF
+  git config --global core.autocrlf input
   ```
 
 * github将master改为了main，所以本地库也改成main，否则无法提交：
@@ -618,7 +620,13 @@ release过程：
 
 ### 7 其他
 
-（1）多个仓库共用模块
+（1）README
+
+README.md 是项目的说明文件，在github项目的首页会显示里面的内容。
+
+README-zh.md 和 README.md 同时存在时，github会根据浏览器的语言设置使用对应的README文件。
+
+21）多个仓库共用模块
 
 若多个仓库会共用同一个模块，可以封装成一个npm包，pip包等，也可以用gitmodules
 
@@ -636,7 +644,7 @@ release过程：
    
    上面代码的意思是将这个xxx.git仓库的内容放到挡墙项目的src下的xxx
 
-（2）git rebase
+（3）git rebase
 
 简化提交记录，注意：最好只合并没有存到远程库的记录，否则很麻烦
 
@@ -682,11 +690,11 @@ git add 解决完冲突的文件
 git rebase --continue
 ```
 
-（3）快速解决冲突
+（4）快速解决冲突
 
 使用软件 beyond compare
 
-（4）github上开源项目贡献
+（5）github上开源项目贡献
 
 # 四、markdown
 
